@@ -153,8 +153,7 @@ FthetaEAP <- function(xi,theta,w,a,b,c,D){
   return(c(eap, SE ,const))
 }
 
-FthetaMAP <- function(xi,a,b,c,mu,sigma,D,
-                      groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta,method=method){
+FthetaMAP <- function(xi,a,b,c,mu,sigma,D,groupitem, maxtheta=6,mintheta=-6,method="NR"){
 
   gid <- xi[1]
   xi <- xi[-1]
@@ -221,8 +220,7 @@ FthetaMAP <- function(xi,a,b,c,mu,sigma,D,
   t1
 }
 
-FthetaMLE <- function(xi,a,b,c,D,
-                      groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta,method=method){
+FthetaMLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6,method="NR"){
 
   gid <- xi[1]
   xi <- xi[-1]
@@ -289,8 +287,7 @@ FthetaMLE <- function(xi,a,b,c,D,
   t1
 }
 
-FthetaWLE <- function(xi,a,b,c,D,
-                      groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta){
+FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
   gid <- xi[1]
   xi <- xi[-1]
   d <- 0
@@ -422,7 +419,8 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
   if((est == "PVs") || (est == "MAP")){
     # 全受検者のデータをapply関数で与え，MAP推定を実行
     cat("Calculating MAP.\r")
-    map_apply <- apply(cbind(group, x.all),1,FthetaMAP,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+    map_apply <- apply(cbind(group, x.all),1,FthetaMAP,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D,
+                       groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta,method=method)
     #message("MAP推定値の計算が終了しました。")
   }
 
@@ -433,7 +431,8 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
   if(est == "MLE"){
     # 全受検者のデータをapply関数で与え，MAP推定を実行
     cat("Calculating MLE.\r")
-    mle_apply <- apply(cbind(group, x.all),1,FthetaMLE,a=a,b=b,c=c,D=D)
+    mle_apply <- apply(cbind(group, x.all),1,FthetaMLE,a=a,b=b,c=c,D=D,
+                       groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta,method=method)
     #message("MLE推定値の計算が終了しました。")
   }
 
@@ -444,7 +443,8 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
   if(est == "WLE"){
     # 全受検者のデータをapply関数で与え，MAP推定を実行
     cat("Calculating WLE.\r")
-    wle_apply <- apply(cbind(group, x.all),1,FthetaWLE,a=a,b=b,c=c,D=D)
+    wle_apply <- apply(cbind(group, x.all),1,FthetaWLE,a=a,b=b,c=c,D=D,
+                       groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta)
     #message("WLEの計算が終了しました。")
   }
 
