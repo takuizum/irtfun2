@@ -3,6 +3,7 @@
 #' @importFrom stats dnorm
 #' @importFrom stats na.omit
 #' @importFrom stats optimise
+#' @importFrom stats optim
 #' @importFrom stats runif
 "_PACKAGE"
 
@@ -117,7 +118,7 @@ Fmaxpdc <- function(xi,theta,a,b,c,D){
 }
 
 #the function for "fg"
-Ffg <- function(xi,theta,a,b,c,D){
+Ffg <- function(xi,theta,a,b,c,mu,sigma,D){
   exp(sum(xi*log( c+(1-c)/(1+exp(-D*a*(theta-b)))) + (1-xi)*log(1- (c+(1-c)/(1+exp(-D*a*(theta-b))))), na.rm=T))*dnorm(theta,mean=mu,sd=sigma)
 }
 
@@ -150,7 +151,8 @@ FthetaEAP <- function(xi,theta,w,a,b,c,D){
   return(c(eap, SE ,const))
 }
 
-FthetaMAP <- function(xi,a,b,c,mu,sigma,D){
+FthetaMAP <- function(xi,a,b,c,mu,sigma,D,
+                      groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta,method=method){
 
   gid <- xi[1]
   xi <- xi[-1]
@@ -217,7 +219,8 @@ FthetaMAP <- function(xi,a,b,c,mu,sigma,D){
   t1
 }
 
-FthetaMLE <- function(xi,a,b,c,D){
+FthetaMLE <- function(xi,a,b,c,D,
+                      groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta,method=method){
 
   gid <- xi[1]
   xi <- xi[-1]
@@ -284,14 +287,20 @@ FthetaMLE <- function(xi,a,b,c,D){
   t1
 }
 
-FthetaWLE <- function(xi,a,b,c,D){
+FthetaWLE <- function(xi,a,b,c,D,
+                      groupitem=groupitem, maxtheta=maxtheta,mintheta=mintheta){
+  gid <- xi[1]
+  xi <- xi[-1]
+  d <- 0
+  conv1 <- 0
+  mm <- groupitem[gid]
   #初期値を設定。ログオッズ比を用いた。
   if(sum(xi, na.rm = TRUE) == 0){
     t0 <- log(0.5)
-  }else if (sum(xi, na.rm = TRUE) == m){
-    t0 <- log(m-0.5)
+  }else if(sum((xi==1)*1,na.rm=T) == length(na.omit(xi))){
+    t0 <- log(mm-0.5)
   }else{
-    t0 <- log(sum(xi, na.rm = TRUE)/(m-sum(xi, na.rm = TRUE)))
+    t0 <- log(sum(xi, na.rm = TRUE)/(mm-sum(xi, na.rm = TRUE)))
   }
   opt <- optimise(WL,interval = c(mintheta,maxtheta),maximum = T,xi=xi,a=a,b=b,c=c,D=D)
   t1 <- opt$maximum
@@ -433,7 +442,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
   if(est == "WLE"){
     # 全受検者のデータをapply関数で与え，MAP推定を実行
     cat("Calculating WLE.\r")
-    wle_apply <- apply(x.all,1,FthetaWLE,a=a,b=b,c=c,D=D)
+    wle_apply <- apply(cbind(group, x.all),1,FthetaWLE,a=a,b=b,c=c,D=D)
     #message("WLEの計算が終了しました。")
   }
 
@@ -508,7 +517,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
         y <- runif( 1, 0, yheight)
         z <- runif( 1, zmin, zmax)
         times_sub <- times_sub +1
-        fg <- apply(xi,1,Ffg,theta=z,a=a,b=b,c=c,D=D)
+        fg <- apply(xi,1,Ffg,theta=z,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
         fgvalue <- fg/const
 
         if( y <= fgvalue){
