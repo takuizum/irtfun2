@@ -587,3 +587,171 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
          "MAPmean&sd" = c(mean(map_apply), sd(map_apply)), "PVmean&sd" = c(M_M, M_SD), "PS" = PS, "SE" = SE)
   }
 }
+
+cf <- function(x,af,bf,at,bt,D=D,p=p,N=N,w=w){
+  A <- x[1]
+  K <- x[2]
+  Q1 <- 0
+  Q2 <- 0
+  for(m in 1:N){
+    HC1 <- (ptheta(p[m],at,bt,c=0,D)-ptheta(p[m],af,bf,c=0,D))^2
+    HC2 <- (ptheta(p[m],af,bf,c=0,D)-ptheta(p[m],at*A,(bt-K)/A,c=0,D))^2
+
+    Q1 <- Q1 + sum(HC1*w[m])
+    Q2 <- Q2 + sum(HC2*w[m])
+  }
+  Q <- Q1 +Q2
+  return(Q)
+}
+
+cf2 <- function(x,af,bf,at,bt,D=D,p=p,N=N,w=w){
+  A <- x[1]
+  K <- x[2]
+  Q1 <- 0
+  Q2 <- 0
+  for(m in 1:N){
+    SLC1 <- (sum(ptheta(p[m],at,bt,c=0,D))-sum(ptheta(p[m],af,bf,c=0,D)))^2
+    SLC2 <- (sum(ptheta(p[m],af,bf,c=0,D))-sum(ptheta(p[m],at*A,(bt-K)/A,c=0,D)))^2
+
+    Q1 <- Q1 + SLC1*w[m]
+    Q2 <- Q2 + SLC2*w[m]
+
+  }
+  Q <- Q1 +Q2
+  return(Q)
+}
+
+
+
+#' Equating item parameter only sampled by common item design. FOR ONLY 2PLM
+#'
+#' @param T_para a parameter file equating TO.
+#' @param F_para a parameter file equating FROM.
+#' @param method equating method. U can select "SL" or "HB".
+#' @param D a factor canstant.
+#' @param N the number of nodes.
+#' @param mintheta a minimum value of theta in integration.
+#' @param maxtheta a maximum value of theta in integration.
+#' @param output logical. if TRUE output CSV file.
+#' @param Fname character. a file name of csv file.
+#' @param Change int. if 0 equated parameter of common item is no transformed parameter from T_para, if 2 transformed parameter, if1 mean and geometric mean.
+#' @param Easy logical. if TRUE output file is adaptive for Easy Estimation.
+#' @export
+
+CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6, maxtheta = 6,
+                      output = F, Fname ="default", Change = 0, Easy = F){
+
+  if(Easy==TRUE){
+    Tpara <- T_para[T_para$V3 != 0,]   #remove item that a-parameter is 0
+    Fpara <- F_para[F_para$V3 != 0,]
+    CII <- Fpara[Fpara$V1 %in% Tpara$V1,1]  #Comon Item Index
+    at <- bt <- af <- bf <- numeric(length(CII))
+
+    for (i in 1:length(CII)){
+      at[i] <- Tpara[Tpara$V1 == CII[i], "V3"]
+      bt[i] <- Tpara[Tpara$V1 == CII[i], "V4"]
+      af[i] <- Fpara[Fpara$V1 == CII[i], "V3"]
+      bf[i] <- Fpara[Fpara$V1 == CII[i], "V4"]
+    }
+  } else {
+    Tpara <- T_para[T_para$a != 0,]   #remove item that a-parameter is 0
+    Fpara <- F_para[F_para$a != 0,]
+    CII <- Fpara[Fpara$Item %in% Tpara$Item,1]  #Comon Item Index
+    at <- bt <- af <- bf <- numeric(length(CII))
+
+    for (i in 1:length(CII)){
+      at[i] <- Tpara[Tpara$Item == CII[i], "a"]
+      bt[i] <- Tpara[Tpara$Item == CII[i], "b"]
+      af[i] <- Fpara[Fpara$Item == CII[i], "a"]
+      bf[i] <- Fpara[Fpara$Item == CII[i], "b"]
+    }
+  }
+
+  #mean & sigma method
+  tm <- mean(bt)  #mean of diff para
+  ts <- sqrt(mean((bt-tm)^2))    #standard deviation(It's not used unbiased estimator)
+  fm <- mean(bf)
+  fs <- sqrt(mean((bf-fm)^2))
+  msA <- ts/fs
+  msK <- tm - fm * msA
+
+  p <- seq(mintheta,maxtheta,length.out = N)   #nodes of division quadrature
+  w <- numeric(N)      #weights of division quadrature
+  for (m in 1:N){    w[m] <- dnorm(p[m],0,1)  }
+  w <- w/sum(w) # calibration
+
+  if(method == "HB"){
+    #criterion function
+    res <- stats::nlm(f=cf, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D)#initial value is equating coefficient estimated by mean & sigma
+
+    A <- res$estimate[1]
+    K <- res$estimate[2]
+
+  } else if (method == "SL"){
+    res <- stats::nlm(f=cf2, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D)
+
+    A <- res$estimate[1]
+    K <- res$estimate[2]
+
+  }
+
+  if(Easy==TRUE){
+    #equating Fpara on the scale of Tpara
+    nCII <- numeric(0)
+    if(nrow(Fpara) != length(CII)){
+      nCII <- Fpara[!(Fpara$V1 %in% Tpara$V1),1]  #extract non comon item
+      #common items
+      for (n in nCII){
+        Fpara[Fpara$V1==n,"V3"] <- round(Fpara[Fpara$V1==n,"V3"]/A, digits = 5)
+        Fpara[Fpara$V1==n,"V4"] <- round(Fpara[Fpara$V1==n,"V4"]*A+K, digits = 5)
+      }
+    }
+    #non comon items
+    for (i in CII){
+      if(Change == 0){
+        Fpara[Fpara$V1==i,"V3"] <- Tpara[Tpara$V1==i,"V3"]
+        Fpara[Fpara$V1==i,"V4"] <- Tpara[Tpara$V1==i,"V4"]
+      } else if(Change == 1){
+        Fpara[Fpara$V1 == i,"V3"] <- sqrt(Fpara[Fpara$V1 == i, "V3"]/A * Tpara[Tpara$V1 == i, "V3"]) # geometric mean
+        Fpara[Fpara$V1 == i,"V4"] <- (Fpara[Fpara$V1 == i, "V4"]*A+K + Tpara[Tpara$V1 == i, "V4"])/2 # arithmetic mean
+      } else if(Change == 2){
+        Fpara[Fpara$V1 == i,"V3"] <- Fpara[Fpara$V1 == i, "V3"]/A
+        Fpara[Fpara$V1 == i,"V4"] <- Fpara[Fpara$V1 == i, "V4"]*A+K
+      }
+    }
+  }else{
+    #equating Fpara on the scale of Tpara
+    nCII <- numeric(0)
+    if(nrow(Fpara) != length(CII)){
+      nCII <- Fpara[!(Fpara$Item %in% Tpara$Item),1]  #extract non comon item
+      #common items
+      for (n in nCII){
+        Fpara[Fpara$Item==n,"a"] <- round(Fpara[Fpara$Item==n,"a"]/A, digits = 5)
+        Fpara[Fpara$Item==n,"b"] <- round(Fpara[Fpara$Item==n,"b"]*A+K, digits = 5)
+      }
+    }
+    #non comon items
+    for (i in CII){
+      if(Change == 0){
+        Fpara[Fpara$Item==i,"a"] <- Tpara[Tpara$Item==i,"a"]
+        Fpara[Fpara$Item==i,"b"] <- Tpara[Tpara$Item==i,"b"]
+      } else if(Change == 1){
+        Fpara[Fpara$Item == i,"a"] <- sqrt(Fpara[Fpara$Item == i, "a"]/A * Tpara[Tpara$Item == i, "a"]) # geometric mean
+        Fpara[Fpara$Item == i,"b"] <- (Fpara[Fpara$Item == i, "b"]*A+K + Tpara[Tpara$Item == i, "b"])/2 # arithmetic mean
+      } else if(Change == 2){
+        Fpara[Fpara$Item == i,"a"] <- Fpara[Fpara$Item == i, "a"]/A
+        Fpara[Fpara$Item == i,"b"] <- Fpara[Fpara$Item == i, "b"]*A+K
+      }
+    }
+  }
+
+
+  result <- list(D=paste0("D = ",D), para=Fpara, METHOD=method,
+                 EquatingCoefficient_A_K=c(A,K), MeanSigma_A_K=c(msA,msK),ComonItem=CII,NonComonItem=nCII)
+  if(output == T){
+    utils::write.table(result[1],file=paste0(Fname,"ParaEquated.csv"),sep = "",quote = F, col.names = F, row.names = F)
+    utils::write.table(result[2],file=paste0(Fname,"ParaEquated.csv"),sep = ",",quote = F, append = T, col.names = F, row.names = F)
+  }
+  return(result)
+
+}
