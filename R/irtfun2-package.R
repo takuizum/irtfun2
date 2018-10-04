@@ -5,6 +5,8 @@
 #' @importFrom stats optimise
 #' @importFrom stats optim
 #' @importFrom stats runif
+#' @useDynLib irtfun2, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
 "_PACKAGE"
 
 # P(theta) in two-parameter logisticmodel
