@@ -85,6 +85,48 @@ estip(x, model = "2PL", N = 31L, eMLL = 1e-6, eEM = 1e-4, eM = 1e-3,
 \description{
   U can select 'model' option. 1PL, 2PL, 3PL, Bayesian estimation is available.
 }
+\value{
+\item{para}{a df of estimated item parameter.}
+
+\item{SE}{a df of standard error of estimation.}
+
+\item{initial}{initial values were used in estimation}
+
+\item{theta.dist}{theta distribution calculated in last EM cycle.}
+
+\item{ms}{mean and sigma calculated by above distribution file.}
+
+\item{mean}{same as above.}
+
+\item{sd}{same as above.}
+
+\item{population_dist}{estimated population distribution via EM algorithm. Initial distribution is uniform.}
+
+\item{population_mean}{mean calculated by above distribution file.}
+
+\item{population_sd}{sd calculated by above distribution file.}
+
+\item{MLL}{a log of marginal log likelihood in all EM cycle.}
+
+\item{conv}{logical.}
+
+\item{count1}{???}
+
+\item{count2}{???}
+
+\item{skip_para}{the item name skipped in EM cycle.}
+
+\item{rm_n}{the number of remove items.}
+
+\item{rm_id}{a removed item list.}
+
+\item{p_bis}{point biserial correlation.}
+
+\item{raw_score}{a raw score matrix.}
+
+\item{passing_rate}{passing rates used in initial value.}
+
+}
 
 \author{
 Takumi Shibuya, sep10.taku.izum@gmail.com

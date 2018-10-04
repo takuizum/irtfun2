@@ -1283,12 +1283,12 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
   DataFrame Para = DataFrame::create(Named("Item")=Item, Named("a") = t0(_,0), Named("b") = t0(_,1), Named("c") = t0(_,2));
   DataFrame SE_d = DataFrame::create(Named("Item")=Item, Named("a") = SE(_,0), Named("b") = SE(_,1));
 
-  List res = List::create(_["para"] = Para, _["StandardError"] = SE_d, _["initial"] = initial,
+  List res = List::create(_["para"] = Para, _["SE"] = SE_d, _["initial"] = initial,
                           _["theta.dist"] = dist, _["ms"] = ms,_["mean"] = mean, _["sd"] = sd,
                           _["population_dist"] = unif_dist, _["population_mean"] = mean_pop, _["population_sd"] = sd_pop,
                             _["MLL"] = MLL, _["conv"] = conv, _["count1"] = count1, _["count2"] = count2,
                               _["skip_para"] = skip_para, _["rm_n"] = rm_n, _["rm_id"] = rm_id ,
-                              _["cor"] = r, _["RawScore"] = rs, _["PassingRate"] = p
+                              _["p_bis"] = r, _["raw_score"] = rs, _["passing_rate"] = p
   );
 
   return res;
