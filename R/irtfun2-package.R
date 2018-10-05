@@ -178,7 +178,7 @@ FthetaMAP <- function(xi,a,b,c,mu,sigma,D,groupitem, maxtheta=6,mintheta=-6,meth
   conv1 <- 0
   if(method=="NR"){
     while(conv1==0){
-      t1 <- t0 - fpdLPD(xi,t0,a,b,c,mu,sigma,D)/spdLPD(t0,a,b,c,sigma,D)
+      t1 <- t0 - fpdLPD(xi,t0,a,b,c,mu,sigma,D=D)/spdLPD(t0,a,b,c,sigma,D=D)
       if(abs(t1-t0)<0.001 || abs(t0)>10 ||is.nan(t1)) {
         conv1 <- 1
       }else{
