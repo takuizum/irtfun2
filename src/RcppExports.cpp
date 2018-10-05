@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // estip
-List estip(DataFrame x, String model, const int N, const double eMLL, const double eEM, const double eM, const double emu, int fc0, int ng, int gc0, const double D, const int fix, const int print, const double ic, const double max, const double min, const double mu, const double sigma, const int Bayes, const double mu_a, const double sigma_a, const double mu_b, const double sigma_b, const double mu_c, const double w_c, const double min_a, const double maxabs_b, const int maxiter_em, const int maxiter_j, const int maxskip_j, CharacterVector rm_list, const String thdist, const int e_ell, const int EM_dist);
-RcppExport SEXP _irtfun2_estip(SEXP xSEXP, SEXP modelSEXP, SEXP NSEXP, SEXP eMLLSEXP, SEXP eEMSEXP, SEXP eMSEXP, SEXP emuSEXP, SEXP fc0SEXP, SEXP ngSEXP, SEXP gc0SEXP, SEXP DSEXP, SEXP fixSEXP, SEXP printSEXP, SEXP icSEXP, SEXP maxSEXP, SEXP minSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP BayesSEXP, SEXP mu_aSEXP, SEXP sigma_aSEXP, SEXP mu_bSEXP, SEXP sigma_bSEXP, SEXP mu_cSEXP, SEXP w_cSEXP, SEXP min_aSEXP, SEXP maxabs_bSEXP, SEXP maxiter_emSEXP, SEXP maxiter_jSEXP, SEXP maxskip_jSEXP, SEXP rm_listSEXP, SEXP thdistSEXP, SEXP e_ellSEXP, SEXP EM_distSEXP) {
+List estip(DataFrame x, String model, const int N, const double eMLL, const double eEM, const double eM, const double emu, const double esd, int fc0, int ng, int gc0, const double D, const int fix, const int print, const double ic, const double max, const double min, const double mu, const double sigma, const int Bayes, const double mu_a, const double sigma_a, const double mu_b, const double sigma_b, const double mu_c, const double w_c, const double min_a, const double maxabs_b, const int maxiter_em, const int maxiter_j, const int maxskip_j, CharacterVector rm_list, const String thdist, const int e_ell, const int EM_dist);
+RcppExport SEXP _irtfun2_estip(SEXP xSEXP, SEXP modelSEXP, SEXP NSEXP, SEXP eMLLSEXP, SEXP eEMSEXP, SEXP eMSEXP, SEXP emuSEXP, SEXP esdSEXP, SEXP fc0SEXP, SEXP ngSEXP, SEXP gc0SEXP, SEXP DSEXP, SEXP fixSEXP, SEXP printSEXP, SEXP icSEXP, SEXP maxSEXP, SEXP minSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP BayesSEXP, SEXP mu_aSEXP, SEXP sigma_aSEXP, SEXP mu_bSEXP, SEXP sigma_bSEXP, SEXP mu_cSEXP, SEXP w_cSEXP, SEXP min_aSEXP, SEXP maxabs_bSEXP, SEXP maxiter_emSEXP, SEXP maxiter_jSEXP, SEXP maxskip_jSEXP, SEXP rm_listSEXP, SEXP thdistSEXP, SEXP e_ellSEXP, SEXP EM_distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -18,6 +18,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type eEM(eEMSEXP);
     Rcpp::traits::input_parameter< const double >::type eM(eMSEXP);
     Rcpp::traits::input_parameter< const double >::type emu(emuSEXP);
+    Rcpp::traits::input_parameter< const double >::type esd(esdSEXP);
     Rcpp::traits::input_parameter< int >::type fc0(fc0SEXP);
     Rcpp::traits::input_parameter< int >::type ng(ngSEXP);
     Rcpp::traits::input_parameter< int >::type gc0(gc0SEXP);
@@ -45,13 +46,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const String >::type thdist(thdistSEXP);
     Rcpp::traits::input_parameter< const int >::type e_ell(e_ellSEXP);
     Rcpp::traits::input_parameter< const int >::type EM_dist(EM_distSEXP);
-    rcpp_result_gen = Rcpp::wrap(estip(x, model, N, eMLL, eEM, eM, emu, fc0, ng, gc0, D, fix, print, ic, max, min, mu, sigma, Bayes, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, e_ell, EM_dist));
+    rcpp_result_gen = Rcpp::wrap(estip(x, model, N, eMLL, eEM, eM, emu, esd, fc0, ng, gc0, D, fix, print, ic, max, min, mu, sigma, Bayes, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, e_ell, EM_dist));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_irtfun2_estip", (DL_FUNC) &_irtfun2_estip, 34},
+    {"_irtfun2_estip", (DL_FUNC) &_irtfun2_estip, 35},
     {NULL, NULL, 0}
 };
 

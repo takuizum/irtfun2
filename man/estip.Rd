@@ -6,11 +6,11 @@
 1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now.}
 \usage{
 estip(x, model = "2PL", N = 31L, eMLL = 1e-06, eEM = 1e-04,
-  eM = 0.001, emu = 1e-04, fc0 = 2L, ng = 1L, gc0 = 2L,
-  D = 1.702, fix = 1L, print = 0L, ic = 1/5, max = 6, min = -6,
-  mu = 0, sigma = 1, Bayes = 0L, mu_a = 0, sigma_a = 1,
-  mu_b = 0, sigma_b = 2, mu_c = 4/13, w_c = 13, min_a = 0.1,
-  maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L,
+  eM = 0.001, emu = 0.001, esd = 0.01, fc0 = 2L, ng = 1L,
+  gc0 = 2L, D = 1.702, fix = 1L, print = 0L, ic = 1/5, max = 6,
+  min = -6, mu = 0, sigma = 1, Bayes = 0L, mu_a = 0,
+  sigma_a = 1, mu_b = 0, sigma_b = 2, mu_c = 4/13, w_c = 13,
+  min_a = 0.1, maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L,
   maxskip_j = 5L, rm_list = as.character(c("NONE")),
   thdist = "normal", e_ell = 1L, EM_dist = 1L)
 }
@@ -28,6 +28,8 @@ estip(x, model = "2PL", N = 31L, eMLL = 1e-06, eEM = 1e-04,
 \item{eM}{a CC in M step.}
 
 \item{emu}{a CC for population distribution mean.}
+
+\item{esd}{a CC for population distribution standard deviation.}
 
 \item{fc0}{a column of first item response}
 

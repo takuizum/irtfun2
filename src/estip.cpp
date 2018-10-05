@@ -16,6 +16,7 @@ using namespace Rcpp;
 //'@param eEM a CC in EM cycle.
 //'@param eM a CC in M step.
 //'@param emu a CC for population distribution mean.
+//'@param esd a CC for population distribution standard deviation.
 //'@param fc0 a column of first item response
 //'@param ng the number of groups
 //'@param gc0 a column of group.
@@ -47,12 +48,12 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 
-List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eMLL = 1e-6, const double eEM = 1e-4, const double eM = 1e-3, const double emu = 1e-4,
-                 int fc0 = 2,int ng = 1, int gc0 = 2, const double D = 1.702, const int fix = 1, const int print = 0, const double ic = 1/5,
-                 const double max = 6.0, const double min = -6.0, const double mu = 0, const double sigma = 1, const int Bayes = 0,
-                 const double mu_a = 0, const double sigma_a = 1, const double mu_b = 0, const double sigma_b = 2, const double mu_c = 4/13, const double w_c = 13,
-                 const double min_a = 0.1, const double maxabs_b = 20, const int maxiter_em = 200, const int maxiter_j = 20, const int maxskip_j = 5,
-                 CharacterVector rm_list = CharacterVector::create("NONE"), const String thdist = "normal", const int e_ell = 1, const int EM_dist = 1
+List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eMLL = 1e-6, const double eEM = 1e-4, const double eM = 1e-3,
+            const double emu = 1e-3, const double esd = 1e-2,
+            int fc0 = 2,int ng = 1, int gc0 = 2, const double D = 1.702, const int fix = 1, const int print = 0, const double ic = 1/5,
+            const double max = 6.0, const double min = -6.0, const double mu = 0, const double sigma = 1, const int Bayes = 0,
+            const double mu_a = 0, const double sigma_a = 1, const double mu_b = 0, const double sigma_b = 2, const double mu_c = 4/13, const double w_c = 13,               const double min_a = 0.1, const double maxabs_b = 20, const int maxiter_em = 200, const int maxiter_j = 20, const int maxskip_j = 5,
+            CharacterVector rm_list = CharacterVector::create("NONE"), const String thdist = "normal", const int e_ell = 1, const int EM_dist = 1
 ){
   struct LocalFunc{ // R function define
 
@@ -751,11 +752,192 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
       }
     }
 
+    // update group distribution
+    // 再計算
+
+    // 母集団ごとの平均と標準偏差を計算
+    LogicalVector conv4 (ng); // 平均と標準偏差の収束確認用
+
+    if(thdist == "normal"){
+      for(int g=0; g<ng; g++){
+        // probability
+        double mean_g = 0;
+        double sd_g = 0;
+        //int counti = 0; // 母集団の受検した項目数カウント用
+        for(int j=0; j<nj; j++){
+          // 集団内のだれも回答をしていなかったら，次の項目のループへスキップ。
+          if(ind(g,j) == 0) continue;
+
+          //counti = counti + 1;
+          double mean_j = 0;
+          double sNjm = 0; // 項目ごとの分点の受験者の期待度数の総和代入用
+          for(int m=0; m<N; m++){  // sum
+            double Njm = Nm[g][j][m];
+            sNjm = sNjm + Njm;
+          }
+
+          for(int m=0; m<N; m++){ // sum
+            double Njm = Nm[g][j][m];
+            double xm = Xm[m];
+            double tempM = xm * Njm/sNjm; // E(X) = \Sigma(x_i * prob_i)
+            mean_j = mean_j + tempM; //
+          } // end of m
+          mean_g = mean_g + mean_j; // 項目ごとの母集団平均を足し上げたもの
+
+          // sd
+
+          double var_j = 0;
+          double sd_j = 0;
+          for(int m=0; m<N; m++){
+            double Njm = Nm[g][j][m];
+            double xm = Xm[m];
+            double tempV = (xm -mean_j)*(xm -mean_j)*Njm/sNjm; // V(X) = Sigma(x_i-E(X))^2*prob_i
+            var_j = var_j + tempV;
+          }// end of m
+          sd_j = std::sqrt(var_j); // 項目ごとに計算した標準偏差
+          sd_g = sd_g + sd_j; // 項目ごとの母集団標準偏差を足し上げたもの
+
+
+        } // end of j
+
+        int counti = sum(ind(g,_));
+        mean[g] = mean_g/counti; // 全項目における母集団平均の，平均
+        sd[g] = sd_g/counti; // 全項目における母集団標準偏差の，平均
+
+        //Rcout << "mean: "<< mean[g]<<", sd: "<<sd[g]<<"\n";
+      }
+    } else if(thdist == "empirical"){ // 受検者の分点ごとの期待度数を用いて，次回のEステップの事前分布を計算する。
+      // 母集団ごとの平均と標準偏差を計算
+      for(int g=0; g<ng; g++){
+        // probability
+        double mean_g = 0;
+        double sd_g = 0;
+        //int counti = 0; // 母集団の受検した項目数カウント用
+        for(int j=0; j<nj; j++){
+          // 集団内のだれも回答をしていなかったら，次の項目のループへスキップ。
+          if(ind(g,j) == 0) continue;
+
+          //counti = counti + 1;
+          double mean_j = 0;
+          double sNjm = 0; // 項目ごとの分点の受験者の期待度数の総和代入用
+          for(int m=0; m<N; m++){  // sum
+            double Njm = Nm[g][j][m];
+            sNjm = sNjm + Njm;
+          }
+
+          for(int m=0; m<N; m++){ // sum
+            double Njm = Nm[g][j][m];
+            double xm = Xm[m];
+            double tempM = xm * Njm/sNjm; // E(X) = \Sigma(x_i * prob_i)
+            Um(m,g) += Njm/sNjm;
+            mean_j += tempM; //
+          } // end of m
+          mean_g = mean_g + mean_j; // 項目ごとの母集団平均を足し上げたもの
+
+          // sd
+
+          double var_j = 0;
+          double sd_j = 0;
+          for(int m=0; m<N; m++){
+            double Njm = Nm[g][j][m];
+            double xm = Xm[m];
+            double tempV = (xm -mean_j)*(xm -mean_j)*Njm/sNjm; // V(X) = Sigma(x_i-E(X))^2*prob_i
+            var_j = var_j + tempV;
+          }// end of m
+          sd_j = std::sqrt(var_j); // 項目ごとに計算した標準偏差
+          sd_g = sd_g + sd_j; // 項目ごとの母集団標準偏差を足し上げたもの
+
+        } // end of j
+
+        int counti = sum(ind(g,_));
+        // 収束判定用
+        if(fabs(mean[g] - mean_g/counti)<emu && fabs(sd[g] - sd_g/counti)<esd ) conv4[g] = 1;
+
+        mean[g] = mean_g/counti; // 全項目における母集団平均の，平均
+        sd[g] = sd_g/counti; // 全項目における母集団標準偏差の，平均
+        if(print >= 1) Rcout << "mean: "<< mean[g]<<", sd: "<<sd[g]<<"\n";
+
+        for(int m=0; m<N; m++){
+          Um(m,g) /= counti;
+        }
+
+      } // end of g
+    }
+
+
+    double A = 1;
+    double K = 0;
+
+    if(fix == 1){// && thdist != "empirical"){
+      A = sigma/sd[0];
+      K = mu - A * mean[0];
+    }
+
+    // 平均0，標準偏差1になるように線形変換
+    // 基準集団は１
+
+
+    // 平均と標準偏差をキャリブレーション
+    if(print == 1) Rprintf("\n----------------------------------");
+    for(int g=0; g<ng; g++){
+      mean[g] = A * mean[g] + K;
+      sd[g] = A * sd[g];
+      if (print >= 2) Rprintf("\n mean: %.5f, sd: %.5f ", mean[g],sd[g] );
+      //Rcout <<"\n mean: "<< mean[g]<<", sd: "<<sd[g];
+    }
+    if(print == 1) Rprintf("\n----------------------------------");
+
+    // 次回のEステップ用の項目パラメタもキャリブレーション
+
+    for(int j=0; j<nj; j++){
+      a = t0m(j,0); // a parameter
+      b = t0m(j,1); // b parameter
+      c=  t0m(j,2); // c parameter
+      LogicalVector rm_j = 0;
+      rm_j = j==rm_id;
+      if(skip_para(j,0)>maxskip_j || skip_para(j,1)>maxskip_j || skip_para(j,2)>maxskip_j || is_true(any(rm_j))){
+        // Mステップの更新をスキップした項目は，そのまま
+        t0(j,0) = a;
+        t0(j,1) = b;
+        t0(j,2) = c;
+        t0m(j,0) = a;
+        t0m(j,1) = b;
+        t0m(j,2) = c;
+      } else {
+        // きちんと更新をおこなった項目は，キャリブレーション
+        if(model != "1PL"){ // 1PLの場合は識別力の尺度調整を行わない
+          t0(j,0) = a/A;
+          t0m(j,0) = a/A;
+        } else {
+          t0(j,0) = a;
+          t0m(j,0) = a;
+        }
+        t0(j,1) = A * b + K;
+        t0(j,2) = c;
+        t0m(j,1) = A * b + K;
+        t0m(j,2) = c;
+      }
+    }
+
+    if(print >= 2){
+      Rprintf("\n Item Parameters in %d times iteration", count1);
+      for(int j=0; j<nj; j++){
+        //Rcout << "\n a: "<<t0m(j,0)<<", b: "<<t0m(j,1)<< ", c: "<<t0m(j,2);
+        Rprintf("\n a: %.5f, b: %.5f, c: %.5f",t0m(j,0), t0m(j,1), t0m(j,2));
+      }
+      Rcout <<"\n MLL difference is "<<diff;
+      Rprintf("\n------------------------------------------------------\n");
+
+    }
+
+
+    ////////////////////////////////////////////
     // 収束判定
+    ////////////////////////////////////////////
 
     //  項目パラメタの差の絶対値，か周辺対数尤度の差の絶対値が一定数よりも下回ったら収束
     // もしくは最大繰り返し回数に達したら，終了。
-    if((is_true(all(conv)))|| count1 == maxiter_em || diff < eMLL){
+    if((is_true(all(conv)))|| count1 == maxiter_em || diff < eMLL || is_true(all(conv4))){
       //Rcout << "eval EM conv\n";
       conv1 = 1; // 収束していたら繰り返しを打ち切り
 
@@ -891,187 +1073,10 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
       }// end of estimate SE for item j
 
 
-      Rcout << "\n The parameters has been converged by EM algorithm.\n Total iteration time is " << count1 << "\n";
-
-    } else if(print >= 1){
-      Rcout << "Update parameter for next E step.                                                                                \r";
-    }
-
-
-    // update group distribution
-    // 再計算
-
-
-    // 母集団ごとの平均と標準偏差を計算
-    if(thdist == "normal"){
-      for(int g=0; g<ng; g++){
-        // probability
-        double mean_g = 0;
-        double sd_g = 0;
-        //int counti = 0; // 母集団の受検した項目数カウント用
-        for(int j=0; j<nj; j++){
-          // 集団内のだれも回答をしていなかったら，次の項目のループへスキップ。
-          if(ind(g,j) == 0) continue;
-
-          //counti = counti + 1;
-          double mean_j = 0;
-          double sNjm = 0; // 項目ごとの分点の受験者の期待度数の総和代入用
-          for(int m=0; m<N; m++){  // sum
-            double Njm = Nm[g][j][m];
-            sNjm = sNjm + Njm;
-          }
-
-          for(int m=0; m<N; m++){ // sum
-            double Njm = Nm[g][j][m];
-            double xm = Xm[m];
-            double tempM = xm * Njm/sNjm; // E(X) = \Sigma(x_i * prob_i)
-            mean_j = mean_j + tempM; //
-          } // end of m
-          mean_g = mean_g + mean_j; // 項目ごとの母集団平均を足し上げたもの
-
-          // sd
-
-          double var_j = 0;
-          double sd_j = 0;
-          for(int m=0; m<N; m++){
-            double Njm = Nm[g][j][m];
-            double xm = Xm[m];
-            double tempV = (xm -mean_j)*(xm -mean_j)*Njm/sNjm; // V(X) = Sigma(x_i-E(X))^2*prob_i
-            var_j = var_j + tempV;
-          }// end of m
-          sd_j = std::sqrt(var_j); // 項目ごとに計算した標準偏差
-          sd_g = sd_g + sd_j; // 項目ごとの母集団標準偏差を足し上げたもの
-
-
-        } // end of j
-
-        int counti = sum(ind(g,_));
-        mean[g] = mean_g/counti; // 全項目における母集団平均の，平均
-        sd[g] = sd_g/counti; // 全項目における母集団標準偏差の，平均
-
-        //Rcout << "mean: "<< mean[g]<<", sd: "<<sd[g]<<"\n";
-      }
-    } else if(thdist == "empirical"){ // 受検者の分点ごとの期待度数を用いて，次回のEステップの事前分布を計算する。
-      // 母集団ごとの平均と標準偏差を計算
-      for(int g=0; g<ng; g++){
-        // probability
-        double mean_g = 0;
-        double sd_g = 0;
-        //int counti = 0; // 母集団の受検した項目数カウント用
-        for(int j=0; j<nj; j++){
-          // 集団内のだれも回答をしていなかったら，次の項目のループへスキップ。
-          if(ind(g,j) == 0) continue;
-
-          //counti = counti + 1;
-          double mean_j = 0;
-          double sNjm = 0; // 項目ごとの分点の受験者の期待度数の総和代入用
-          for(int m=0; m<N; m++){  // sum
-            double Njm = Nm[g][j][m];
-            sNjm = sNjm + Njm;
-          }
-
-          for(int m=0; m<N; m++){ // sum
-            double Njm = Nm[g][j][m];
-            double xm = Xm[m];
-            double tempM = xm * Njm/sNjm; // E(X) = \Sigma(x_i * prob_i)
-            Um(m,g) += Njm/sNjm;
-            mean_j += tempM; //
-          } // end of m
-          mean_g = mean_g + mean_j; // 項目ごとの母集団平均を足し上げたもの
-
-          // sd
-
-          double var_j = 0;
-          double sd_j = 0;
-          for(int m=0; m<N; m++){
-            double Njm = Nm[g][j][m];
-            double xm = Xm[m];
-            double tempV = (xm -mean_j)*(xm -mean_j)*Njm/sNjm; // V(X) = Sigma(x_i-E(X))^2*prob_i
-            var_j = var_j + tempV;
-          }// end of m
-          sd_j = std::sqrt(var_j); // 項目ごとに計算した標準偏差
-          sd_g = sd_g + sd_j; // 項目ごとの母集団標準偏差を足し上げたもの
-
-        } // end of j
-
-        int counti = sum(ind(g,_));
-        // 収束判定用
-        mean[g] = mean_g/counti; // 全項目における母集団平均の，平均
-        sd[g] = sd_g/counti; // 全項目における母集団標準偏差の，平均
-        if(print >= 1) Rcout << "mean: "<< mean[g]<<", sd: "<<sd[g]<<"\n";
-
-        for(int m=0; m<N; m++){
-          Um(m,g) /= counti;
-        }
-
-      } // end of g
-    }
-
-
-
-    double A = 1;
-    double K = 0;
-
-    if(fix == 1 && thdist != "empirical"){
-      A = sigma/sd[0];
-      K = mu - A * mean[0];
-    }
-    // 平均0，標準偏差1になるように線形変換
-    // 基準集団は１
-
-
-    // 平均と標準偏差をキャリブレーション
-    if(print == 1) Rprintf("\n----------------------------------");
-    for(int g=0; g<ng; g++){
-      mean[g] = A * mean[g] + K;
-      sd[g] = A * sd[g];
-      if (print >= 2) Rprintf("\n mean: %.5f, sd: %.5f ", mean[g],sd[g] );
-      //Rcout <<"\n mean: "<< mean[g]<<", sd: "<<sd[g];
-    }
-    if(print == 1) Rprintf("\n----------------------------------");
-
-    // 次回のEステップ用の項目パラメタもキャリブレーション
-
-    for(int j=0; j<nj; j++){
-      a = t0m(j,0); // a parameter
-      b = t0m(j,1); // b parameter
-      c=  t0m(j,2); // c parameter
-      LogicalVector rm_j = 0;
-      rm_j = j==rm_id;
-      if(skip_para(j,0)>maxskip_j || skip_para(j,1)>maxskip_j || skip_para(j,2)>maxskip_j || is_true(any(rm_j))){
-        // Mステップの更新をスキップした項目は，そのまま
-        t0(j,0) = a;
-        t0(j,1) = b;
-        t0(j,2) = c;
-        t0m(j,0) = a;
-        t0m(j,1) = b;
-        t0m(j,2) = c;
-      } else {
-        // きちんと更新をおこなった項目は，キャリブレーション
-        if(model != "1PL"){ // 1PLの場合は識別力の尺度調整を行わない
-          t0(j,0) = a/A;
-          t0m(j,0) = a/A;
-        } else {
-          t0(j,0) = a;
-          t0m(j,0) = a;
-        }
-        t0(j,1) = A * b + K;
-        t0(j,2) = c;
-        t0m(j,1) = A * b + K;
-        t0m(j,2) = c;
-      }
-    }
-
-    if(print >= 2){
-      Rprintf("\n Item Parameters in %d times iteration", count1);
-      for(int j=0; j<nj; j++){
-        //Rcout << "\n a: "<<t0m(j,0)<<", b: "<<t0m(j,1)<< ", c: "<<t0m(j,2);
-        Rprintf("\n a: %.5f, b: %.5f, c: %.5f",t0m(j,0), t0m(j,1), t0m(j,2));
-      }
-      Rcout <<"\n MLL difference is "<<diff;
-      Rprintf("\n------------------------------------------------------\n");
+      Rcout << "\n The parameters has been converged via EM algorithm.\n Total iteration time is " << count1 << "\n";
 
     }
+
 
   } // end of EM step
 
@@ -1258,7 +1263,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
 
       int counti = sum(ind(g,_));
       // 収束判定用
-      if(fabs(mean_pop[g] - mean_g/counti)<emu && fabs(sd_pop[g] - sd_g/counti)<emu ) conv0[g] = 1;
+      if(fabs(mean_pop[g] - mean_g/counti)<emu && fabs(sd_pop[g] - sd_g/counti)<esd ) conv0[g] = 1;
 
       mean_pop[g] = mean_g/counti; // 全項目における母集団平均の，平均
       sd_pop[g] = sd_g/counti; // 全項目における母集団標準偏差の，平均
