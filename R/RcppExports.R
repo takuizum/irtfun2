@@ -37,7 +37,7 @@
 #'@param thdist Dont use.
 #'@param e_ell a CC of expected log likelihood.
 #'@param EM_dist If 1, calculate esimated population distribution by EM argorithm.
-#' @export
+#'@export
 estip <- function(x, model = "2PL", N = 31L, eMLL = 1e-6, eEM = 1e-4, eM = 1e-3, emu = 1e-4, fc0 = 2L, ng = 1L, gc0 = 2L, D = 1.702, fix = 1L, print = 0L, ic = 1/5, max = 6.0, min = -6.0, mu = 0, sigma = 1, Bayes = 0L, mu_a = 0, sigma_a = 1, mu_b = 0, sigma_b = 2, mu_c = 4/13, w_c = 13, min_a = 0.1, maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L, maxskip_j = 5L, rm_list = as.character( c("NONE")), thdist = "normal", e_ell = 1L, EM_dist = 1L) {
     .Call(`_irtfun2_estip`, x, model, N, eMLL, eEM, eM, emu, fc0, ng, gc0, D, fix, print, ic, max, min, mu, sigma, Bayes, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, e_ell, EM_dist)
 }

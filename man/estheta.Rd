@@ -52,3 +52,6 @@ a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
 \description{
 A estimation theta function.
 }
+\author{
+Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
+}

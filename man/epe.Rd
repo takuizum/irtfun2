@@ -16,3 +16,6 @@ epe(x, y)
 Equipercentile equating function of row score.
 This function generates the Form Y equipercentle equivalent of score x on FormX, eY(x).
 }
+\author{
+Takumi Shibuya.
+}

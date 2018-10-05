@@ -2,8 +2,7 @@
 % Please edit documentation in R/mext-contract.R
 \name{probability}
 \alias{probability}
-\title{a function generates conditional probability for fixed ability on 2-parameter logistic model
-The original Fortran77 program was developed by Inoue,S., December 1990., extended by Shibayama,T., January 1991., translated into R by Shibayama,T. September 2008., functionalized by Itamiya, C., & Shibuya. T., June 2018.}
+\title{a function generates conditional probability for fixed ability on 2-parameter logistic model}
 \usage{
 probability(trait, a, b, D = 1.702)
 }
@@ -18,5 +17,10 @@ probability(trait, a, b, D = 1.702)
 }
 \description{
 a function generates conditional probability for fixed ability on 2-parameter logistic model
+}
+\references{
+Kolen, M. J., & Brennan, R. L. (2014). Test Equating, Scaling, and Linking. Springer.
+}
+\author{
 The original Fortran77 program was developed by Inoue,S., December 1990., extended by Shibayama,T., January 1991., translated into R by Shibayama,T. September 2008., functionalized by Itamiya, C., & Shibuya. T., June 2018.
 }

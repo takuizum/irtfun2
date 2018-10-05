@@ -402,7 +402,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
       npoint <- N
       xnodes <- seq(mintheta, maxtheta, length.out = N)
       weight <- dnorm(xnodes, mu, sigma)
-      weight <- weight/sum(xnodes)
+      weight <- weight/sum(weight)
     }
   }
 
@@ -515,7 +515,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
       yheight <- Fmaxpdc(xi,map_apply[k],a,b,c,D)*1.001
 
       # 乱数発生時の，θ軸の最大値を設定。
-      zmin <- -maxtheta + eap
+      zmin <- maxtheta + eap
       zmax <- mintheta + eap
 
       nofpv <- 0
@@ -523,9 +523,9 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
       while( nofpv <= nofrands ){
 
         y <- runif( 1, 0, yheight)
-        z <- runif( 1, zmin, zmax)
+        z <- runif( 1, zmax, zmin)
         times_sub <- times_sub +1
-        fg <- apply(xi,1,Ffg,theta=z,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+        fg <- apply(matrix(xi),2,Ffg,theta=z,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
         fgvalue <- fg/const
 
         if( y <= fgvalue){
