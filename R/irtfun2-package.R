@@ -512,7 +512,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
       const <- eap_apply[3,k]
 
       #乱数発生時の，P(θ)軸の最大値を設定。
-      yheight <- Fmaxpdc(xi,map_apply[k],a,b,c)*1.001
+      yheight <- Fmaxpdc(xi,map_apply[k],a,b,c,D)*1.001
 
       # 乱数発生時の，θ軸の最大値を設定。
       zmin <- -maxtheta + eap
