@@ -333,6 +333,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@param sigma same as above.
 #'@param counter Display progress every counter value.
 #'@return a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
+#'@author Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
 #'
 #'@importFrom stats sd
 #'@importFrom stats var

@@ -1,10 +1,12 @@
 
 #' a function generates conditional probability for fixed ability on 2-parameter logistic model
-#' The original Fortran77 program was developed by Inoue,S., December 1990., extended by Shibayama,T., January 1991., translated into R by Shibayama,T. September 2008., functionalized by Itamiya, C., & Shibuya. T., June 2018.
+#'
 #' @param trait a vector of theta on IRT.
 #' @param a a slope parameter
 #' @param b a location parameter
 #' @param D a factor constant
+#' @author The original Fortran77 program was developed by Inoue,S., December 1990., extended by Shibayama,T., January 1991., translated into R by Shibayama,T. September 2008., functionalized by Itamiya, C., & Shibuya. T., June 2018.
+#' @references Kolen, M. J., & Brennan, R. L. (2014). Test Equating, Scaling, and Linking. Springer.
 #' @export
 
 probability <- function(trait,a,b,D=1.702){
@@ -151,6 +153,7 @@ tscore_dist <- function(theta,a,b,D=1.702){
 #' This function generates the Form Y equipercentle equivalent of score x on FormX, eY(x).
 #' @param x test score of Form X
 #' @param y test score of Form Y
+#' @author Takumi Shibuya.
 #' @export
 
 epe <- function(x, y){

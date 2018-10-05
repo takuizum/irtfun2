@@ -43,7 +43,7 @@ using namespace Rcpp;
 //'@param thdist Dont use.
 //'@param e_ell a CC of expected log likelihood.
 //'@param EM_dist If 1, calculate esimated population distribution by EM argorithm.
-//' @export
+//'@export
 // [[Rcpp::export]]
 
 
