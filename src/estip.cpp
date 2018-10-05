@@ -3,6 +3,10 @@
 
 using namespace Rcpp;
 
+
+// [[Rcpp::plugins("cpp11")]]
+// [[Rcpp::depends(BH)]]
+
 //'Estimate item parameter for binary{0,1} response data.
 //'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now.
 //'@param x an item response data which class is data.frame object.
@@ -39,10 +43,7 @@ using namespace Rcpp;
 //'@param thdist Dont use.
 //'@param e_ell a CC of expected log likelihood.
 //'@param EM_dist If 1, calculate esimated population distribution by EM argorithm.
-//'@export
-
-// [[Rcpp::plugins("cpp11")]]
-// [[Rcpp::depends(BH)]]
+//' @export
 // [[Rcpp::export]]
 
 
