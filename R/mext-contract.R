@@ -57,7 +57,7 @@ probability <- function(trait,a,b,D=1.702){
 obscore_dist <- function(theta,a,b,D=1.702,name="test",color="cyan", output=1){
 
   a <- as.matrix(a)
-  b <- as.matrix(b)　　　
+  b <- as.matrix(b)
   theta <- as.matrix(theta)
 
 
@@ -123,7 +123,7 @@ truescore<-function(trait,a,b,D){
 tscore_dist <- function(theta,a,b,D=1.702){
   #--------------------------------------------------------------#
   a <- as.matrix(a)
-  b <- as.matrix(b)　　　
+  b <- as.matrix(b)
   theta <- as.matrix(theta)
 
   # Number of Items and Subjects

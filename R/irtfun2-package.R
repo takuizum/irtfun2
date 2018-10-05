@@ -9,6 +9,11 @@
 #' @importFrom Rcpp sourceCpp
 "_PACKAGE"
 
+.onUnload = function(libpath) {
+  library.dynam.unload("irtfun2", libpath)
+}
+
+
 # P(theta) in two-parameter logisticmodel
 ptheta <- function(theta,a,b,c,D=1.702){
   c+(1-c)/(1+exp(-D*a*(theta-b)))
