@@ -11,13 +11,14 @@ using namespace Rcpp;
 //'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now.
 //'@param x an item response data which class is data.frame object.
 //'@param model Character.U can select which one, "1PL","2PL","3PL".
-//'@param N the number of nodes in integration
+//'@param N the number of nodes in integration.
+//'@param bg the number ob base grade.
 //'@param eMLL a convergence criteria(CC) forf marginal log likelihood.
 //'@param eEM a CC in EM cycle.
 //'@param eM a CC in M step.
 //'@param emu a CC for population distribution mean.
 //'@param esd a CC for population distribution standard deviation.
-//'@param fc0 a column of first item response
+//'@param fc0 a column of first item response.
 //'@param ng the number of groups
 //'@param gc0 a column of group.
 //'@param D a scaling constant.
@@ -48,7 +49,8 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 
-List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eMLL = 1e-6, const double eEM = 1e-4, const double eM = 1e-3,
+List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 = 1,
+            const double eMLL = 1e-6, const double eEM = 1e-4, const double eM = 1e-3,
             const double emu = 1e-3, const double esd = 1e-2,
             int fc0 = 2,int ng = 1, int gc0 = 2, const double D = 1.702, const int fix = 1, const int print = 0, const double ic = 1/5,
             const double max = 6.0, const double min = -6.0, const double mu = 0, const double sigma = 1, const int Bayes = 0,
@@ -86,6 +88,8 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
   const int ni = x.nrows(); // subject n
 
   const int gc = gc0 -1;
+
+  const int bg = bg0 -1;
 
   IntegerVector group (ni,1);
   if(ng != 1) group = x[gc];
@@ -187,9 +191,9 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
       t0m(j,0) = a0;
       initial(j,0) = a0;
     } else {
-      t0(j,0) = 1.0;
-      t0m(j,0) = 1.0;
-      initial(j,0) = 1.0;
+      t0(j,0) = 1.702/D;
+      t0m(j,0) = 1.702/D;
+      initial(j,0) = 1.702/D;
     }
     // b parameter
     t0(j,1) =  b0;
@@ -494,7 +498,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
 
     if(print >= 1) Rcout << "\n expected log complete data likelihood is " <<ell;
 
-    if(traits::is_nan<REALSXP>(ell) && e_ell == 1){
+    if(traits::is_nan<REALSXP>(ell) && e_ell == 1 && Bayes != 1){
       // 対数尤度の計算に失敗したら，計算を中止する。
       //List res = List::create(_["para"]=t0, _["Lim"]=Lim,_["diff"]=diff,_["rjm"]=rjm,_["Nm"]=Nm);
       //return(res);
@@ -678,7 +682,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
         }
 
 
-        if(print >= 2) Rprintf("item %d -- abs a is %.7f, abs b is %.7f, abs c is %.7f \r", j+1, fabs(a-a1), fabs(b-b1), fabs(c-c1));
+        if(print >= 3) Rprintf("item %d -- abs a is %.7f, abs b is %.7f, abs c is %.7f \r", j+1, fabs(a-a1), fabs(b-b1), fabs(c-c1));
         //Rcout <<"fabs a is"<<fabs(a-a1)<<". fabs b is"<<fabs(b-b1)<<". fabs c is"<<fabs(c-c1)<<"\r";
 
 
@@ -869,8 +873,8 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const double eM
     double K = 0;
 
     if(fix == 1){// && thdist != "empirical"){
-      A = sigma/sd[0];
-      K = mu - A * mean[0];
+      A = sigma/sd[bg];
+      K = mu - A * mean[bg];
     }
 
     // 平均0，標準偏差1になるように線形変換
