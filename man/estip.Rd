@@ -3,9 +3,9 @@
 \name{estip}
 \alias{estip}
 \title{Estimate item parameter for binary{0,1} response data.
-1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now.}
+1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.}
 \usage{
-estip(x, model = "2PL", N = 31L, bg = 1L, eMLL = 1e-06,
+estip(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-06,
   eEM = 1e-04, eM = 0.001, emu = 0.001, esd = 0.01, fc0 = 2L,
   ng = 1L, gc0 = 2L, D = 1.702, fix = 1L, print = 0L, ic = 1/5,
   max = 6, min = -6, mu = 0, sigma = 1, Bayes = 0L, mu_a = 0,
@@ -20,8 +20,6 @@ estip(x, model = "2PL", N = 31L, bg = 1L, eMLL = 1e-06,
 \item{model}{Character.U can select which one, "1PL","2PL","3PL".}
 
 \item{N}{the number of nodes in integration.}
-
-\item{bg}{the number ob base grade.}
 
 \item{eMLL}{a convergence criteria(CC) forf marginal log likelihood.}
 
@@ -55,7 +53,7 @@ estip(x, model = "2PL", N = 31L, bg = 1L, eMLL = 1e-06,
 
 \item{sigma}{same as above.}
 
-\item{Bayes}{If 1, marginal Bayesian estimation runs.}
+\item{Bayes}{If 1, marginal Bayesian estimation runs. This option is unstable. Don't use.}
 
 \item{mu_a}{a hyperparameter of log normal dist for slope parameter.}
 
@@ -86,8 +84,10 @@ estip(x, model = "2PL", N = 31L, bg = 1L, eMLL = 1e-06,
 \item{e_ell}{a CC of expected log likelihood.}
 
 \item{EM_dist}{If 1, calculate esimated population distribution by EM argorithm.}
+
+\item{bg}{the number ob base grade.}
 }
 \description{
 Estimate item parameter for binary{0,1} response data.
-1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now.
+1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.
 }

@@ -8,7 +8,7 @@ using namespace Rcpp;
 // [[Rcpp::depends(BH)]]
 
 //'Estimate item parameter for binary{0,1} response data.
-//'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now.
+//'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.
 //'@param x an item response data which class is data.frame object.
 //'@param model Character.U can select which one, "1PL","2PL","3PL".
 //'@param N the number of nodes in integration.
@@ -29,7 +29,7 @@ using namespace Rcpp;
 //'@param min a minimum value of theta in integration.
 //'@param mu a hyperparameter for theta dist.
 //'@param sigma same as above.
-//'@param Bayes If 1, marginal Bayesian estimation runs.
+//'@param Bayes If 1, marginal Bayesian estimation runs. This option is unstable. Don't use.
 //'@param mu_a a hyperparameter of log normal dist for slope parameter.
 //'@param sigma_a same as above.
 //'@param mu_b a hyperparameter of normal dist for location parameter.
@@ -488,7 +488,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
           }
           da = -1/a - (log(a)-mu_a)/a*sigma_a*sigma_a;
           db = -(b-mu_b)/sigma_b*sigma_b;
-          dc = (alpha_c-2)/c - (beta_c-2)/(1-c);
+          dc = (alpha_c-2)/c - (beta_c-2)/(1-c); // たぶんここのパラメタの計算が非数になる原因だと思われる。
           ell += (da + db + dc);
           if(traits::is_nan<REALSXP>(ell)) ell_check = j+1;
         }

@@ -2,7 +2,7 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #'Estimate item parameter for binary{0,1} response data.
-#'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now.
+#'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.
 #'@param x an item response data which class is data.frame object.
 #'@param model Character.U can select which one, "1PL","2PL","3PL".
 #'@param N the number of nodes in integration.
@@ -23,7 +23,7 @@
 #'@param min a minimum value of theta in integration.
 #'@param mu a hyperparameter for theta dist.
 #'@param sigma same as above.
-#'@param Bayes If 1, marginal Bayesian estimation runs.
+#'@param Bayes If 1, marginal Bayesian estimation runs. This option is unstable. Don't use.
 #'@param mu_a a hyperparameter of log normal dist for slope parameter.
 #'@param sigma_a same as above.
 #'@param mu_b a hyperparameter of normal dist for location parameter.
