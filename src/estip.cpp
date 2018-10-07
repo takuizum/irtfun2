@@ -12,7 +12,7 @@ using namespace Rcpp;
 //'@param x an item response data which class is data.frame object.
 //'@param model Character.U can select which one, "1PL","2PL","3PL".
 //'@param N the number of nodes in integration.
-//'@param bg the number ob base grade.
+//'@param bg0 the number ob base grade.
 //'@param eMLL a convergence criteria(CC) forf marginal log likelihood.
 //'@param eEM a CC in EM cycle.
 //'@param eM a CC in M step.

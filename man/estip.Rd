@@ -21,6 +21,8 @@ estip(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-06,
 
 \item{N}{the number of nodes in integration.}
 
+\item{bg0}{the number ob base grade.}
+
 \item{eMLL}{a convergence criteria(CC) forf marginal log likelihood.}
 
 \item{eEM}{a CC in EM cycle.}
@@ -84,8 +86,6 @@ estip(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-06,
 \item{e_ell}{a CC of expected log likelihood.}
 
 \item{EM_dist}{If 1, calculate esimated population distribution by EM argorithm.}
-
-\item{bg}{the number ob base grade.}
 }
 \description{
 Estimate item parameter for binary{0,1} response data.
