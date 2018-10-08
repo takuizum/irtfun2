@@ -1,7 +1,9 @@
 # irtfun2
 ------
 ## This package provides some usefule function.
-このパッケージではIRTの分析に使える関数を使用できます。
+このパッケージではIRTの分析に使える関数を使用できます。(2018/10/09)
+
+### バージョン0.4.0での変更点。esthetaのPVsオプションで，C++による高速なリジェクションサンプリングを可能にしました。argument'sampling_engine="Cpp"'で実行可能です。
 
 ### estip
 "estip" is a function for marginal maximum likelihood estimation of item parameter. For binary response data only. MML via EM is a standard estimation method in IRT item parameter estimaiton.
