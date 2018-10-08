@@ -1,6 +1,6 @@
 Package: irtfun2
 Title: Some useful functions for IRT
-Version: 0.3.1
+Version: 0.3.2
 Authors@R: person("Takumi", "Shibuya", email = "sep10.taku.izum@gmail.com", role = c("aut", "cre"))
 Description: This package provedes functions for IRT analysis, for instance, estimation item and subject parameter.
 Depends: R (>= 3.4.0)

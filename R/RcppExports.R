@@ -61,7 +61,7 @@ estip <- function(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-6, eEM = 1e-4, 
 #'@param mu p hyper parameter of a posterior distribution.
 #'@param sigma same as above.
 #'@export
-theta_pv <- function(xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma) {
-    .Call(`_irtfun2_theta_pv`, xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma)
+theta_pv <- function(x, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma) {
+    .Call(`_irtfun2_theta_pv`, x, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma)
 }
 

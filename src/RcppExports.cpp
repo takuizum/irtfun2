@@ -52,12 +52,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // theta_pv
-NumericMatrix theta_pv(List xall, const int nofrands, NumericVector eap_apply, NumericVector const_apply, NumericVector map_apply, const int n, double maxtheta, double mintheta, NumericVector a, NumericVector b, NumericVector c, const double D, const double mu, const double sigma);
-RcppExport SEXP _irtfun2_theta_pv(SEXP xallSEXP, SEXP nofrandsSEXP, SEXP eap_applySEXP, SEXP const_applySEXP, SEXP map_applySEXP, SEXP nSEXP, SEXP maxthetaSEXP, SEXP minthetaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP DSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+NumericMatrix theta_pv(DataFrame x, const int nofrands, NumericVector eap_apply, NumericVector const_apply, NumericVector map_apply, const int n, double maxtheta, double mintheta, NumericVector a, NumericVector b, NumericVector c, const double D, const double mu, const double sigma);
+RcppExport SEXP _irtfun2_theta_pv(SEXP xSEXP, SEXP nofrandsSEXP, SEXP eap_applySEXP, SEXP const_applySEXP, SEXP map_applySEXP, SEXP nSEXP, SEXP maxthetaSEXP, SEXP minthetaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP DSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type xall(xallSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type x(xSEXP);
     Rcpp::traits::input_parameter< const int >::type nofrands(nofrandsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type eap_apply(eap_applySEXP);
     Rcpp::traits::input_parameter< NumericVector >::type const_apply(const_applySEXP);
@@ -71,7 +71,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type D(DSEXP);
     Rcpp::traits::input_parameter< const double >::type mu(muSEXP);
     Rcpp::traits::input_parameter< const double >::type sigma(sigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(theta_pv(xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma));
+    rcpp_result_gen = Rcpp::wrap(theta_pv(x, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma));
     return rcpp_result_gen;
 END_RCPP
 }

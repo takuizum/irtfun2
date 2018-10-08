@@ -14,11 +14,11 @@ estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
 
 \item{param}{a item parameter file.If class is df, parameter column starts from second column and the order is a, b, c.}
 
-\item{est}{estimation method option.EAP,MAP,MLE,PVs.}
+\item{est}{estimation method option. "EAP","MAP","MLE","PVs."}
 
 \item{nofrands}{the number of PVs.}
 
-\item{method}{iteration method option in MLE and MAP. NR is Newton Rapthon, SANN is Simulated Aannealing, Brent is optimization using optimise function}
+\item{method}{iteration method option in MLE and MAP. "NR" is Newton Rapthon, "SANN" is Simulated Aannealing, "Brent" is optimization using optimise function}
 
 \item{file}{a name of output csv file.}
 
@@ -44,7 +44,7 @@ estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
 
 \item{sigma}{same as above.}
 
-\item{sampling_engine}{an option of sampling engine. Dont use.}
+\item{sampling_engine}{an option of sampling engine. "R" is for loop in R lang, but "Cpp" is for loop in C++ lang.}
 }
 \value{
 a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.

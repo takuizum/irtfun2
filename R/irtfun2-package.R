@@ -316,9 +316,9 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'
 #'@param xall a item response data
 #'@param param a item parameter file.If class is df, parameter column starts from second column and the order is a, b, c.
-#'@param est estimation method option.EAP,MAP,MLE,PVs.
+#'@param est estimation method option. "EAP","MAP","MLE","PVs."
 #'@param nofrands the number of PVs.
-#'@param method iteration method option in MLE and MAP. NR is Newton Rapthon, SANN is Simulated Aannealing, Brent is optimization using optimise function
+#'@param method iteration method option in MLE and MAP. "NR" is Newton Rapthon, "SANN" is Simulated Aannealing, "Brent" is optimization using optimise function
 #'@param file a name of output csv file.
 #'@param IDc colomn of ID, default is 1.Even If df has no ID columns this function works.
 #'@param gc column of group or population numbers. If df has no grouo ID, set 0.
@@ -331,7 +331,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@param mintheta the minimum value of theta in integration.
 #'@param mu a hyperparameter of prior distribution.
 #'@param sigma same as above.
-#'@param sampling_engine an option of sampling engine. Dont use.
+#'@param sampling_engine an option of sampling engine. "R" is for loop in R lang, but "Cpp" is for loop in C++ lang.
 #'@return a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
 #'@author Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
 #'
@@ -504,11 +504,11 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
     cat("Sampling Plausible Values based on von Neumann Rejection sampling.\n")
 
     if(sampling_engine=="Cpp"){
-      cat("Cpp version.")
+      cat("C++ version.")
       d1 <- eap_apply[1,]
       d2 <- eap_apply[3,]
-      theta_pv(xall=x.all, nofrands=nofrands,eap_apply=d1,const_apply=d2,map_apply=map_apply,
-               n=n,maxtheta=maxtheta,mintheta=mintheta,a=a,b=b,c=c,D=D,mu=mu,sigma=sigma)
+      pv <- theta_pv(x=x.all, nofrands=nofrands,eap_apply=d1,const_apply=d2,map_apply=map_apply,
+                     n=n,maxtheta=maxtheta,mintheta=mintheta,a=a,b=b,c=c,D=D,mu=mu,sigma=sigma)
     } else if( sampling_engine=="R"){
       cat("R version \n")
       for(k in 1:n){
@@ -585,7 +585,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
 
     #result
 
-    result <- data.frame(ID=ID,GROUP=group,SCORE=xscore,EAP=eap_apply[1,],MAP=map_apply,PVmeans_W=pvmeans_w,PV=pv,AREAS=const)
+    result <- data.frame(ID=ID,GROUP=group,SCORE=xscore,EAP=eap_apply[1,],MAP=map_apply,PVmeans_W=pvmeans_w,PV=pv,AREAS=eap_apply[3,])
     plausible_values <-data.frame(ID=ID,Group=group,PV=pv)
     if(output==T){
       #message("結果のCSVファイルを書き出しています。")

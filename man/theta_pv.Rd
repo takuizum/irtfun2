@@ -4,12 +4,10 @@
 \alias{theta_pv}
 \title{Sampling plausible values(PVs) based on rejection sampling.}
 \usage{
-theta_pv(xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta,
+theta_pv(x, nofrands, eap_apply, const_apply, map_apply, n, maxtheta,
   mintheta, a, b, c, D, mu, sigma)
 }
 \arguments{
-\item{xall}{response data}
-
 \item{nofrands}{the number of PVs}
 
 \item{eap_apply}{a numeric vector of estimated EAP.}
@@ -35,6 +33,8 @@ theta_pv(xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta,
 \item{mu}{p hyper parameter of a posterior distribution.}
 
 \item{sigma}{same as above.}
+
+\item{xall}{response data}
 }
 \description{
 Sampling plausible values(PVs) based on rejection sampling.
