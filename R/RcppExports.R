@@ -46,7 +46,7 @@ estip <- function(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-6, eEM = 1e-4, 
 
 #'Sampling plausible values(PVs) based on rejection sampling.
 #'
-#'@param xall response data
+#'@param x response data
 #'@param nofrands the number of PVs
 #'@param eap_apply a numeric vector of estimated EAP.
 #'@param const_apply a numeric vector of const of a posterior distribution.
