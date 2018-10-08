@@ -7,7 +7,7 @@
 estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
   file = "default", output = FALSE, IDc = 1, gc = 2, fc = 3,
   gh = TRUE, N = 31, D = 1.702, maxtheta = 6, mintheta = -6,
-  mu = 0, sigma = 1, counter = 1000)
+  mu = 0, sigma = 1, sampling_engine = "R")
 }
 \arguments{
 \item{xall}{a item response data}
@@ -44,7 +44,7 @@ estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
 
 \item{sigma}{same as above.}
 
-\item{counter}{Display progress every counter value.}
+\item{sampling_engine}{an option of sampling engine. Dont use.}
 }
 \value{
 a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.

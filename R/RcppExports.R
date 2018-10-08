@@ -44,3 +44,24 @@ estip <- function(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-6, eEM = 1e-4, 
     .Call(`_irtfun2_estip`, x, model, N, bg0, eMLL, eEM, eM, emu, esd, fc0, ng, gc0, D, fix, print, ic, max, min, mu, sigma, Bayes, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, e_ell, EM_dist)
 }
 
+#'Sampling plausible values(PVs) based on rejection sampling.
+#'
+#'@param xall response data
+#'@param nofrands the number of PVs
+#'@param eap_apply a numeric vector of estimated EAP.
+#'@param const_apply a numeric vector of const of a posterior distribution.
+#'@param map_apply a numeric vector of estimated MAP.
+#'@param n the number of subjects.
+#'@param maxtheta a max value of theta.
+#'@param mintheta a mininum value of theta.
+#'@param a an item slope parameter vector.
+#'@param b an item location parameter vector.
+#'@param c an item asymptote parameter vector.
+#'@param D a factor constant.
+#'@param mu p hyper parameter of a posterior distribution.
+#'@param sigma same as above.
+#'@export
+theta_pv <- function(xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma) {
+    .Call(`_irtfun2_theta_pv`, xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma)
+}
+

@@ -51,9 +51,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// theta_pv
+NumericMatrix theta_pv(List xall, const int nofrands, NumericVector eap_apply, NumericVector const_apply, NumericVector map_apply, const int n, double maxtheta, double mintheta, NumericVector a, NumericVector b, NumericVector c, const double D, const double mu, const double sigma);
+RcppExport SEXP _irtfun2_theta_pv(SEXP xallSEXP, SEXP nofrandsSEXP, SEXP eap_applySEXP, SEXP const_applySEXP, SEXP map_applySEXP, SEXP nSEXP, SEXP maxthetaSEXP, SEXP minthetaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP DSEXP, SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type xall(xallSEXP);
+    Rcpp::traits::input_parameter< const int >::type nofrands(nofrandsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type eap_apply(eap_applySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type const_apply(const_applySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type map_apply(map_applySEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type maxtheta(maxthetaSEXP);
+    Rcpp::traits::input_parameter< double >::type mintheta(minthetaSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type b(bSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type c(cSEXP);
+    Rcpp::traits::input_parameter< const double >::type D(DSEXP);
+    Rcpp::traits::input_parameter< const double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< const double >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(theta_pv(xall, nofrands, eap_apply, const_apply, map_apply, n, maxtheta, mintheta, a, b, c, D, mu, sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_irtfun2_estip", (DL_FUNC) &_irtfun2_estip, 36},
+    {"_irtfun2_theta_pv", (DL_FUNC) &_irtfun2_theta_pv, 14},
     {NULL, NULL, 0}
 };
 

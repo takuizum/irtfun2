@@ -331,7 +331,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@param mintheta the minimum value of theta in integration.
 #'@param mu a hyperparameter of prior distribution.
 #'@param sigma same as above.
-#'@param counter Display progress every counter value.
+#'@param sampling_engine an option of sampling engine. Dont use.
 #'@return a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
 #'@author Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
 #'
@@ -341,7 +341,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@export
 
 estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="default", output=FALSE, IDc=1, gc=2, fc=3,
-                    gh = TRUE, N = 31, D=1.702, maxtheta = 6, mintheta = -6, mu=0, sigma=1, counter=1000){
+                    gh = TRUE, N = 31, D=1.702, maxtheta = 6, mintheta = -6, mu=0, sigma=1, sampling_engine="R"){
 
   #message("データチェック")
   ID <- xall[,IDc]
@@ -457,13 +457,13 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
   if(est == "EAP"){
 
     # EAP
-    eap_m <- eap_apply[1,] %>% round(digits = 5)
+    eap_m <- eap_apply[1,]
     # estimate standard error for EAP estimator
     SE    <- eap_apply[2,] %>% round(digits = 5)
     z3 <- apply(cbind(eap_apply[1,], x.all), 1, pfit, a=a,b=b,c=c,D=D) %>% round(digits = 5)
     lol <-  apply(cbind(eap_apply[1,], x.all), 1, lolF, a=a,b=b,c=c,D=D) %>% round(digits = 5)
 
-    result <- data.frame(ID=ID,GROUP=group,SCORE=xscore,EAP=eap_m,SE=SE,z3=z3,lol=lol)
+    result <- data.frame(ID=ID,GROUP=group,SCORE=xscore,EAP=eap_m,const=eap_apply[3,],SE=SE,z3=z3,lol=lol)
     list("res" = result, "EAPmean&sd" = c(mean(eap_m),sd(eap_m)) %>% round(digits = 5))
 
   }else if(est == "MAP"){
@@ -503,45 +503,50 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
 
     cat("Sampling Plausible Values based on von Neumann Rejection sampling.\n")
 
-    for(k in 1:n){
-      xi <- x.all[k,]
-      times <- times + 1
+    if(sampling_engine=="Cpp"){
+      cat("Cpp version.")
+      d1 <- eap_apply[1,]
+      d2 <- eap_apply[3,]
+      theta_pv(xall=x.all, nofrands=nofrands,eap_apply=d1,const_apply=d2,map_apply=map_apply,
+               n=n,maxtheta=maxtheta,mintheta=mintheta,a=a,b=b,c=c,D=D,mu=mu,sigma=sigma)
+    } else if( sampling_engine=="R"){
+      cat("R version \n")
+      for(k in 1:n){
+        xi <- x.all[k,]
+        times <- times + 1
 
-      #すでに計算してあるEAP推定値と，事後分布の分子を取り出して行列として展開。
-      eap   <- eap_apply[1,k]
-      const <- eap_apply[3,k]
+        #すでに計算してあるEAP推定値と，事後分布の分子を取り出して行列として展開。
+        eap   <- eap_apply[1,k]
+        const <- eap_apply[3,k]
 
-      #乱数発生時の，P(θ)軸の最大値を設定。
-      yheight <- Fmaxpdc(xi,map_apply[k],a,b,c,D)*1.001
+        #乱数発生時の，P(θ)軸の最大値を設定。
+        yheight <- Ffg(xi=xi,theta=map_apply[k],a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+        yheight <- yheight/const*1.001
+        #cat("yheight is ",yheight,"\r")
 
-      # 乱数発生時の，θ軸の最大値を設定。
-      zmin <- maxtheta + eap
-      zmax <- mintheta + eap
+        # 乱数発生時の，θ軸の最大値を設定。
+        zmax <- maxtheta + eap
+        zmin <- mintheta + eap
 
-      nofpv <- 0
-      times_sub <- 0
-      while( nofpv <= nofrands ){
+        nofpv <- 0
+        while( nofpv <= nofrands ){
 
-        y <- runif( 1, 0, yheight)
-        z <- runif( 1, zmax, zmin)
-        times_sub <- times_sub +1
-        fg <- apply(matrix(xi),2,Ffg,theta=z,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
-        fgvalue <- fg/const
+          y <- runif(n = 1, min = 0, max = yheight)
+          z <- runif(n = 1, min = zmin, max = zmax)
+          fg <- Ffg(xi=xi,theta=z,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+          fgvalue <- fg/const
+          #cat(" y is",y," fgvalue is", fgvalue,"\r")
 
-        if( y <= fgvalue){
-          nofpv <- nofpv + 1
-          if( nofpv > nofrands) break
-          pv[k,nofpv] <- z
+          if( y <= fgvalue){
+            nofpv <- nofpv + 1
+            if( nofpv > nofrands) break
+            pv[k,nofpv] <- z
+          }
         }
-      }
-
-      if(times==counter){
         cat(k ," / ", n," \r")
-        #message(k,"人目の受検者の推算値の発生が終了しました。")
-        times <- 0
       }
-
     }
+
 
     #推算値の組ごとにもとめた統計量の平均を計算。なお，母集団が複数存在する場合には母集団ごとに求める。
     pvG <- data.frame(group,pv)
@@ -591,7 +596,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
       write.csv(SE,paste0(file,"_PVS standard error.csv"),quote=F,row.names = F)
     }
     pv <- data.frame(ID=ID,group=group,SCORE=xscore,EAP=eap_apply[1,],MAP=map_apply,PV=pv)
-    list("PVs" = pv, "EAPmean&sd" = c(mean(eap),sd(eap)),
+    list("PVs" = pv, "EAPmean&sd" = c(mean(eap_apply[1,]),sd(eap_apply[1,])),
          "MAPmean&sd" = c(mean(map_apply), sd(map_apply)), "PVmean&sd" = c(M_M, M_SD), "PS" = PS, "SE" = SE)
   }
 }

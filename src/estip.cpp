@@ -57,6 +57,10 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
             const double mu_a = 0, const double sigma_a = 1, const double mu_b = 0, const double sigma_b = 2, const double mu_c = 4/13, const double w_c = 13,               const double min_a = 0.1, const double maxabs_b = 20, const int maxiter_em = 200, const int maxiter_j = 20, const int maxskip_j = 5,
             CharacterVector rm_list = CharacterVector::create("NONE"), const String thdist = "normal", const int e_ell = 1, const int EM_dist = 1
 ){
+  // argument check
+  if(model != "1PL" && model != "2PL" && model != "3PL") stop("Errpr! option string of 'model' is incorrect.");
+  if(thdist != "normal" && thdist != "empirical") stop("Errpr! option string of 'thdist' is incorrect.");
+
   struct LocalFunc{ // R function define
 
     static NumericVector colSums_cpp(NumericMatrix mat){ // R::colSums
@@ -86,15 +90,11 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
   // 入力データの確認
   const int nj = lc - fc;
   const int ni = x.nrows(); // subject n
-
   const int gc = gc0 -1;
-
   const int bg = bg0 -1;
 
   IntegerVector group (ni,1);
   if(ng != 1) group = x[gc];
-  //NumericVector group = x[gc];
-
   group = group -1; // 集団変数を，C++の要素数に適合するように，-1する。
 
   NumericMatrix xall (ni, nj);
@@ -277,6 +277,8 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
     ///////////////////////
 
     count1 = count1 + 1; // count up
+
+    checkUserInterrupt(); // If user input Ctrl + c, stop EM cycle.
 
     if(print>=1)Rcout <<count1 << " times E-step calculation. \r";
 

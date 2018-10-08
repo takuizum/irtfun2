@@ -6,7 +6,7 @@
 \alias{irtfun2-package}
 \title{irtfun2: Some useful functions for IRT}
 \description{
-This package provede functions for IRT analysis, for instance, estimation item and subject parameter.
+This package provedes functions for IRT analysis, for instance, estimation item and subject parameter.
 }
 \author{
 \strong{Maintainer}: Takumi Shibuya \email{sep10.taku.izum@gmail.com}
