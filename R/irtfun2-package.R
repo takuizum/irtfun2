@@ -331,7 +331,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@param mintheta the minimum value of theta in integration.
 #'@param mu a hyperparameter of prior distribution.
 #'@param sigma same as above.
-#'@param sampling_engine an option of sampling engine. "R" is for loop in R lang, but "Cpp" is for loop in C++ lang.
+#'@param sampling_engine an option of sampling engine. "R" is for loop in R lang so too slow, but "Cpp" is for loop in C++ lang so very fast.
 #'@return a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
 #'@author Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
 #'

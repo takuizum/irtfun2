@@ -334,7 +334,6 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
               tt = 1;
             }
             // std::powやlog，expの関数を持ってくると急激に遅くなる。それよりかif文の方がいくらか高速。
-
             //tt =
             //  std::pow(c+(1.0-c)/(1.0+exp(-D*a*(x-b))),u)* // log of correct probabbility
             //  std::pow(1.0-(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))),(1.0-u)); // log of incorrect probability
@@ -359,7 +358,6 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
         ff = 0; // 受検者iの周辺対数尤度代入用
         for(int m=0; m<N; m++){
           l = Lim[g][i][m];
-          //Rprintf("Lim is %f \r",l);
           w = Wm(m,g);
           fff =  l*w ;
           ff += fff;
@@ -419,8 +417,6 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
       }
     }
 
-
-    //Rcout<<Nm(1,5)<<"\n";
     //Rcout<<"expected freqency of correct response number in each nodes calculation.\n";
 
     double h,gg,hh;
@@ -502,8 +498,6 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
 
     if(traits::is_nan<REALSXP>(ell) && e_ell == 1 && Bayes != 1){
       // 対数尤度の計算に失敗したら，計算を中止する。
-      //List res = List::create(_["para"]=t0, _["Lim"]=Lim,_["diff"]=diff,_["rjm"]=rjm,_["Nm"]=Nm);
-      //return(res);
       stop("Can't calculate expected log complete data likelihood.\nItem %d is not converged. Check P.BIS!", ell_check);
     }
 

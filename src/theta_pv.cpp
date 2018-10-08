@@ -68,7 +68,7 @@ NumericMatrix theta_pv(DataFrame x, const int nofrands, NumericVector eap_apply,
       } else if(xij==0){
         mpdc_t = 1 - (c_j+(1.0-c_j)/(1.0+exp(-D*a_j*(map-b_j))));
       } else {
-        mpdc_t = 0;
+        mpdc_t = 1;
       }
       mpdc += log(mpdc_t);
       //Rprintf("mpdc is %f\n",mpdc);
@@ -92,19 +92,21 @@ NumericMatrix theta_pv(DataFrame x, const int nofrands, NumericVector eap_apply,
         if(a_j == 0) continue;
         b_j = b[j];
         c_j = c[j];
+        xij = xi[j];
         double fg_t;
         if(xij == 1){
           fg_t = c_j+(1.0-c_j)/(1.0+exp(-D*a_j*(z-b_j))) ;
         } else if(xij==0){
           fg_t = 1 - (c_j+(1.0-c_j)/(1.0+exp(-D*a_j*(z-b_j))));
         } else {
-          fg_t = 0;
+          fg_t = 1;
         }
         fg += log(fg_t) ;
       }
-      fg = exp(fg)*prior_z/const_cpp;
-      //Rprintf("y-height is %f, y is %f, z is %f, fgvalue is %f \r",yheight,y,z,fg);
+      fg = exp(fg);
+      fg = fg*prior_z/const_cpp;
       if(y <= fg){
+        //Rprintf("y-height is %f, y is %f, z is %f, fgvalue is %f \n",yheight,y,z,fg);
         pv(k,nofpv) = z;
         nofpv += 1;
         YES += 1;
@@ -113,11 +115,6 @@ NumericMatrix theta_pv(DataFrame x, const int nofrands, NumericVector eap_apply,
       }
     }
     Rprintf("NOW---%d / %d , ACCEPT---%d, REJECT---%d \r",k+1,n,YES,NO);
-
-    //if(times == counter){
-    //  Rprintf("%d / n \r",k);
-    //  times = 0;
-    //}
   }
   return pv;
 }
