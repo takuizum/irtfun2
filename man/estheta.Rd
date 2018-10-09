@@ -44,7 +44,7 @@ estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
 
 \item{sigma}{same as above.}
 
-\item{sampling_engine}{an option of sampling engine. "R" is for loop in R lang, but "Cpp" is for loop in C++ lang.}
+\item{sampling_engine}{an option of sampling engine. "R" is for loop in R lang so too slow, but "Cpp" is for loop in C++ lang so very fast.}
 }
 \value{
 a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.

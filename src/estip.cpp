@@ -54,7 +54,8 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
             const double emu = 1e-3, const double esd = 1e-2,
             int fc0 = 2,int ng = 1, int gc0 = 2, const double D = 1.702, const int fix = 1, const int print = 0, const double ic = 1/5,
             const double max = 6.0, const double min = -6.0, const double mu = 0, const double sigma = 1, const int Bayes = 0,
-            const double mu_a = 0, const double sigma_a = 1, const double mu_b = 0, const double sigma_b = 2, const double mu_c = 4/13, const double w_c = 13,               const double min_a = 0.1, const double maxabs_b = 20, const int maxiter_em = 200, const int maxiter_j = 20, const int maxskip_j = 5,
+            const double mu_a = 0, const double sigma_a = 1, const double mu_b = 0, const double sigma_b = 2, const double mu_c = 4/13, const double w_c = 13,
+            const double min_a = 0.1, const double maxabs_b = 20, const int maxiter_em = 200, const int maxiter_j = 20, const int maxskip_j = 5,
             CharacterVector rm_list = CharacterVector::create("NONE"), const String thdist = "normal", const int e_ell = 1, const int EM_dist = 1
 ){
   // argument check
@@ -1073,7 +1074,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
       }// end of estimate SE for item j
 
 
-      Rcout << "\n The parameters has been converged via EM algorithm.\n Total iteration time is " << count1 << "\n";
+      Rcout << "\nThe parameters is converged via EM algorithm.\nTotal iteration time is " << count1 << "\n";
 
     }
 
@@ -1084,8 +1085,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
 
   // 推定母集団分布の計算
   // 初期値に一様分布をもちいた場合，Easy Estimationの計算結果とおおむね一致するはず。
-
-  Rprintf("Start calculating estimated population distribution.\n");
+  if(EM_dist == 1) Rprintf("Start calculating estimated population distribution.\n");
 
   // result
   NumericVector mean_pop(ng);
