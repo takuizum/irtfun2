@@ -77,12 +77,17 @@ irt_ytx <- function(paraX,paraY,D=1.702){
   by <- paraY$b[keyy]
   cy <- paraY$c[keyy]
 
-  tau_x <- ceiling(sum(cx,na.rm = T)):(length(ax)-1) %>% matrix()
+  tau_x <- floor(sum(cx,na.rm = T)+1):(length(ax)-1) %>% matrix()
   theta <- apply(tau_x,1,tse,a=ax,b=bx,c=cx,D=D,t0=0) %>% t()
 
   tau_y <- apply(theta[,2] %>% as.matrix,1,ty,a=ay,b=by,c=cy,D=D)
 
-  res <- data.frame(theta = theta[,2],tau_X=tau_x, tau_Y=tau_y)
+  tau_x <- c(0,tau_x,length(ax))
+  tau_y <- c(0,tau_y,length(ay))
+  theta <- c(NA,theta[,2],NA)
+
+  res <- data.frame(theta = theta,tau_X=tau_x, tau_Y=tau_y)
+  res
 }
 
 
