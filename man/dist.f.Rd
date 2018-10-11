@@ -2,7 +2,8 @@
 % Please edit documentation in R/mext-contract.R
 \name{dist.f}
 \alias{dist.f}
-\title{a table for Equipercentile equating function of row score.}
+\title{a table for Equipercentile equating function of row score.
+The return table contains roe score, frequency, cumrative frequency, percent, cumlative percent, discrete distribution and cumlative discrete distribution.}
 \usage{
 dist.f(x)
 }
@@ -11,6 +12,7 @@ dist.f(x)
 }
 \description{
 a table for Equipercentile equating function of row score.
+The return table contains roe score, frequency, cumrative frequency, percent, cumlative percent, discrete distribution and cumlative discrete distribution.
 }
 \author{
 Takumi Shibuya.

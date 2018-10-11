@@ -21,7 +21,7 @@ estip(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-06,
 
 \item{N}{the number of nodes in integration.}
 
-\item{bg0}{the number ob base grade.}
+\item{bg0}{the number of base grade.}
 
 \item{eMLL}{a convergence criteria(CC) forf marginal log likelihood.}
 
@@ -37,55 +37,55 @@ estip(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-06,
 
 \item{ng}{the number of groups}
 
-\item{gc0}{a column of group.}
+\item{gc0}{a column of group. the element must be integer and the minimum number must be 1.}
 
 \item{D}{a scaling constant.}
 
-\item{fix}{If 1, fix population distribution mean and sigma each EM cycle.}
+\item{fix}{Don't use. If 1, fix population distribution mean and sigma each EM cycle.}
 
 \item{print}{How much information you want to display? from 1 to 3. The larger, more information is displayed.}
 
-\item{ic}{a initial value for guessing parameter.}
+\item{ic}{initial value for guessing parameter.}
 
-\item{max}{a maximum value of theta in integration.}
+\item{max}{maximum value of theta in integration.}
 
-\item{min}{a minimum value of theta in integration.}
+\item{min}{minimum value of theta in integration.}
 
-\item{mu}{a hyperparameter for theta dist.}
+\item{mu}{hyperparameter for theta dist.}
 
 \item{sigma}{same as above.}
 
 \item{Bayes}{If 1, marginal Bayesian estimation runs. This option is unstable. Don't use.}
 
-\item{mu_a}{a hyperparameter of log normal dist for slope parameter.}
+\item{mu_a}{hyperparameter of log normal dist for slope parameter.}
 
 \item{sigma_a}{same as above.}
 
-\item{mu_b}{a hyperparameter of normal dist for location parameter.}
+\item{mu_b}{hyperparameter of normal dist for location parameter.}
 
 \item{sigma_b}{same as above.}
 
-\item{mu_c}{a hyperparameter for lower asymptote parameter.}
+\item{mu_c}{hyperparameter for lower asymptote parameter.}
 
 \item{w_c}{weight of a Beta dist.}
 
-\item{min_a}{a minimum value of slope parameter.}
+\item{min_a}{minimum value of slope parameter.}
 
-\item{maxabs_b}{a maximum absolute value of location parameter.}
+\item{maxabs_b}{maximum absolute value of location parameter.}
 
-\item{maxiter_em}{a maximul iteration time for EM cycle.}
+\item{maxiter_em}{maximum iteration time for EM cycle.}
 
-\item{maxiter_j}{a maximul iteration time for Newton Raphton in M step.}
+\item{maxiter_j}{maximum iteration time for Newton Raphton in M step.}
 
 \item{maxskip_j}{Dont use.}
 
 \item{rm_list}{a vector of item U want to remove for estimation. NOT list.}
 
-\item{thdist}{Dont use.}
+\item{thdist}{Which distribution do you want \code{normal} or \code{empirical} for E step.}
 
-\item{e_ell}{a CC of expected log likelihood.}
+\item{e_ell}{If 1 use a CC of expected log likelihood.}
 
-\item{EM_dist}{If 1, calculate esimated population distribution by EM argorithm.}
+\item{EM_dist}{If 1, calculate esimated population distribution via EM argorithm.}
 }
 \description{
 Estimate item parameter for binary{0,1} response data.

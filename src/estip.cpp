@@ -12,7 +12,7 @@ using namespace Rcpp;
 //'@param x an item response data which class is data.frame object.
 //'@param model Character.U can select which one, "1PL","2PL","3PL".
 //'@param N the number of nodes in integration.
-//'@param bg0 the number ob base grade.
+//'@param bg0 the number of base grade.
 //'@param eMLL a convergence criteria(CC) forf marginal log likelihood.
 //'@param eEM a CC in EM cycle.
 //'@param eM a CC in M step.
@@ -20,31 +20,31 @@ using namespace Rcpp;
 //'@param esd a CC for population distribution standard deviation.
 //'@param fc0 a column of first item response.
 //'@param ng the number of groups
-//'@param gc0 a column of group.
+//'@param gc0 a column of group. the element must be integer and the minimum number must be 1.
 //'@param D a scaling constant.
-//'@param fix If 1, fix population distribution mean and sigma each EM cycle.
+//'@param fix Don't use. If 1, fix population distribution mean and sigma each EM cycle.
 //'@param print How much information you want to display? from 1 to 3. The larger, more information is displayed.
-//'@param ic a initial value for guessing parameter.
-//'@param max a maximum value of theta in integration.
-//'@param min a minimum value of theta in integration.
-//'@param mu a hyperparameter for theta dist.
+//'@param ic initial value for guessing parameter.
+//'@param max maximum value of theta in integration.
+//'@param min minimum value of theta in integration.
+//'@param mu hyperparameter for theta dist.
 //'@param sigma same as above.
 //'@param Bayes If 1, marginal Bayesian estimation runs. This option is unstable. Don't use.
-//'@param mu_a a hyperparameter of log normal dist for slope parameter.
+//'@param mu_a hyperparameter of log normal dist for slope parameter.
 //'@param sigma_a same as above.
-//'@param mu_b a hyperparameter of normal dist for location parameter.
+//'@param mu_b hyperparameter of normal dist for location parameter.
 //'@param sigma_b same as above.
-//'@param mu_c a hyperparameter for lower asymptote parameter.
+//'@param mu_c hyperparameter for lower asymptote parameter.
 //'@param w_c weight of a Beta dist.
-//'@param min_a a minimum value of slope parameter.
-//'@param maxabs_b a maximum absolute value of location parameter.
-//'@param maxiter_em a maximul iteration time for EM cycle.
-//'@param maxiter_j a maximul iteration time for Newton Raphton in M step.
+//'@param min_a minimum value of slope parameter.
+//'@param maxabs_b maximum absolute value of location parameter.
+//'@param maxiter_em maximum iteration time for EM cycle.
+//'@param maxiter_j maximum iteration time for Newton Raphton in M step.
 //'@param maxskip_j Dont use.
 //'@param rm_list a vector of item U want to remove for estimation. NOT list.
-//'@param thdist Dont use.
-//'@param e_ell a CC of expected log likelihood.
-//'@param EM_dist If 1, calculate esimated population distribution by EM argorithm.
+//'@param thdist Which distribution do you want `normal` or `empirical` for E step.
+//'@param e_ell If 1 use a CC of expected log likelihood.
+//'@param EM_dist If 1, calculate esimated population distribution via EM argorithm.
 //'@export
 // [[Rcpp::export]]
 
@@ -59,8 +59,8 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
             CharacterVector rm_list = CharacterVector::create("NONE"), const String thdist = "normal", const int e_ell = 1, const int EM_dist = 1
 ){
   // argument check
-  if(model != "1PL" && model != "2PL" && model != "3PL") stop("Errpr! option string of 'model' is incorrect.");
-  if(thdist != "normal" && thdist != "empirical") stop("Errpr! option string of 'thdist' is incorrect.");
+  if(model != "1PL" && model != "2PL" && model != "3PL") stop("Errpr! option string of 'model' is incorrect. U should select '1~3PL'.");
+  if(thdist != "normal" && thdist != "empirical") stop("Errpr! option string of 'thdist' is incorrect. U should select 'normal' or 'empirical'.");
 
   struct LocalFunc{ // R function define
 
