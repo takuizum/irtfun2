@@ -147,6 +147,33 @@ tscore_dist <- function(theta,a,b,D=1.702){
   return(round(tscore))
 }
 
+dist.f <- function(x){
+  #---------------------------------------#
+  # 度数分布とパーセンタイルの計算に必要な経験分布関数，累積経験分布関数を求める。
+  # result     : 度数分布表
+  # x          : データ，正答数得点
+  # ddf        : 経験分布関数
+  # cddf       : 累積経験分布関数
+  #---------------------------------------#
+  mxc <- max(x)
+  m <- length(0:mxc)
+
+  freq <- data.frame(rep(0,m), row.names = as.character(0:mxc)) # 空のデータフレーム
+  colnames(freq) <- "freq"
+  for(i in 0:mxc){
+    f <- sum(1 * (x == i))
+    freq[i+1,] <- f
+  }
+  cum.freq <- cumsum(freq)
+  percent <- freq/sum(freq)*100
+  cum.pcnt <- cumsum(percent)
+  ddf <- freq/length(x)
+  cddf <- cumsum(ddf)
+
+  result <- cbind(freq, cum.freq, percent, cum.pcnt, ddf, cddf)
+  colnames(result) <- c("freq", "cum.freq", "percent", "cum.pcnt", "ddf", "cddf")
+  result
+}
 
 
 #' Equipercentile equating function of row score.
@@ -180,7 +207,11 @@ epe <- function(x, y){
   #		resulty:
   #----------------------------------------------------------------------------------
 
-  tablex <- x;tabley <- y
+  #XとYの度数分布表を変数に代入しておく。
+  tablex <- dist.f(x)
+  tabley <- dist.f(y)
+
+  #tablex <- x;tabley <- y
 
   prfx <- function(q){
     x <- q
