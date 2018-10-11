@@ -148,31 +148,71 @@ tscore_dist <- function(theta,a,b,D=1.702){
 }
 
 dist.f <- function(x){
-  #---------------------------------------#
-  # 度数分布とパーセンタイルの計算に必要な経験分布関数，累積経験分布関数を求める。
-  # result     : 度数分布表
-  # x          : データ，正答数得点
-  # ddf        : 経験分布関数
-  # cddf       : 累積経験分布関数
-  #---------------------------------------#
   mxc <- max(x)
   m <- length(0:mxc)
 
-  freq <- data.frame(rep(0,m), row.names = as.character(0:mxc)) # 空のデータフレーム
+  freq <- data.frame(rep(0,m), row.names = as.character(0:mxc))
   colnames(freq) <- "freq"
   for(i in 0:mxc){
     f <- sum(1 * (x == i))
     freq[i+1,] <- f
   }
+  score <- 0:mxc
   cum.freq <- cumsum(freq)
   percent <- freq/sum(freq)*100
   cum.pcnt <- cumsum(percent)
   ddf <- freq/length(x)
   cddf <- cumsum(ddf)
 
-  result <- cbind(freq, cum.freq, percent, cum.pcnt, ddf, cddf)
-  colnames(result) <- c("freq", "cum.freq", "percent", "cum.pcnt", "ddf", "cddf")
-  result
+  result <- cbind(score,freq, cum.freq, percent, cum.pcnt, ddf, cddf)
+  colnames(result) <- c("score","freq", "cum.freq", "percent", "cum.pcnt", "ddf", "cddf")
+  #result <- data.frame(score=m, freq=freq, cum.freq=cum.freq, percent=percent, cum.pcnt=cum.pcnt, ddf=ddf, cddf=cddf)
+  as.data.frame(result)
+}
+
+prfx <- function(q,tablex){
+  x <- q
+  x1 <- q+1
+  rx <- round(x1)
+  ddf <- tablex[,3]
+  cddf <- tablex[,5]
+  prf <- (cddf[rx]+(x-rx+0.5)*(cddf[rx]-cddf[rx-1]))*100
+}
+
+prfy <- function(r,tabley){
+  x <- r
+  x1 <- r+1
+  rx <- round(x1)
+  ddf <- tabley[,3]
+  cddf <- tabley[,5]
+  prf <- (cddf[rx]+(x-rx+0.5)*(cddf[rx]-cddf[rx-1]))*100
+}
+
+pfU <- function(p,tabley2){
+  if(p/100 > tabley2$V2[1]){
+    a <- tabley2[tabley2$V2 > (p/100),]
+    yU <- a[1,1]
+    FyU <- a$V2[1]
+    b <- tabley2[tabley2$V2 < (p/100),]
+    FyU1 <- b$V2[yU]				#yU-1 is not proper value because table b couont "0".
+    pfU <- (p/100 - FyU1)/(FyU-FyU1) + yU - 0.5
+  }else{
+    pfU <- tabley2$V2[1]
+  }
+}
+
+
+pfL <- function(p,tabley2){
+  if(p/100 > tabley2$V2[1]){
+    a <- tabley2[tabley2$V2 > (p/100),]
+    yL1 <- a[1,1]
+    FyL1 <- a$V2[1]
+    b <- tabley2[tabley2$V2 < (p/100),]
+    FyL <- b$V2[yL1]
+    pfL <-(p/100 - FyL)/(FyL1-FyL) + (yL1 - 1) + 0.5
+  }else{
+    pfL <- tabley2$V2[1]
+  }
 }
 
 
@@ -201,56 +241,31 @@ epe <- function(x, y){
   #		pfU:			the inverse of the percentile rank function.
   #		eYx:			the function of the equipercentile equivalent of score x on the scale of Form Y.
   #		eXy:			the function of the equipercentile equivalent of score y on the scale of Form X.
-  #		tablex:
-  #		tabley:
-  #		resultx:
-  #		resulty:
   #----------------------------------------------------------------------------------
 
-  #XとYの度数分布表を変数に代入しておく。
+  # frequency distribution table
   tablex <- dist.f(x)
   tabley <- dist.f(y)
 
-  #tablex <- x;tabley <- y
-
-  prfx <- function(q){
-    x <- q
-    x1 <- q+1
-    rx <- round(x1)
-    ddf <- tablex[,3]
-    cddf <- tablex[,5]
-    prf <- (cddf[rx]+(x-rx+0.5)*(cddf[rx]-cddf[rx-1]))*100
-  }
-
-  prfy <- function(r){
-    x <- r
-    x1 <- r+1
-    rx <- round(x1)
-    ddf <- tabley[,3]
-    cddf <- tabley[,5]
-    prf <- (cddf[rx]+(x-rx+0.5)*(cddf[rx]-cddf[rx-1]))*100
-  }
-
   #n of item on Form X and Y
+  nx <- max(tablex$score)
+  ny <- max(tabley$score)
 
-  nx <- max(x$score)
-  ny <- max(y$score)
-
-  resultx <- matrix(0, nrow(x), 1)
-  resulty <- matrix(0, nrow(y), 1)
-  resultx[1,1] <- x[1,3]
-  resulty[1,1] <- y[1,3]
+  resultx <- matrix(0, nrow(tablex), 1)
+  resulty <- matrix(0, nrow(tabley), 1)
+  resultx[1,1] <- tablex[1,3]
+  resulty[1,1] <- tabley[1,3]
 
   z<- 0
   for (i in 1:nx){
     z <- z +1
-    resultx[(z+1), 1] <- prfx(z)
+    resultx[(z+1), 1] <- prfx(z,tablex)
   }
 
   z<- 0
   for (i in 1:ny){
     z <- z +1
-    resulty[(z+1), 1] <- prfy(z)
+    resulty[(z+1), 1] <- prfy(z,tabley)
   }
 
   #----------------------------------------------------------------------------------
@@ -258,9 +273,9 @@ epe <- function(x, y){
   # test Form Y equipercentile equivalent of score x on Form X
   #----------------------------------------------------------------------------------
 
-  tabley2 <- matrix(0, nrow(y), 3)
-  tabley2[,1] <- y$score
-  tabley2[,2] <- y[,5]      #relative.p
+  tabley2 <- matrix(0, nrow(tabley), 3)
+  tabley2[,1] <- tabley$score
+  tabley2[,2] <- tabley[,5]      #relative.p
   tabley2[,3] <- resulty    #percentile rank
   tabley2 <- as.data.frame(tabley2)
 
@@ -274,45 +289,13 @@ epe <- function(x, y){
   #(This value is smallest value corresponds with above cumulative percent "p"%
   #----------------------------------------------------------------------------------
 
-  pfU <- function(p){
-    if(p/100 > tabley2$V2[1]){
-      a <- tabley2[tabley2$V2 > (p/100),]
-      yU <- a[1,1]
-      FyU <- a$V2[1]
-      b <- tabley2[tabley2$V2 < (p/100),]
-      FyU1 <- b$V2[yU]				#yU-1 is not proper value because table b couont "0".
-      pfU <- (p/100 - FyU1)/(FyU-FyU1) + yU - 0.5
-    }else{
-      pfU <- tabley2$V2[1]
-    }
+  eYx <- matrix(0, nrow(tablex), 2)
+  for (i in 1:nrow(tablex)){
+    eYx[i,1] <- pfU(resultx[i],tabley2)
+    eYx[i,2] <- pfL(resultx[i],tabley2)
   }
 
-  #----------------------------------------------------------------------------------
-  #Next, define the percentile function that contains yL
-  #(This value is largest value corresponds with below cumulative percent "p" percent)
-  #----------------------------------------------------------------------------------
-
-  pfL <- function(p){
-    if(p/100 > tabley2$V2[1]){
-      a <- tabley2[tabley2$V2 > (p/100),]
-      yL1 <- a[1,1]
-      FyL1 <- a$V2[1]
-      b <- tabley2[tabley2$V2 < (p/100),]
-      FyL <- b$V2[yL1]
-      pfL <-(p/100 - FyL)/(FyL1-FyL) + (yL1 - 1) + 0.5
-    }else{
-      pfL <- tabley2$V2[1]
-    }
-
-  }
-
-  eYx <- matrix(0, nrow(x), 2)
-  for (i in 1:nrow(x)){
-    eYx[i,1] <- pfU(resultx[i])
-    eYx[i,2] <- pfL(resultx[i])
-  }
-
-  result <- cbind(x$score, eYx)
-  colnames(result) <- c("X raw score", "pfU", "pfL")
-  result
+  result <- cbind(tablex$score, eYx)
+  colnames(result) <- c("X", "eYx_U", "eYx_L")
+  as.data.frame(result)
 }
