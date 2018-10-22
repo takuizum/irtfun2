@@ -204,10 +204,10 @@ prf <- function(q,table){
   prf
 }
 
-#' Equipercentile equating function of row score.
-#' This function generates the Form Y equipercentle equivalent of score x on FormX, eY(x).
+#' The inverse of percentile rank function which uses the smallest integer score with cumulative persent that is greater then `p`.
+#' This function generates `p` percentile of the score in `tabley2`.
 #' @param p percentile.
-#' @param tabley2 distribution table(must bedata.frame). `V2` is cumulative discrete distribution.
+#' @param tabley2 distribution table(must be data.frame). `V2` is cumulative discrete distribution.
 #' @author Takumi Shibuya.
 #' @export
 pfU <- function(p,tabley2){
@@ -227,6 +227,7 @@ pfU <- function(p,tabley2){
 }
 
 
+# The inverse of percentile rank function which uses the largest integer score with cumulative persent that is less then `p`.
 
 pfL <- function(p,tabley2){
   if(p/100 > tabley2$V2[1]){

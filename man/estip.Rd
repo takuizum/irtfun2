@@ -12,7 +12,7 @@ estip(x, model = "2PL", N = 31L, bg0 = 1L, eMLL = 1e-06,
   sigma_a = 1, mu_b = 0, sigma_b = 2, mu_c = 4/13, w_c = 13,
   min_a = 0.1, maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L,
   maxskip_j = 5L, rm_list = as.character(c("NONE")),
-  thdist = "normal", e_ell = 1L, EM_dist = 1L)
+  thdist = "normal", e_ell = 0L, EM_dist = 1L)
 }
 \arguments{
 \item{x}{an item response data which class is data.frame object.}

@@ -511,6 +511,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
                      n=n,maxtheta=maxtheta,mintheta=mintheta,a=a,b=b,c=c,D=D,mu=mu,sigma=sigma)
     } else if( sampling_engine=="R"){
       cat("R version \n")
+      x.all <- as.matrix(x.all)
       for(k in 1:n){
         xi <- x.all[k,]
         times <- times + 1

@@ -2,19 +2,19 @@
 % Please edit documentation in R/mext-contract.R
 \name{pfU}
 \alias{pfU}
-\title{Equipercentile equating function of row score.
-This function generates the Form Y equipercentle equivalent of score x on FormX, eY(x).}
+\title{The inverse of percentile rank function which uses the smallest integer score with cumulative persent that is greater then \code{p}.
+This function generates \code{p} percentile of the score in \code{tabley2}.}
 \usage{
 pfU(p, tabley2)
 }
 \arguments{
 \item{p}{percentile.}
 
-\item{tabley2}{distribution table(must bedata.frame). \code{V2} is cumulative discrete distribution.}
+\item{tabley2}{distribution table(must be data.frame). \code{V2} is cumulative discrete distribution.}
 }
 \description{
-Equipercentile equating function of row score.
-This function generates the Form Y equipercentle equivalent of score x on FormX, eY(x).
+The inverse of percentile rank function which uses the smallest integer score with cumulative persent that is greater then \code{p}.
+This function generates \code{p} percentile of the score in \code{tabley2}.
 }
 \author{
 Takumi Shibuya.
