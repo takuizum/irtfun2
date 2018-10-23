@@ -10,7 +10,7 @@ using namespace Rcpp;
 //'Estimate item parameter for binary{0,1} response data.
 //'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.
 //'@param x an item response data which class is data.frame object.
-//'@param model Character.U can select which one, "1PL","2PL","3PL".
+//'@param model0 Character.U can select which one, "1PL","2PL","3PL".
 //'@param N the number of nodes in integration.
 //'@param bg0 the number of base grade.
 //'@param eMLL a convergence criteria(CC) forf marginal log likelihood.
@@ -49,18 +49,50 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 
-List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 = 1,
-            const double eMLL = 1e-6, const double eEM = 1e-4, const double eM = 1e-3,
-            const double emu = 1e-3, const double esd = 1e-2,
-            int fc0 = 2,int ng = 1, int gc0 = 2, const double D = 1.702, const int fix = 1, const int print = 0, const double ic = 1/5,
-            const double max = 6.0, const double min = -6.0, const double mu = 0, const double sigma = 1, const int Bayes = 0,
-            const double mu_a = 0, const double sigma_a = 1, const double mu_b = 0, const double sigma_b = 2, const double mu_c = 4/13, const double w_c = 13,
-            const double min_a = 0.1, const double maxabs_b = 20, const int maxiter_em = 200, const int maxiter_j = 20, const int maxskip_j = 5,
-            CharacterVector rm_list = CharacterVector::create("NONE"), const String thdist = "normal", const int e_ell = 0, const int EM_dist = 1
+List estip (DataFrame x,
+            CharacterVector model0 = CharacterVector::create("2PL") ,
+            const int N = 31,
+            const int bg0 = 1,
+            const double eMLL = 1e-6,
+            const double eEM = 1e-4,
+            const double eM = 1e-3,
+            const double emu = 1e-3,
+            const double esd = 1e-2,
+            int fc0 = 2,
+            int ng = 1,
+            int gc0 = 2,
+            const double D = 1.702,
+            const int fix = 1,
+            const int print = 0,
+            const double ic = 1/5,
+            const double max = 6.0,
+            const double min = -6.0,
+            const double mu = 0,
+            const double sigma = 1,
+            const int Bayes = 0,
+            const double mu_a = 0,
+            const double sigma_a = 1,
+            const double mu_b = 0,
+            const double sigma_b = 2,
+            const double mu_c = 1/5,
+            const double w_c = 5,
+            const double min_a = 0.1,
+            const double maxabs_b = 20,
+            const int maxiter_em = 200,
+            const int maxiter_j = 20,
+            const int maxskip_j = 0,
+            CharacterVector rm_list = CharacterVector::create("NONE"),
+            const String thdist = "normal",
+            const int e_ell = 0,
+            const int EM_dist = 1
 ){
   // argument check
-  if(model != "1PL" && model != "2PL" && model != "3PL") stop("Errpr! option string of 'model' is incorrect. U should select '1~3PL'.");
-  if(thdist != "normal" && thdist != "empirical") stop("Errpr! option string of 'thdist' is incorrect. U should select 'normal' or 'empirical'.");
+  for(int j=0; j<model0.length(); j++){
+    Rprintf("Checking the model string of item %i !\r", j+1);
+    if(model0[j] != "1PL" && model0[j] != "2PL" && model0[j] != "3PL") stop("Errpr! option string of 'model' is incorrect. You should select '1~3PL'.");
+  }
+  Rprintf("\n");
+  if(thdist != "normal" && thdist != "empirical") stop("Errpr! option string of 'thdist' is incorrect. You should select 'normal' or 'empirical'.");
 
   struct LocalFunc{ // R function define
 
@@ -160,14 +192,15 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
 
 
   // initial values
-
-  int cat;
-  if(model == "1PL") cat = 1;
-  if(model == "2PL") cat = 2;
-  if(model == "3PL") cat = 3;
-
-
-
+  CharacterVector model (nj, model0[0]);
+  const int nmodel = model0.length();
+  if(nmodel == nj){
+    Rprintf("You selected model variable yourself.\n");
+    for(int j=0; j<nj; j++){
+      model[j] = model0[j];
+    }
+  }
+  IntegerVector cat (nj);
   NumericMatrix t0 (nj, 3); // 初期値代入用の行列　いまのところ2PLのみ
   NumericMatrix t0m (nj,3);
   NumericMatrix initial (nj,3);
@@ -180,6 +213,10 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
   double a0, b0, c0;
   for(int j=0; j<nj; j++){
 
+    if(model[j] == "1PL") cat[j] = 1;
+    if(model[j] == "2PL") cat[j] = 2;
+    if(model[j] == "3PL") cat[j] = 3;
+
     a0 = D*r[j]/sqrt(1-r[j]*r[j]); // P.BIS
     b0 = -log(p[j]/(1.0-p[j]));
     c0 = ic;
@@ -187,7 +224,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
     if(a0 < 0.1) a0 = 0.3; // 初期値が小さすぎる場合に，大きい値に補正する。
 
     // a parameter
-    if(model == "2PL" || model == "3PL"){
+    if(model[j] == "2PL" || model[j] == "3PL"){
       t0(j,0) =  a0;
       t0m(j,0) = a0;
       initial(j,0) = a0;
@@ -201,7 +238,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
     t0m(j,1) = b0;
     initial(j,1) = b0;
 
-    if(model == "3PL"){
+    if(model[j] == "3PL"){
       // c parameter
       t0(j,2) =  c0;
       t0m(j,2) = c0;
@@ -252,7 +289,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
   boost::multi_array <double, 3> Lim (boost::extents[ng][ni][N]);
   boost::multi_array <double, 3> Nm (boost::extents[ng][nj][N]);
   boost::multi_array <double, 3> rjm (boost::extents[ng][nj][N]);
-  LogicalVector conv (nj*cat); // 収束判定代入用ベクトル。
+  LogicalVector conv (sum(cat)); // 収束判定代入用ベクトル。
   // 周辺対数尤度代入用ベクトル
   NumericVector MLL(1);
   double diff = 0;
@@ -448,7 +485,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
     int ell_check = 0;
     double alpha_c = w_c*mu_c + 1; // 識別力の事前分布計算に用いる定数
     double beta_c = w_c*(1-mu_c) + 1;
-    // default alpha=10, beta=5
+    // default alpha=2, beta=5
 
     if(e_ell==1){
 
@@ -527,7 +564,6 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
         //Rcout<<"skip item "<<j+1<<"\r";
         continue;
       }
-
 
       // convergence criteria
       int conv2 = 0; // for M step
@@ -612,45 +648,35 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
             / ((1-c) * (1-c) * P);
           dbc = dbc + dbcm;
 
-          if(Bayes == 0){
-            // the elements of gradient vector
-            double dad = D*(xm - b) * (rr - nm * P) * (P-c)
+          // the elements of gradient vector
+          double dad = D*(xm - b) * (rr - nm * P) * (P-c)
             / ((1-c) * P);
-            da = da + dad;
+          da = da + dad;
 
-            double dbd = -D*a*(rr - nm * P) * (P-c)
-              / ((1-c) * P);
-            db = db + dbd;
-
-            double dcd = (rr - nm * P)
-              /( (1-c) * P);
-            dc = dc + dcd;
-
-          } else { // Bayes estimation
-            // the elements of gradient vector
-            double dad = D*(xm - b) * (rr - nm * P) * (P-c)
+          double dbd = -D*a*(rr - nm * P) * (P-c)
             / ((1-c) * P);
-            da += dad -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
+          db = db + dbd;
 
-            double dbd = -D*a*(rr - nm * P) * (P-c)
-              / ((1-c) * P);
-            db += dbd - (b-mu_b)/(sigma_b*sigma_b);
-
-            double dcd = (rr - nm * P)
-              / ((1-c) * P);
-            dc += dcd + (alpha_c-2)/c - (beta_c-2)/(1-c);
-          }
+          double dcd = (rr - nm * P)
+            /( (1-c) * P);
+          dc = dc + dcd;
 
         } // 行列計算の下準備終了 // end of m
 
+        if(Bayes==1){
+          // the elements of gradient vector
+          da += -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
+          db += -(b-mu_b)/(sigma_b*sigma_b);
+          dc += (alpha_c-2)/c - (beta_c-2)/(1-c);
+        }
         //Rcout<<"daa"<<daa<<"dbb"<<dbb<<"dcc"<<dcc<<"dac"<<dab<<"dac"<<dac<<"dbc"<<dbc<<"da"<<da<<"db"<<db<<"dc"<<dc<<"\r";
 
-        double a1 = 1;
+        double a1 = 1.702/D;
         double b1 = 0;
         double c1 = 0;
 
         // 行列，ベクトルに代入
-        if(model == "3PL"){
+        if(model[j] == "3PL"){
           // determinant of Fisher's information matrix
           double det = 1/(daa*dbb*dcc + dab*dbc*dac + dac*dab*dbc - dac*dbb*dac - dab*dab*dcc - daa*dbc*dbc);
 
@@ -666,7 +692,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
           b1 = b + inv_dab*da + inv_dbb*db + inv_dbc*dc;
           c1 = c + inv_dac*da + inv_dbc*db + inv_dcc*dc;
 
-        } else if (model == "2PL"){
+        } else if (model[j] == "2PL"){
           // determinant of Fisher's information matrix
           double det_Itj = 1/(daa * dbb - dab * dab);
 
@@ -681,7 +707,6 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
         } else {
           b1 = b + db/dbb;
         }
-
 
         if(print >= 3) Rprintf("item %d -- abs a is %.7f, abs b is %.7f, abs c is %.7f \r", j+1, fabs(a-a1), fabs(b-b1), fabs(c-c1));
         //Rcout <<"fabs a is"<<fabs(a-a1)<<". fabs b is"<<fabs(b-b1)<<". fabs c is"<<fabs(c-c1)<<"\r";
@@ -698,7 +723,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
         // aパラメタが0以下だったら，計算を中止
         if(a1 <= min_a || a1 > 10 || traits::is_nan<REALSXP>(fabs(a1 - a))){
           skip_para(j,0) += 1; // count up skip vector
-          t0m(j,0) = min_a;
+          //t0m(j,0) = min_a;
           warning("'a' must be positive value. Error of item %i in %i time iteration.", j+1, count1);
           conv2 = 1;; // 次の項目パラメタの更新へスキップ
         } else {
@@ -712,10 +737,10 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
           skip_para(j,1) += 1; // count up skip vector
           if(b1 < 0){
             warning("'b' must be larger than %d. Error of item %i in %i time iteration.", maxabs_b, j+1, count1);
-            t0m(j,1) = -maxabs_b;
+            //t0m(j,1) = -maxabs_b;
           } else if(b1 >= 0){
             warning("'b' must be smaller than %d. Error of item %i in %i time iteration.", maxabs_b, j+1, count1);
-            t0m(j,1) = maxabs_b;
+            //t0m(j,1) = maxabs_b;
           }
           conv2 = 1;; // 次の項目パラメタの更新へスキップ
         } else {
@@ -724,9 +749,10 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
 
         // guessing parameter
         if(c1 < 0 || c1 > 1 || traits::is_nan<REALSXP>(fabs(c1 - c))){
-          skip_para(j,2) += 1; // count up skip vector
+          //skip_para(j,2) += 1; // count up skip vector
           warning("'c' must be real value between 0 to 1. Error of item %i in %i time iteration.", j+1, count1);
-          t0m(j,2) = ic;
+          t0m(j,2) = 0;
+          model[j] = "2PL"; // 2PLに変更する。
           conv2 = 1; // 次の項目パラメタの更新へスキップ
         } else {
           t0m(j,2) = c1;
@@ -741,19 +767,43 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
 
 
     int vv = 0;
-    int pp = 0;
-    if(model == "1PL") pp = 1;
-    for(int p=pp; p<cat; p++){
-      for(int j=0; j<nj; j++){
-        double p1 = t0m(j,p);
-        double p2 = t0(j,p);
-        double p3 = skip_para(j,p);
-        if(fabs(p1 - p2) < eEM || p3>maxskip_j){// 項目パラメタの差の絶対値，と吹っ飛んだパラメタの抑制
-          conv[vv] = 1;
-        } else {
-          conv[vv] = 0;
+    for(int j=0; j<nj; j++){
+      if(model[j]=="1PL"){
+        for(int p=1; p<2; p++){
+          double p1 = t0m(j,p);
+          double p2 = t0(j,p);
+          double p3 = skip_para(j,p);
+          if(fabs(p1 - p2) < eEM || p3>maxskip_j){// 項目パラメタの差の絶対値，と吹っ飛んだパラメタの抑制
+            conv[vv] = 1;
+          } else {
+            conv[vv] = 0;
+          }
+          vv = vv + 1;
         }
-        vv = vv + 1;
+      }else if(model[j]=="2PL"){
+        for(int p=0; p<2; p++){
+          double p1 = t0m(j,p);
+          double p2 = t0(j,p);
+          double p3 = skip_para(j,p);
+          if(fabs(p1 - p2) < eEM || p3>maxskip_j){// 項目パラメタの差の絶対値，と吹っ飛んだパラメタの抑制
+            conv[vv] = 1;
+          } else {
+            conv[vv] = 0;
+          }
+          vv = vv + 1;
+        }
+      }else if(model[j]=="3PL"){
+        for(int p=0; p<3; p++){
+          double p1 = t0m(j,p);
+          double p2 = t0(j,p);
+          double p3 = skip_para(j,p);
+          if(fabs(p1 - p2) < eEM || p3>maxskip_j){// 項目パラメタの差の絶対値，と吹っ飛んだパラメタの抑制
+            conv[vv] = 1;
+          } else {
+            conv[vv] = 0;
+          }
+          vv = vv + 1;
+        }
       }
     }
 
@@ -910,7 +960,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
         t0m(j,2) = c;
       } else {
         // きちんと更新をおこなった項目は，キャリブレーション
-        if(model != "1PL"){ // 1PLの場合は識別力の尺度調整を行わない
+        if(model[j] != "1PL"){ // 1PLの場合は識別力の尺度調整を行わない
           t0(j,0) = a/A;
           t0m(j,0) = a/A;
         } else {
@@ -1047,7 +1097,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
 
 
         // 行列，ベクトルに代入
-        if(model == "3PL"){
+        if(model[j] == "3PL"){
           // determinant of Fisher's information matrix
           double det = 1/(daa*dbb*dcc+dab*dbc*dac+dac*dab*dbc-dac*dbb*dac-dab*dab*dcc-daa*dbc*dbc);
           // each element of inverse of Fisher's information matrix
@@ -1060,7 +1110,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
           SE(j,1) = std::sqrt(inv_dbb);
           SE(j,2) = std::sqrt(inv_dcc);
 
-        } else if (model == "2PL"){
+        } else if (model[j] == "2PL"){
           // determinant of Fisher's information matrix
           double det_Itj = 1/(daa * dbb - dab * dab);
 
@@ -1078,7 +1128,7 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
       }// end of estimate SE for item j
 
 
-      Rcout << "\nThe parameters is converged via EM algorithm.\nTotal iteration time is " << count1 << "\n";
+      Rcout << "\nEM algorithm has been converged.\nTotal iteration time is " << count1 << "\n";
 
     }
 
@@ -1290,8 +1340,8 @@ List estip (DataFrame x, String model = "2PL" ,const int N = 31, const int bg0 =
   // アウトプットファイルの調整
 
   NumericMatrix ms = cbind(mean,sd);
-  DataFrame Para = DataFrame::create(Named("Item")=Item, Named("a") = t0(_,0), Named("b") = t0(_,1), Named("c") = t0(_,2));
-  DataFrame SE_d = DataFrame::create(Named("Item")=Item, Named("a") = SE(_,0), Named("b") = SE(_,1));
+  DataFrame Para = DataFrame::create(Named("Item")=Item, Named("a") = t0(_,0), Named("b") = t0(_,1), Named("c") = t0(_,2), Named("model") = model);
+  DataFrame SE_d = DataFrame::create(Named("Item")=Item, Named("a") = SE(_,0), Named("b") = SE(_,1), Named("c") = SE(_,2), Named("model") = model);
 
   List res = List::create(_["para"] = Para, _["SE"] = SE_d, _["initial"] = initial,
                           _["theta.dist"] = dist, _["ms"] = ms,_["mean"] = mean, _["sd"] = sd,
