@@ -4,5 +4,5 @@ CXX_STD = CXX11
 #	"${R_HOME}/bin${R_ARCH_BIN}/Rscript.exe"
 #	-e "Rcpp:::LdFlags()"
 #)
-PKG_CPPFLAGS=-DSTRICT_R_HEADERS -I/usr/local/include
-PKG_LIBS=-L/usr/local/lib -Wl,-rpath,/usr/local/lib
+#PKG_CPPFLAGS=-DSTRICT_R_HEADERS -I/usr/local/include
+#PKG_LIBS=-L/usr/local/lib -Wl,-rpath,/usr/local/lib

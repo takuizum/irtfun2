@@ -29,7 +29,7 @@ using namespace Rcpp;
 //'@param min minimum value of theta in integration.
 //'@param mu hyperparameter for theta dist.
 //'@param sigma same as above.
-//'@param Bayes If 1, marginal Bayesian estimation runs. This option is unstable. Don't use.
+//'@param Bayes If 1, marginal Bayesian estimation runs.
 //'@param mu_a hyperparameter of log normal dist for slope parameter.
 //'@param sigma_a same as above.
 //'@param mu_b hyperparameter of normal dist for location parameter.
@@ -53,17 +53,15 @@ List estip (DataFrame x,
             CharacterVector model0 = CharacterVector::create("2PL") ,
             const int N = 31,
             const int bg0 = 1,
+            int fc0 = 2,
+            int ng = 1,
+            int gc0 = 2,
             const double eMLL = 1e-6,
             const double eEM = 1e-4,
             const double eM = 1e-3,
             const double emu = 1e-3,
-            const double esd = 1e-2,
-            int fc0 = 2,
-            int ng = 1,
-            int gc0 = 2,
+            const double esd = 1e-3,
             const double D = 1.702,
-            const int fix = 1,
-            const int print = 0,
             const double ic = 1/5,
             const double max = 6.0,
             const double min = -6.0,
@@ -76,6 +74,8 @@ List estip (DataFrame x,
             const double sigma_b = 2,
             const double mu_c = 1/5,
             const double w_c = 5,
+            const int fix = 1,
+            const int print = 0,
             const double min_a = 0.1,
             const double maxabs_b = 20,
             const int maxiter_em = 200,
@@ -88,7 +88,7 @@ List estip (DataFrame x,
 ){
   // argument check
   for(int j=0; j<model0.length(); j++){
-    Rprintf("Checking the model string of item %i !\r", j+1);
+    Rprintf("Checking the model string vector %i !\r", j+1);
     if(model0[j] != "1PL" && model0[j] != "2PL" && model0[j] != "3PL") stop("Errpr! option string of 'model' is incorrect. You should select '1~3PL'.");
   }
   Rprintf("\n");
@@ -123,8 +123,8 @@ List estip (DataFrame x,
   // 入力データの確認
   const int nj = lc - fc;
   const int ni = x.nrows(); // subject n
-  const int gc = gc0 -1;
-  const int bg = bg0 -1;
+  const int gc = gc0 -1; // the column of group n
+  const int bg = bg0 -1; // base grade
 
   IntegerVector group (ni,1);
   if(ng != 1) group = x[gc];
@@ -313,6 +313,9 @@ List estip (DataFrame x,
     //for debug.///////////
     //break; //////////////
     ///////////////////////
+
+    // check cancel command Ctrl + c
+    Rcpp::checkUserInterrupt();
 
     count1 = count1 + 1; // count up
 
@@ -751,6 +754,7 @@ List estip (DataFrame x,
         if(c1 < 0 || c1 > 1 || traits::is_nan<REALSXP>(fabs(c1 - c))){
           //skip_para(j,2) += 1; // count up skip vector
           warning("'c' must be real value between 0 to 1. Error of item %i in %i time iteration.", j+1, count1);
+          Rprintf("The model of item %i is changed from '3PL' to '2PL'." );
           t0m(j,2) = 0;
           model[j] = "2PL"; // 2PLに変更する。
           conv2 = 1; // 次の項目パラメタの更新へスキップ
@@ -996,7 +1000,7 @@ List estip (DataFrame x,
       //Rcout << "eval EM conv\n";
       conv1 = 1; // 収束していたら繰り返しを打ち切り
 
-      if(print>=1)Rcout <<"\n Estimating Standard Error";
+      if(print>=1)Rcout <<"\nEstimating Standard Error";
 
       ///////////////////////
       // SE of estimation. //
@@ -1126,7 +1130,6 @@ List estip (DataFrame x,
         }
 
       }// end of estimate SE for item j
-
 
       Rcout << "\nEM algorithm has been converged.\nTotal iteration time is " << count1 << "\n";
 
