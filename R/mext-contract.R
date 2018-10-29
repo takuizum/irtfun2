@@ -144,7 +144,7 @@ tscore_dist <- function(theta,a,b,D=1.702){
     tscore[i,] <- t(truescore(theta[i],a,b,D=D))
   }
 
-  return(round(tscore))
+  return(as.vector(round(tscore)))
 }
 
 #' a table for Equipercentile equating function of row score.

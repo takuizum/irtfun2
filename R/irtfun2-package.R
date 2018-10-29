@@ -549,9 +549,6 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
     group_mean <- matrix(0,G,nofrands)
     group_var <- matrix(0,G,nofrands)
     group_sd <- matrix(0,G,nofrands)
-    MI_mean <- numeric(G)
-    MI_var <- numeric(G)
-    MI_sd <- numeric(G)
 
     for (i in 1:G){
       # count the number of subjects for each groups
@@ -562,20 +559,9 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
       group_mean[i,] <- apply(group_pv,2,mean)
       group_var[i,] <- apply(group_pv,2,var) # unbias variance
       group_sd[i,] <- apply(group_pv,2,sd)
-
-      K <- nofrands
-      Mpv_i <- apply(group_pv,2,mean) %>% as.vector()
-      Mpv_bar <- mean(Mpv_i)
-      VMpv_i <- apply(group_pv,2,var) %>% as.vector()
-      VMpv_i <- VMpv_i*(K-1)/K # modify
-      V_IMP <- (1+1/K)*1/(K-1)+sum((Mpv_i - Mpv_bar)^2)+1/K*sum(VMpv_i)
-
-      MI_mean[i] <- Mpv_bar# approximation for the posterior mean.
-      MI_sd[i] <- sqrt(V_IMP)# approximation for the posterior variance.
-      MI_var[i] <- V_IMP
     }
 
-    MI <- data.frame(group=c(1:G),N=ng,mean=MI_mean,sd=MI_sd,var=MI_var)
+    PS <- list(group=c(1:G),mean=group_mean,sd=group_sd,var=group_var)
 
 
     #message("集団統計量の標準誤差の推定が終了しました。")
@@ -592,12 +578,69 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
       cat("\n output result files.")
       write.csv(result,paste0(file,"_result.csv"),quote=F,row.names = F)
       write.csv(plausible_values,paste0(file,"_PVs.csv"),quote=F,row.names = F)
-      write.csv(MI,paste0(file,"_PVS population estimator.csv"),quote=F,row.names = F)
+      write.csv(PS,paste0(file,"_PVS population estimator.csv"),quote=F,row.names = F)
     }
     pv <- data.frame(ID=ID,group=group,SCORE=xscore,EAP=eap_apply[1,],MAP=map_apply,PV=pv)
-    list("PVs" = pv, "EAPmean&sd" = c(mean(eap_apply[1,]),sd(eap_apply[1,])),
-         "MAPmean&sd" = c(mean(map_apply), sd(map_apply)), "PS" = MI)
+    list("PVs_df" = pv, "PVs_only"=pvG, "EAPmean&sd" = c(mean(eap_apply[1,]),sd(eap_apply[1,])),
+         "MAPmean&sd" = c(mean(map_apply), sd(map_apply)), "PS" = PS)
   }
+}
+
+e_v_mean <- function(X){
+  # 標本平均の分散＝平均の誤差分散
+  n <- length(X)
+  s <- var(X)*(n-1)/n
+  s/n
+}
+
+e_v_var <- function(X){
+  # 標本分散の分散＝分散の誤差分散
+  # 不偏分散を使う
+  # reference
+  # http://www.crl.nitech.ac.jp/~ida/research/memo/SampleVariance/sample_variance.pdf
+  n <- length(X)
+  M <- mean(X)
+  b4 <- (X-M)^4
+  COEF <- 1/((n-1)*(n^2-3*n+3))
+  term1 <- n*sum(b4)
+  term2 <- (n^2-3)*var(X)^2
+  COEF*(term1-term2)
+}
+
+#'Calculate the imputation variance
+#'
+#'@param PVs_only a df given by the result of `estheta(est="PVs")`.
+#'@export
+stat_pv <- function(PVs_only){
+  pvG <- PVs_only
+  G <- max(pvG$group)
+  MEAN <- numeric(G)
+  VAR <- numeric(G)
+  res_M <- numeric(G)
+  res_V <- numeric(G)
+
+  for(i in 1:max(pvG$group)){
+    # extract the PVs data frame for each group
+    group_pv <- pvG[pvG$group==i,-1]#
+    # the average of the mean
+    M <- apply(pvG,2,mean) %>% as.vector()#as.vector(apply(pvG,2,mean))
+    V_M <- apply(pvG,2,e_v_mean) %>% as.vector()
+    V <- apply(pvG,2,var) %>% as.vector()#as.vector(apply(pvG,2,var))
+    V_V <- apply(pvG,2,e_v_var) %>% as.vector()
+    # imputation variance of mean
+    # variance of expectation(the first term of equation 2.2.2)
+    K <- length(M)
+    V_imp_mean <- (1+1/K)*var(M)+mean(V_M)
+    # imputation variance of variance
+    # variance of expectation(the first term of equation 2.2.2)
+    V_imp_var <- (1+1/K)*var(V)+mean(V_V)
+
+    res_M[i] <- V_imp_mean
+    res_V[i] <- V_imp_var
+    MEAN[i] <- mean(M)
+    VAR[i] <- mean(V)
+  }
+  data.frame(group=c(1:G),mean=MEAN,var=VAR,V_imp_mean=V_imp_mean,V_imp_var=V_imp_var)
 }
 
 cf <- function(x,af,bf,at,bt,D=D,p=p,N=N,w=w){

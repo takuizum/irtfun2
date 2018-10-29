@@ -37,11 +37,10 @@
 #'@param maxskip_j Dont use.
 #'@param rm_list a vector of item U want to remove for estimation. NOT list.
 #'@param thdist Which distribution do you want `normal` or `empirical` for E step.
-#'@param e_ell If 1 use a CC of expected log likelihood.
 #'@param EM_dist If 1, calculate esimated population distribution via EM argorithm.
 #'@export
-estip <- function(x, model0 = as.character( c("2PL")), N = 31L, bg0 = 1L, fc0 = 2L, ng = 1L, gc0 = 2L, eMLL = 1e-6, eEM = 1e-4, eM = 1e-3, emu = 1e-3, esd = 1e-3, D = 1.702, ic = 1/5, max = 6.0, min = -6.0, mu = 0, sigma = 1, Bayes = 0L, mu_a = 0, sigma_a = 1, mu_b = 0, sigma_b = 2, mu_c = 1/5, w_c = 5, fix = 1L, print = 0L, min_a = 0.1, maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L, maxskip_j = 0L, rm_list = as.character( c("NONE")), thdist = "normal", e_ell = 0L, EM_dist = 1L) {
-    .Call(`_irtfun2_estip`, x, model0, N, bg0, fc0, ng, gc0, eMLL, eEM, eM, emu, esd, D, ic, max, min, mu, sigma, Bayes, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, fix, print, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, e_ell, EM_dist)
+estip <- function(x, model0 = as.character( c("2PL")), N = 31L, bg0 = 1L, fc0 = 2L, ng = 1L, gc0 = 2L, eMLL = 1e-6, eEM = 1e-4, eM = 1e-3, emu = 1e-3, esd = 1e-3, D = 1.702, ic = 1/5, max = 6.0, min = -6.0, mu = 0, sigma = 1, Bayes = 0L, mu_a = 0, sigma_a = 1, mu_b = 0, sigma_b = 2, mu_c = 1/5, w_c = 5, fix = 1L, print = 0L, min_a = 0.1, maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L, maxskip_j = 0L, rm_list = as.character( c("NONE")), thdist = "normal", EM_dist = 1L) {
+    .Call(`_irtfun2_estip`, x, model0, N, bg0, fc0, ng, gc0, eMLL, eEM, eM, emu, esd, D, ic, max, min, mu, sigma, Bayes, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, fix, print, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, EM_dist)
 }
 
 #'Sampling plausible values(PVs) based on rejection sampling.

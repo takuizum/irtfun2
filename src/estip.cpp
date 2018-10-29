@@ -43,7 +43,6 @@ using namespace Rcpp;
 //'@param maxskip_j Dont use.
 //'@param rm_list a vector of item U want to remove for estimation. NOT list.
 //'@param thdist Which distribution do you want `normal` or `empirical` for E step.
-//'@param e_ell If 1 use a CC of expected log likelihood.
 //'@param EM_dist If 1, calculate esimated population distribution via EM argorithm.
 //'@export
 // [[Rcpp::export]]
@@ -83,7 +82,6 @@ List estip (DataFrame x,
             const int maxskip_j = 0,
             CharacterVector rm_list = CharacterVector::create("NONE"),
             const String thdist = "normal",
-            const int e_ell = 0,
             const int EM_dist = 1
 ){
   // argument check
@@ -246,6 +244,10 @@ List estip (DataFrame x,
     }
 
   }
+
+  double alpha_c = w_c*mu_c + 1; // 識別力の事前分布計算に用いる定数
+  double beta_c = w_c*(1-mu_c) + 1;
+  // default alpha=2, beta=5
 
   // 削除項目はすべて計算をスキップするので
   if(rm_list[0] != "NONE"){
@@ -483,72 +485,66 @@ List estip (DataFrame x,
 
     //Rcout<<"expected log complete likelihood calculation.\n";
 
-    double ell=0;
-    double rr,nm,elll;
-    int ell_check = 0;
-    double alpha_c = w_c*mu_c + 1; // 識別力の事前分布計算に用いる定数
-    double beta_c = w_c*(1-mu_c) + 1;
-    // default alpha=2, beta=5
-
-    if(e_ell==1){
-
-      if(Bayes == 0){
-        // 期待対数完全データ尤度関数
-        for(int g=0; g<ng; g++){
-          for(int j=0; j<nj; j++){
-            if(ind(g,j) == 0) continue;
-            a = t0(j,0);
-            b = t0(j,1);
-            c = t0(j,2);
-            for(int m=0; m<N; m++){
-              rr = rjm[g][j][m];
-              nm = Nm[g][j][m];
-              x = Xm[m];
-              elll = rr*log(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))) +
-                (nm - rr) * log(1-(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))));
-              ell += + elll;
-              if(traits::is_nan<REALSXP>(ell)) ell_check = j+1;
-            }
-          }
-        }
-      } else {    // Bayes parameter estimation
-        double da,db,dc;
-        for(int g=0; g<ng; g++){
-          for(int j=0; j<nj; j++){
-            if(ind(g,j) == 0) continue;
-            a = t0(j,0);
-            b = t0(j,1);
-            c = t0(j,2);
-            for(int m=0; m<N; m++){
-              rr = rjm[g][j][m];
-              nm = Nm[g][j][m];
-              x = Xm[m];
-              elll = rr*log(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))) +
-                (nm - rr) * log(1-(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))));
-              ell += elll;
-            }
-            da = -1/a - (log(a)-mu_a)/a*sigma_a*sigma_a;
-            db = -(b-mu_b)/sigma_b*sigma_b;
-            dc = (alpha_c-2)/c - (beta_c-2)/(1-c); // たぶんここのパラメタの計算が非数になる原因だと思われる。
-            ell += (da + db + dc);
-            if(traits::is_nan<REALSXP>(ell)) ell_check = j+1;
-          }
-        }
-      }
+    //const int e_ell = 0,//'@param e_ell If 1 use a CC of expected log likelihood.
 
 
-      if(print >= 1) Rcout << "\n expected log complete data likelihood is " <<ell;
+    //double ell=0;
+    //double rr,nm,elll;
+    //int ell_check = 0;
+    //if(e_ell==1){
 
-      if(traits::is_nan<REALSXP>(ell) && Bayes != 1){
-        // 対数尤度の計算に失敗したら，計算を中止する。
-        stop("Can't calculate expected log complete data likelihood.\nItem %d is not converged. Check P.BIS!", ell_check);
-      }
+    //  if(Bayes == 0){
+    //    // 期待対数完全データ尤度関数
+    //    for(int g=0; g<ng; g++){
+    //      for(int j=0; j<nj; j++){
+    //        if(ind(g,j) == 0) continue;
+    //        a = t0(j,0);
+    //        b = t0(j,1);
+    //        c = t0(j,2);
+    //        for(int m=0; m<N; m++){
+    //          rr = rjm[g][j][m];
+    //          nm = Nm[g][j][m];
+    //          x = Xm[m];
+    //          elll = rr*log(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))) +
+    //            (nm - rr) * log(1-(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))));
+    //          ell += + elll;
+    //          if(traits::is_nan<REALSXP>(ell)) ell_check = j+1;
+    //        }
+    //      }
+    //    }
+    //  } else {    // Bayes parameter estimation
+    //    double da,db,dc;
+    //    for(int g=0; g<ng; g++){
+    //      for(int j=0; j<nj; j++){
+    //        if(ind(g,j) == 0) continue;
+    //        a = t0(j,0);
+    //        b = t0(j,1);
+    //        c = t0(j,2);
+    //        for(int m=0; m<N; m++){
+    //          rr = rjm[g][j][m];
+    //          nm = Nm[g][j][m];
+    //          x = Xm[m];
+    //          elll = rr*log(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))) +
+    //            (nm - rr) * log(1-(c+(1.0-c)/(1.0+exp(-D*a*(x-b)))));
+    //          ell += elll;
+    //        }
+    //        da = -1/a - (log(a)-mu_a)/a*sigma_a*sigma_a;
+    //        db = -(b-mu_b)/sigma_b*sigma_b;
+    //        dc = (alpha_c-2)/c - (beta_c-2)/(1-c); // たぶんここのパラメタの計算が非数になる原因だと思われる。
+    //        ell += (da + db + dc);
+    //        if(traits::is_nan<REALSXP>(ell)) ell_check = j+1;
+    //      }
+    //    }
+    //  }
 
-    }
 
+    //  if(print >= 1) Rcout << "\n expected log complete data likelihood is " <<ell;
 
-
-
+    //  if(traits::is_nan<REALSXP>(ell) && Bayes != 1){
+    //    // 対数尤度の計算に失敗したら，計算を中止する。
+    //    stop("Can't calculate expected log complete data likelihood.\nItem %d is not converged. Check P.BIS!", ell_check);
+    //  }
+    //}
     ////////////////////////
     // M step starts here //
     ////////////////////////
@@ -754,7 +750,7 @@ List estip (DataFrame x,
         if(c1 < 0 || c1 > 1 || traits::is_nan<REALSXP>(fabs(c1 - c))){
           //skip_para(j,2) += 1; // count up skip vector
           warning("'c' must be real value between 0 to 1. Error of item %i in %i time iteration.", j+1, count1);
-          Rprintf("The model of item %i is changed from '3PL' to '2PL'." );
+          Rprintf("\nThe model of item %i is changed from '3PL' to '2PL'." , j+1);
           t0m(j,2) = 0;
           model[j] = "2PL"; // 2PLに変更する。
           conv2 = 1; // 次の項目パラメタの更新へスキップ

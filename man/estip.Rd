@@ -12,8 +12,7 @@ estip(x, model0 = as.character(c("2PL")), N = 31L, bg0 = 1L,
   sigma_a = 1, mu_b = 0, sigma_b = 2, mu_c = 1/5, w_c = 5,
   fix = 1L, print = 0L, min_a = 0.1, maxabs_b = 20,
   maxiter_em = 200L, maxiter_j = 20L, maxskip_j = 0L,
-  rm_list = as.character(c("NONE")), thdist = "normal", e_ell = 0L,
-  EM_dist = 1L)
+  rm_list = as.character(c("NONE")), thdist = "normal", EM_dist = 1L)
 }
 \arguments{
 \item{x}{an item response data which class is data.frame object.}
@@ -83,8 +82,6 @@ estip(x, model0 = as.character(c("2PL")), N = 31L, bg0 = 1L,
 \item{rm_list}{a vector of item U want to remove for estimation. NOT list.}
 
 \item{thdist}{Which distribution do you want \code{normal} or \code{empirical} for E step.}
-
-\item{e_ell}{If 1 use a CC of expected log likelihood.}
 
 \item{EM_dist}{If 1, calculate esimated population distribution via EM argorithm.}
 }
