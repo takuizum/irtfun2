@@ -326,7 +326,8 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@param mintheta the minimum value of theta in integration.
 #'@param mu a hyperparameter of prior distribution.
 #'@param sigma same as above.
-#'@param sampling_engine an option of sampling engine. "R" is for loop in R lang so too slow, but "Cpp" is for loop in C++ lang so very fast.
+#'@param sampling_engine an option of sampling engine. if select "rejection_R", the rejection samplimg method is conducted and this engine loop witten in R lang this is so too slow, but "rejection_pp" is for loop in C++ lang so very fast. If select "slice_R" , the slice sampling method will be conducted.
+#'@param warm_up the number of iteration times for warm up in slice sampling
 #'@return a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
 #'@author Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
 #'
@@ -336,7 +337,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@export
 
 estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="default", output=FALSE, IDc=1, gc=2, fc=3,
-                    gh = TRUE, N = 31, D=1.702, maxtheta = 6, mintheta = -6, mu=0, sigma=1, sampling_engine="R"){
+                    gh = TRUE, N = 31, D=1.702, maxtheta = 6, mintheta = -6, mu=0, sigma=1, sampling_engine="rejection_Cpp", warm_up = 100){
 
   #message("データチェック")
   ID <- xall[,IDc]
@@ -494,22 +495,19 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
 
     # 使用するベクトルと行列を予め作成しておく。
     pv <- matrix(0,n,nofrands)
-    times <- 0
-
-    cat("Sampling Plausible Values based on von Neumann Rejection sampling.\n")
-
-    if(sampling_engine=="Cpp"){
+    if(sampling_engine=="rejection_Cpp"){
+      cat("Sampling Plausible Values based on von Neumann Rejection sampling.\n")
       cat("C++ version.")
       d1 <- eap_apply[1,]
       d2 <- eap_apply[3,]
       pv <- theta_pv(x=x.all, nofrands=nofrands,eap_apply=d1,const_apply=d2,map_apply=map_apply,
                      n=n,maxtheta=maxtheta,mintheta=mintheta,a=a,b=b,c=c,D=D,mu=mu,sigma=sigma)
-    } else if( sampling_engine=="R"){
+    } else if( sampling_engine=="rejection_R"){
+      cat("Sampling Plausible Values based on von Neumann Rejection sampling.\n")
       cat("R version \n")
       x.all <- as.matrix(x.all)
       for(k in 1:n){
         xi <- x.all[k,]
-        times <- times + 1
 
         #すでに計算してあるEAP推定値と，事後分布の分子を取り出して行列として展開。
         eap   <- eap_apply[1,k]
@@ -525,18 +523,79 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
         zmin <- mintheta + eap
 
         nofpv <- 0
-        while( nofpv <= nofrands ){
+        while( nofpv < nofrands ){
 
           y <- runif(n = 1, min = 0, max = yheight)
           z <- runif(n = 1, min = zmin, max = zmax)
           fg <- Ffg(xi=xi,theta=z,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
           fgvalue <- fg/const
           #cat(" y is",y," fgvalue is", fgvalue,"\r")
-
           if( y <= fgvalue){
             nofpv <- nofpv + 1
-            if( nofpv > nofrands) break
             pv[k,nofpv] <- z
+          }
+        }
+        cat(k ," / ", n," \r")
+      }
+    }else if(sampling_engine=="slice_R"){
+      cat("Sampling Plausible Values based via slice sampling.\n")
+      cat("slice sampling in R\n")
+      x.all <- as.matrix(x.all)
+      sum_w <- 0 # a parrameter rerated range I(L,R)
+      w <- sigma # estimate of the typical size of a slice
+      for(k in 1:n){
+        xi <- x.all[k,]
+        times <- 0
+        nofpv <- 0
+        # theta軸上の初期値を決定する
+        z0 <- runif(1,min=mintheta,max=maxtheta)
+        while(nofpv<nofrands){
+          # Draw a real value , y, uniformly from (0,fg(z0))
+          fg <- Ffg(xi=xi,theta=z0,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+          y <- runif(1,0,fg)
+          # Find an interval, I=(L,R)
+          # stepping out procedure
+          # レンジを決めるための初期値
+          m_lim <- 10#integer limitating the size of a slice to m_lim*w
+          U <- runif(1)
+          L <- z0 - w*U
+          R <- L + w
+          V <- runif(1)
+          J <- floor(m_lim*V)
+          K <- (m_lim-1)-J
+          fL <- Ffg(xi=xi,theta=L,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+          while(J>0 && y<fL){
+            L <- L-w
+            J <- J-1
+            fL <- Ffg(xi=xi,theta=L,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+          }
+          fR <- Ffg(xi=xi,theta=R,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+          while(K>0 && y<fR){
+            R <- R+w
+            K <- K-1
+            fR <- Ffg(xi=xi,theta=R,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+          }
+          # shrinkage procedure
+          Lb <- L
+          Rb <- R
+          repeat {
+            U <- runif(1)
+            z1 <- Lb+U*(Rb-Lb)
+            fz <- Ffg(xi=xi,theta=z1,a=a,b=b,c=c,mu=mu,sigma=sigma,D=D)
+            if(y<fz){
+              times <- times + 1
+              if(times > warm_up){
+                nofpv <- nofpv + 1
+                pv[k,nofpv] <- z1 # accept
+              }
+              # update parameter w and z0
+              sum_w <- sum_w+abs(z0-z1)
+              w <- sum_w/k
+              z0 <- z1
+              break
+            }
+            if(z1<z0) Lb <- z1
+            else Rb <- z1
           }
         }
         cat(k ," / ", n," \r")

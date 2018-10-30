@@ -7,7 +7,8 @@
 estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
   file = "default", output = FALSE, IDc = 1, gc = 2, fc = 3,
   gh = TRUE, N = 31, D = 1.702, maxtheta = 6, mintheta = -6,
-  mu = 0, sigma = 1, sampling_engine = "R")
+  mu = 0, sigma = 1, sampling_engine = "rejection_Cpp",
+  warm_up = 100)
 }
 \arguments{
 \item{xall}{a item response data}
@@ -44,7 +45,9 @@ estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
 
 \item{sigma}{same as above.}
 
-\item{sampling_engine}{an option of sampling engine. "R" is for loop in R lang so too slow, but "Cpp" is for loop in C++ lang so very fast.}
+\item{sampling_engine}{an option of sampling engine. if select "rejection_R", the rejection samplimg method is conducted and this engine loop witten in R lang this is so too slow, but "rejection_pp" is for loop in C++ lang so very fast. If select "slice_R" , the slice sampling method will be conducted.}
+
+\item{warm_up}{the number of iteration times for warm up in slice sampling}
 }
 \value{
 a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
