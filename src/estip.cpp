@@ -281,7 +281,8 @@ List estip (DataFrame x,
   NumericMatrix Um (N,ng); // 推定母集団分布計算用
   NumericVector mean (ng);
   NumericVector sd (ng);
-  NumericMatrix dist (0);
+  NumericMatrix dist (N,ng+1);
+  dist(_,0) = Xm;
   mean = mean + mu;
   sd = sd + sigma;
 
@@ -339,12 +340,14 @@ List estip (DataFrame x,
           double wn = dnn[m] / dn;
           Wm(m,g) = wn;
         }
+        dist(_,g+1) = Wm(_,g);
       }
     } else if(thdist == "empirical" && count1 != 1){
       for(int g=0; g<ng; g++){
         for(int m=0; m<N; m++){
           Wm(m,g) = Um(m,g);
         }
+        dist(_,g+1) = Wm(_,g);
       }
     }
 
@@ -1335,6 +1338,69 @@ List estip (DataFrame x,
   unif_dist = cbind(Xm,Um);
 
 
+  // Item Fit index
+  // reference: Mayekawa, S. (1991) Estimation of Item parameter.
+  // Xm; node
+  //
+  boost::multi_array <double, 3> EMfit (boost::extents[ng][nj][N]);
+
+  Rcout<<"expected frequency of subjects in each nodes calculation.\n";
+  double k,kk;
+  for(int g=0; g<ng; g++){
+    for(int j=0; j<nj; j++){ // 各分点の期待度数
+      if(ind(g,j) == 0) continue;
+      for(int m=0; m<N; m++){
+        k = 0;
+        for(int i=0; i<ni; i++){ // 欠測値がある場合，項目ごとに受検者数が異なる。
+          if(resp(i,j)==0) continue;
+          //double d = resp(i,j);
+          kk = Gim[g][i][m];
+          k += kk; //* d;
+        }
+        Nm[g][j][m]= k;
+      }
+    }
+  }
+
+  Rcout<<"expected freqency of correct response number in each nodes calculation.\n";
+
+  double h,gg,hh,u;
+  for(int g=0; g<ng; g++){
+    for(int j=0; j<nj; j++){ // 各分点の正答受検者の期待度数
+      if(ind(g,j) == 0) continue;
+      for(int m=0; m<N; m++){
+        h = 0;
+        for(int i=0; i<ni; i++){ // sum
+          //double d = resp(i,j);
+          if(resp(i,j) == 0) continue;
+          u = xall(i,j); // そもそもその項目に回答していない場合は，度数に数え上げない
+          gg = Gim[g][i][m];
+          hh = u*gg;
+          h += hh;
+        }
+        rjm[g][j][m] = h;
+      }
+    }
+  }
+
+  for(int g=0; g<ng; g++){
+    for(int j=0; j<nj; j++){
+      double a = t0(j,0);
+      double b = t0(j,1);
+      double c = t0(j,2);
+      //
+      for(int m=0; m<N; m++){
+        double tpjm = c+(1.0-c)/(1.0+exp(-D*a*(Xm[m]-b))); // theoritical item correct response rate
+        double rpjm = rjm[g][j][m]/Nm[g][j][m]; // real item passing rate
+        double ejm = rpjm - tpjm; // x-t
+        EMfit[g][j][m] = ejm;
+      }// end of m
+    }// end of j(item)
+  }// end of g
+
+
+
+
 
   // アウトプットファイルの調整
 
@@ -1345,9 +1411,9 @@ List estip (DataFrame x,
   List res = List::create(_["para"] = Para, _["SE"] = SE_d, _["initial"] = initial,
                           _["theta.dist"] = dist, _["ms"] = ms,_["mean"] = mean, _["sd"] = sd,
                           _["population_dist"] = unif_dist, _["population_mean"] = mean_pop, _["population_sd"] = sd_pop,
-                            _["MLL"] = MLL, _["conv"] = conv, _["count1"] = count1, _["count2"] = count2,
-                              _["skip_para"] = skip_para, _["rm_n"] = rm_n, _["rm_id"] = rm_id ,
-                              _["p_bis"] = r, _["raw_score"] = rs, _["passing_rate"] = p
+                          _["MLL"] = MLL, _["conv"] = conv, _["count1"] = count1, _["count2"] = count2,
+                          _["skip_para"] = skip_para, _["rm_n"] = rm_n, _["rm_id"] = rm_id ,
+                          _["p_bis"] = r, _["passing_rate"] = p, _["itemfit_EM"] = EMfit
   );
 
   return res;

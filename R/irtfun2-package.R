@@ -73,10 +73,11 @@ pitheta_r <- function(dat,a,b,c,sigma,D){
 WL <- function(xi, theta, a, b,c,D){
   p <- ptheta(theta,a,b,c,D)
   pi <- pitheta(theta,a,b,c,D)
-  L1 <- sum(xi*log(p)+(xi-1)*log(1-p),na.rm = T)
-  L2 <- sum(xi*log(p),na.rm=T)
-  B <- sqrt(pi)
-  L1 + L2 + B
+  W <- sqrt(pi)
+  #L1 <- sum(xi*log(p)+(xi-1)*log(1-p),na.rm = T)
+  #L2 <- sum(xi*log(p),na.rm=T)
+  L <- LL(xi,theta,a,b,c,D)
+  L + W
 }
 
 # E_3(theta) : expectation
