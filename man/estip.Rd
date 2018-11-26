@@ -29,7 +29,7 @@ estip(x, model0 = as.character(c("2PL")), N = 31L, bg0 = 1L,
 
 \item{gc0}{a column of group. the element must be integer and the minimum number must be 1.}
 
-\item{eMLL}{a convergence criteria(CC) forf marginal log likelihood.}
+\item{eMLL}{a convergence criteria(CC) for marginal log likelihood.}
 
 \item{eEM}{a CC in EM cycle.}
 

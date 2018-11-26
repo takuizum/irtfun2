@@ -1,6 +1,6 @@
 Package: irtfun2
 Title: Some useful functions for IRT
-Version: 0.6.6
+Version: 0.6.6.1
 Authors@R: person("Takumi", "Shibuya", email = "sep10.taku.izum@gmail.com", role = c("aut", "cre"))
 Description: This package provedes functions for IRT analysis, for instance, estimation item and subject parameter. Need C++ compiler(Rtools or Xcode etc) to use a part of functions.
 Depends: R (>= 3.4.0)
@@ -8,7 +8,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Imports: 
     magrittr,
     stats,

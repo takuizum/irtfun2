@@ -13,7 +13,7 @@ using namespace Rcpp;
 //'@param model0 Character.U can select which one, "1PL","2PL","3PL".
 //'@param N the number of nodes in integration.
 //'@param bg0 the number of base grade.
-//'@param eMLL a convergence criteria(CC) forf marginal log likelihood.
+//'@param eMLL a convergence criteria(CC) for marginal log likelihood.
 //'@param eEM a CC in EM cycle.
 //'@param eM a CC in M step.
 //'@param emu a CC for population distribution mean.
@@ -406,7 +406,7 @@ List estip (DataFrame x,
           l = Lim[g][i][m];
           w = Wm(m,g);
           fff =  l*w ;
-          ff += fff;
+          ff *= fff;
         }
         f += log(ff);
       }

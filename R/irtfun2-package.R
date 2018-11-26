@@ -5,6 +5,8 @@
 #' @importFrom stats optimise
 #' @importFrom stats optim
 #' @importFrom stats runif
+#' @importFrom stats cor
+#' @importFrom stats qnorm
 #' @useDynLib irtfun2, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 "_PACKAGE"
@@ -21,12 +23,14 @@ ptheta <- function(theta,a,b,c,D=1.702){
 
 # 対数尤度
 LL <- function(u,theta,a,b,c,D){
-  sum(u*log(ptheta(theta,a,b,c,D))+(1-u)*log(1-ptheta(theta,a,b,c,D)),na.rm = T)
+  p <- ptheta(theta,a,b,c,D)
+  sum(u*log(p)+(1-u)*log(1-p),na.rm = T)
 }
 
 # 尤度関数
 LL_b <- function(u,theta,a,b,c,mu,sigma,D){
-  sum(log(ptheta(theta,a,b,c,D))*u+log(1-ptheta(theta,a,b,c,D))*(1-u)-0.5*((theta-mu)/sigma)^2,na.rm = T)
+  p <- ptheta(theta,a,b,c,D)
+  sum(log(p)*u+log(1-p)*(1-u)-0.5*((theta-mu)/sigma)^2,na.rm = T)
 }
 
 # 一階偏微分
@@ -77,7 +81,7 @@ WL <- function(xi, theta, a, b,c,D){
   #L1 <- sum(xi*log(p)+(xi-1)*log(1-p),na.rm = T)
   #L2 <- sum(xi*log(p),na.rm=T)
   L <- LL(xi,theta,a,b,c,D)
-  L + W
+  L * W
 }
 
 # E_3(theta) : expectation
