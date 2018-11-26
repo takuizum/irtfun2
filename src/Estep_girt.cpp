@@ -53,7 +53,7 @@ List Estep_girt(DataFrame x,
   double phi, theta, a, b, tt, t, A, e, p;
   for(int r=0; r<nr; r++){
     phi = Yr[r];
-    Rprintf("%d % / 100%\r", 100/nr*(r+1));
+    //Rprintf("%d % / 100%\r", 100/nr*(r+1));
     for(int q=0; q<nq; q++){
       theta = Xq[q];
       for(int i=0; i<nn; i++){

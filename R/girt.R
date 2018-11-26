@@ -98,32 +98,32 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
     # E step
     knqr <- array(dim = c(nn,nq,nr))
     mll <- 0
+    ml <- numeric(nn)
     if(engine=="R"){
       for(r in 1:nr){
         cat(round(100/nr*r, digits = 1),"% / 100%\r")
         for(q in 1:nq){
           l <- apply(X, 1, gL, theta=Xq[q], phi=Yr[r], a=a0, b=b0, D=1.702)*AX[q]*BY[r]
           knqr[,q,r] <- l
-          mll <-sum(c(mll,sum(log(l))[!is.infinite(sum(log(l)))]))
+          ml <- ml + l
         }
       }
-      cat("-2 Marginal Loglikelihood is",-2*mll,"\n")
-      mll_history <- c(mll_history,mll)
-
+      mll <- sum(log(ml))
     } else if(engine=="Cpp"){
-      temp <- Estep_girt(X,a0,b0,Xq,AX,Yr,BY,D=1.7)
-
+      temp <- Estep_girt(X,a0,b0,Xq,AX,Yr,BY,D=1.702)
       for(i in 1:nn){
         #cat(round(100/nn*i, digits = 1),"% / 100%\r")
         for(q in 1:nq){
           l <- temp$knqr[[i]][[q]]
           knqr[i,q,] <- l
-          mll <-sum(c(mll,sum(log(l))[!is.infinite(sum(log(l)))]))
+          ml[i] <- ml[i] + sum(l)
         }
       }
-      cat("-2 Marginal Loglikelihood is",-2*mll,"\n")
-      mll_history <- c(mll_history,mll)
+      mll <- sum(log(ml))
     }
+
+    cat("-2 Marginal Loglikelihood is",-2*mll,"\n")
+    mll_history <- c(mll_history,mll)
 
     # 規格化
     std_mat <- apply(knqr,1,sum)
