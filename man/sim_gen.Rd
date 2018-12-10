@@ -4,20 +4,25 @@
 \alias{sim_gen}
 \title{Generate simulation binary data in IRT.}
 \usage{
-sim_gen(theta, a, b, c, item = "A", power = 0)
+sim_gen(theta, phi = NULL, a, b, c = NULL, item = "A", power = 0,
+  D = 1.702)
 }
 \arguments{
 \item{theta}{theta vector}
+
+\item{phi}{vector of hyperparameter of phi in GIRT model. Default is \code{NULL}}
 
 \item{a}{slope parameter.}
 
 \item{b}{location parameter.}
 
-\item{c}{asymptote parameter.}
+\item{c}{asymptote parameter. Default is \code{NULL}}
 
 \item{item}{Character. item code.}
 
 \item{power}{a power of probability of NA. for example power = 1/5}
+
+\item{D}{a factor constant.}
 }
 \description{
 This function contain \code{resfunc} and \code{subfunc}.

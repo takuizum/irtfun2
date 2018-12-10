@@ -5,7 +5,9 @@
 \title{Genelar Item Response Theory parameter estimation}
 \usage{
 estGip(x, fc = 3, IDc = 1, Ntheta = 31, Nphi = 31,
-  engine = "Cpp", eEM = 0.001, eMLL = 0.001, maxiter_em = 100)
+  engine = "Cpp", eEM = 0.001, eMLL = 0.001, maxiter_em = 100,
+  method = "L-BFGS-B", phi_dist = "invchi", v = 1, tau = 1,
+  mu_ph = 0, sigma_ph = 1, mu_th = 0, sigma_th = 1)
 }
 \arguments{
 \item{x}{DataFrame.}

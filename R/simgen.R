@@ -57,15 +57,24 @@ resfunc <- function(prob,power){
 #'
 #' This function contain `resfunc` and `subfunc`.
 #' @param theta theta vector
+#' @param phi vector of hyperparameter of phi in GIRT model. Default is `NULL`
 #' @param a slope parameter.
 #' @param b location parameter.
-#' @param c asymptote parameter.
+#' @param c asymptote parameter. Default is `NULL`
 #' @param item Character. item code.
 #' @param power a power of probability of NA. for example power = 1/5
+#' @param D a factor constant.
 #' @export
 
-sim_gen <- function(theta, a, b, c, item = 'A', power=0){
-  prob <- t(apply(matrix(theta, ncol = 1), 1, ptheta, a=a, b=b, c=c))
+sim_gen <- function(theta, phi=NULL, a, b, c=NULL, item = 'A', power=0, D=1.702){
+  if(is.null(phi)){
+    # IRT
+    if(is.null(c)) c <- rep(0,length(a))
+    prob <- t(apply(matrix(theta, ncol = 1), 1, ptheta, a=a, b=b, c=c, D=D))
+  }else{
+    # GIRT
+    prob <- t(mapply(gptheta, matrix(theta, ncol = 1), matrix(phi, ncol=1), MoreArgs = list(a=a, b=b, D=D)))
+  }
 
   # generate item respinse pattern
   test <- t(apply(prob, 1, resfunc, power=power))

@@ -193,7 +193,7 @@ FthetaMAP <- function(xi,a,b,c,mu,sigma,D,groupitem, maxtheta=6,mintheta=-6,meth
             t1 <- (p+q)/2
             mf <- fpdLPD(xi,t1,a,b,c,mu,sigma,D)
             if (abs(pf-qf)<0.001 || c == 1000){
-              cat("change bisection method. \r")
+              cat("change to the bisection method. \r")
               conv2 <- 1
               conv1 <- 1
             }else{
@@ -254,7 +254,7 @@ FthetaMLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6,method="NR"){
         t0 <- t1
         d <- d +1
         if(d > 100 || abs(t0)>10 ||is.nan(t1)){ # ニュートン法の繰り返しが100回を超えたら，二分法に切り替える。
-          cat("change bisection method.\n")
+          cat("change to the bisection method.\r")
           conv2 <- 0
           p <- maxtheta ; q <- mintheta
           while(conv2 == 0){
@@ -344,7 +344,15 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="default", output=FALSE, IDc=1, gc=2, fc=3,
                     gh = TRUE, N = 31, D=1.702, maxtheta = 6, mintheta = -6, mu=0, sigma=1, sampling_engine="rejection_Cpp", warm_up = 100){
 
-  #message("データチェック")
+  #chack the arguments
+  arg_est <- c("EAP","MAP","MLE","WLE","PVs")
+  arg_method <- c("NR","Brent","SANN")
+  arg_engine <- c("rejection_R","rejection_Cpp","slice_R")
+
+  if(est != arg_est) stop("'est' argument is incorrect!")
+  if(method != arg_engine) stop("'method' argument is incorrect!")
+  if(sampling_engine != arg_engine) stop("'sampling_engune' argument is incorrect!")
+  #check the data
   ID <- xall[,IDc]
   if(gc == 0){
     group <- rep(1, nrow(xall))

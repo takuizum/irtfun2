@@ -44,6 +44,9 @@ using namespace Rcpp;
 //'@param rm_list a vector of item U want to remove for estimation. NOT list.
 //'@param thdist Which distribution do you want `normal` or `empirical` for E step.
 //'@param EM_dist If 1, calculate esimated population distribution via EM argorithm.
+//'@param Elastic_Net If 1, add penalize in a parameter by Elastic-Net.
+//'@param lambda a constant of penalty.
+//'@param per Hyper parameter to adjust the relative contribution.
 //'@export
 // [[Rcpp::export]]
 
@@ -82,7 +85,10 @@ List estip (DataFrame x,
             const int maxskip_j = 0,
             CharacterVector rm_list = CharacterVector::create("NONE"),
             const String thdist = "normal",
-            const int EM_dist = 1
+            const int EM_dist = 1,
+            const int Elastic_Net = 1,
+            const double lambda = 0.1,
+            const double per = 0.5
 ){
   // argument check
   for(int j=0; j<model0.length(); j++){
@@ -406,7 +412,7 @@ List estip (DataFrame x,
           l = Lim[g][i][m];
           w = Wm(m,g);
           fff =  l*w ;
-          ff *= fff;
+          ff += fff;
         }
         f += log(ff);
       }
@@ -579,7 +585,7 @@ List estip (DataFrame x,
         double a = t0m(j,0);
         double b = t0m(j,1);
         double c = t0m(j,2);
-        // each element of Fisher's information matrix and gradient vector
+        // each element of Fisher scoring matrix and gradient vector
 
         double daa,dbb,dcc,dab,dac,dbc;
         double da, db, dc;
@@ -670,6 +676,20 @@ List estip (DataFrame x,
           da += -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
           db += -(b-mu_b)/(sigma_b*sigma_b);
           dc += (alpha_c-2)/c - (beta_c-2)/(1-c);
+
+          //ニュートンラフソンに拡張したとき用に保存。フィッシャースコアリングでは要らない（情報行列なので）
+          // second partial derivatives
+          //daa += 1/(a*a) - (1-log(a)+mu_a)/(a*a*sigma_a*sigma_a);
+          //dbb += -1/(sigma_b*sigma_b);
+          //dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
+          //非対角要素は通常の二階偏微分と同じ。
+
+        }
+
+        if(Elastic_Net==1){
+          //double lambda=0.1;
+          //double per=0.5;
+          da += lambda*((1-per)*a*per);
         }
         //Rcout<<"daa"<<daa<<"dbb"<<dbb<<"dcc"<<dcc<<"dac"<<dab<<"dac"<<dac<<"dbc"<<dbc<<"da"<<da<<"db"<<db<<"dc"<<dc<<"\r";
 

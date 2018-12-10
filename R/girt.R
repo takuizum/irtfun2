@@ -6,7 +6,6 @@ gptheta <- function(theta,phi,a,b,D){
   p <- 1/(1+e)
   p
 }
-gptheta(1,1,1,0,1)
 
 # likelihood
 gL <- function(u,theta,phi,a,b,D){
@@ -14,7 +13,7 @@ gL <- function(u,theta,phi,a,b,D){
   prod(p^u*(1-p)^(1-u))
 }
 
-#chi inv dist
+#' The density of chi inv dist
 #' inverse chi distribution
 #'
 #' @param phi phi. upper 0.
@@ -22,13 +21,39 @@ gL <- function(u,theta,phi,a,b,D){
 #' @param tau a parameter.
 #' @export
 #'
-invchi <- function(phi, v=3, tau=1){
+dinvchi <- function(phi, v=1, tau=1){
   pow <- v/2
   A <- tau^pow
   B <- 2^(pow-1)*gamma(pow)
   C <- phi^-(v+1)
   D <- exp(-tau/(2*phi^2))
   A/B*C*D
+}
+
+sub_rinvx <- function(max, v, tau){
+  repeat {
+    x <- runif(1,min=0,max=max) # random value
+    y <- runif(1) # condition to accept or reject random value
+    p <- dinvchi(x, v=v, tau=tau)
+    if(p>=y)break
+  }
+  x
+}
+
+#'The random number of chi inv dist
+#'
+#'@param n the numeber of random variable to generate
+#'@param maz max ov vector
+#'@param v hyper parameter
+#'@param tau hyper parameter
+#'@export
+#'
+rinvchi <- function(n, max=5, v=1, tau=1){
+  if(is.null(max)) stop("Need a real number to argument 'max' !!")
+  if(max <= 0) stop("Need a real number to argument 'max' !!")
+  if(n <= 0) stop("Need a positive number to argument 'n' !!")
+  x <- matrix(rep(max,n))
+  apply(x,1,sub_rinvx,v=v,tau=tau)
 }
 
 # M step
@@ -64,7 +89,10 @@ Elnk_j <- function(rj,N,t0,Xq,Yr,D){
 #' @param maxiter_em the number of iteration of EM cycle.
 #' @export
 #'
-estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, eMLL=0.001, maxiter_em=100){
+estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, eMLL=0.001, maxiter_em=100, method="L-BFGS-B",
+                   phi_dist = "invchi", v=1, tau=1, mu_ph=0, sigma_ph=1, mu_th=0, sigma_th=1){
+
+  if(!(method %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent"))) stop("argument input of `method` is improper string!!")
 
   ID <- x[,IDc]
   X <- x[,fc:ncol(x)]
@@ -75,10 +103,16 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
 
   # weight and nodes
   Xq <- seq(-4,4, length.out = nq)
-  AX <- dnorm(Xq)/sum(dnorm(Xq)) # for theta
-  Yr <- seq(0.1,5, length.out = nr)
-  BY <- invchi(Yr, v=2)/sum(invchi(Yr)) # for phi
-
+  AX <- dnorm(Xq, mean=mu_th, sd=sigma_th)/sum(dnorm(Xq, mean=mu_th, sd=sigma_th)) # for theta
+  Yr <- seq(0.001,5, length.out = nr)
+  if(phi_dist == "invchi"){
+    BY <- dinvch(Yr, v=v, tau=tau)/sum(dinvch(Yr, v=v, tau=tau)) # for phi
+  }else if(phi_dist == "lognormal"){
+    BY <- dlnorm(Yr)/sum(dlnorm(Yr)) # for phi
+  }else{
+    stop("argument input of `phi_dist` is improper string!!")
+  }
+  #
   # initial value
   r <- as.vector(cor(rowSums(X),X))
   pass <- colMeans(X)
@@ -144,7 +178,7 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
     for(j in 1:nj){
       cat("Optimising item ",j,"\r")
       res <- optim(par=c(a0[j],b0[j]), fn=Elnk_j, control = list(fnscale = -1),
-                   rj=rjqr[j,,], N=Nqr, Xq=Xq, Yr=Yr, D=1.702)
+                   rj=rjqr[j,,], N=Nqr, Xq=Xq, Yr=Yr, D=1.702, method = method)
       t1[j,] <- res$par
     }
 
@@ -190,6 +224,3 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
 
   return(res)
 }
-
-
-#res <- estGip(dat,fc=2, maxiter_em = 2, engine = "R", Ntheta = 10, Nphi=10)
