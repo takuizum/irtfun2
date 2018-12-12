@@ -2,12 +2,13 @@
 % Please edit documentation in R/girt.R
 \name{estGip}
 \alias{estGip}
-\title{Genelar Item Response Theory parameter estimation}
+\title{Generalized Item Response Theory parameter estimation}
 \usage{
 estGip(x, fc = 3, IDc = 1, Ntheta = 31, Nphi = 31,
-  engine = "Cpp", eEM = 0.001, eMLL = 0.001, maxiter_em = 100,
-  method = "L-BFGS-B", phi_dist = "invchi", v = 1, tau = 1,
-  mu_ph = 0, sigma_ph = 1, mu_th = 0, sigma_th = 1)
+  engine = "Cpp", method = "L-BFGS-B", phi_dist = "invchi", v = 3,
+  tau = 1, mu_ph = 0, sigma_ph = 0.25, min_ph = 0, max_ph = 5,
+  paramab = c(1, 4), mu_th = 0, sigma_th = 1, min_th = -4,
+  max_th = 4, eEM = 0.001, eMLL = 0.001, maxiter_em = 100)
 }
 \arguments{
 \item{x}{DataFrame.}
@@ -22,6 +23,32 @@ estGip(x, fc = 3, IDc = 1, Ntheta = 31, Nphi = 31,
 
 \item{engine}{Estep calculation engine.\code{Cpp} is very faster than \code{R}.}
 
+\item{method}{the method of optimiser \code{optim()} function. Default is "L-BFG-S".}
+
+\item{phi_dist}{a prior distribution of phi. \code{invchi} is inverse chi distribution. \code{lognormal} is log normal distribution.}
+
+\item{v}{a hyper parameter of invchi for phi}
+
+\item{tau}{a hyper parameter of invchi for phi}
+
+\item{mu_ph}{a hyper parameter of lognormal dist for phi}
+
+\item{sigma_ph}{a hyper parameter of lognormal dist for phi}
+
+\item{min_ph}{a minimum value of phi distribution}
+
+\item{max_ph}{a maximum value of phi distribution}
+
+\item{paramab}{a hyper parameter of generalized beta distribution}
+
+\item{mu_th}{a hyper parameter of normal dist for theta}
+
+\item{sigma_th}{a hyper parameter of normal dist for theta}
+
+\item{min_th}{a minimum value of theta distribution}
+
+\item{max_th}{a maximum value of theta distribution}
+
 \item{eEM}{a convergence criterion of item parameters in EM cycle.}
 
 \item{eMLL}{a convergence criterion of marginal log likelihood in EM cycle.}
@@ -29,5 +56,5 @@ estGip(x, fc = 3, IDc = 1, Ntheta = 31, Nphi = 31,
 \item{maxiter_em}{the number of iteration of EM cycle.}
 }
 \description{
-Genelar Item Response Theory parameter estimation
+Generalized Item Response Theory parameter estimation
 }

@@ -25,5 +25,5 @@ sim_gen(theta, phi = NULL, a, b, c = NULL, item = "A", power = 0,
 \item{D}{a factor constant.}
 }
 \description{
-This function contain \code{resfunc} and \code{subfunc}.
+This function contains \code{resfunc} and \code{subfunc}.
 }

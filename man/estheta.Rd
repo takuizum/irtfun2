@@ -45,7 +45,7 @@ estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
 
 \item{sigma}{same as above.}
 
-\item{sampling_engine}{an option of sampling engine. if select "rejection_R", the rejection samplimg method is conducted and this engine loop witten in R lang this is so too slow, but "rejection_pp" is for loop in C++ lang so very fast. If select "slice_R" , the slice sampling method will be conducted.}
+\item{sampling_engine}{an option of sampling engine. if select "rejection_R", the rejection samplimg method is conducted and this engine loop witten in R lang this is so somewhat slow, but "rejection_Cpp" is for loop in C++ lang so very fast. If select "slice_R" , the slice sampling method will be conducted.}
 
 \item{warm_up}{the number of iteration times for warm up in slice sampling}
 }
@@ -56,5 +56,5 @@ a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
 A estimation theta function.
 }
 \author{
-Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
+Takumi, Shibuya., Daisuke, Ejiri., Tadashi, Shibayama. in Tohoku University.
 }

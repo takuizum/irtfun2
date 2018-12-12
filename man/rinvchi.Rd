@@ -9,11 +9,11 @@ rinvchi(n, max = 5, v = 1, tau = 1)
 \arguments{
 \item{n}{the numeber of random variable to generate}
 
+\item{max}{max ov vector}
+
 \item{v}{hyper parameter}
 
 \item{tau}{hyper parameter}
-
-\item{maz}{max ov vector}
 }
 \description{
 The random number of chi inv dist

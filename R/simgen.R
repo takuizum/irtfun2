@@ -55,7 +55,7 @@ resfunc <- function(prob,power){
 
 #' Generate simulation binary data in IRT.
 #'
-#' This function contain `resfunc` and `subfunc`.
+#' This function contains `resfunc` and `subfunc`.
 #' @param theta theta vector
 #' @param phi vector of hyperparameter of phi in GIRT model. Default is `NULL`
 #' @param a slope parameter.

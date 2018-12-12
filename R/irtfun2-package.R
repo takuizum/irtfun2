@@ -7,6 +7,8 @@
 #' @importFrom stats runif
 #' @importFrom stats cor
 #' @importFrom stats qnorm
+#' @importFrom stats dlnorm
+#' @importFrom tidyr gather
 #' @useDynLib irtfun2, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 "_PACKAGE"
@@ -15,19 +17,49 @@
   library.dynam.unload("irtfun2", libpath)
 }
 
-
+#' The ICC of IRT 1~3PLM
+#'
+#' @param theta the person ability parameter
+#' @param a the slope parameter
+#' @param b the location parameter
+#' @param c the guessing parameter
+#' @param D a scale constant
+#' @export
+#'
 # P(theta) in two-parameter logisticmodel
 ptheta <- function(theta,a,b,c,D=1.702){
   c+(1-c)/(1+exp(-D*a*(theta-b)))
 }
 
 # 対数尤度
+#' The log likelihood function of IRT 1~3PLM
+#'
+#' @param u the item response pattern
+#' @param theta the person ability parameter
+#' @param a the slope parameter
+#' @param b the location parameter
+#' @param c the guessing parameter
+#' @param D a scale constant
+#' @export
+#'
 LL <- function(u,theta,a,b,c,D){
   p <- ptheta(theta,a,b,c,D)
   sum(u*log(p)+(1-u)*log(1-p),na.rm = T)
 }
 
-# 尤度関数
+# 対数尤度関数
+#' The log likelihood function of Bayesian IRT 1~3PLM
+#' a prior distribution is Gaussian(normal) distribution
+#' @param u the item response pattern
+#' @param theta the person ability parameter
+#' @param a the slope parameter
+#' @param b the location parameter
+#' @param c the guessing parameter
+#' @param mu a hyperparameter of prior distribution.
+#' @param sigma same as above.
+#' @param D a scale constant
+#' @export
+#'
 LL_b <- function(u,theta,a,b,c,mu,sigma,D){
   p <- ptheta(theta,a,b,c,D)
   sum(log(p)*u+log(1-p)*(1-u)-0.5*((theta-mu)/sigma)^2,na.rm = T)
@@ -57,13 +89,40 @@ spd <- function(xi,theta,a,b,c,D){
   D^2*sum(a^2*(p-c)*(xi*c-p^2)*(1-p)/(p^2*(1-c)^2),na.rm = T)
 }
 
-# テスト情報量（尤度関数の二階偏微分の負の期待値）
-pitheta <- function(theta,a,b,c,D){
+
+#' Test Information Function for IRT 1~3PLM
+#'
+#' @param theta the person ability parameter
+#' @param a the slope parameter
+#' @param b the location parameter
+#' @param c the guessing parameter
+#' @param D a scale constant
+#' @export
+#'
+tif <- function(theta,a,b,c,D){
   p <- ptheta(theta,a,b,c,D)
-  I <- D^2*sum(a^2*(1-p)*(p-c)^2/((1-c)^2*p), na.rm = T)
+  D^2*sum(a^2*(1-p)*(p-c)^2/((1-c)^2*p), na.rm = T) # I
+}
+
+FI <- function(theta,a,b,c,D){
+  p <- ptheta(theta,a,b,c,D)
+  I <- D^2*sum(a^2*(1-p)*(p-c)^2/((1-c)^2*p), na.rm = T) # I
   1/sqrt(I)
 }
-pitheta_r <- function(dat,a,b,c,sigma,D){
+
+
+#
+#' MAP posterior information for IRT 1~3PLM
+#'
+#' @param dat the matrix or data.frame which has theta and item response pattern vector
+#' @param a the slope parameter
+#' @param b the location parameter
+#' @param c the guessing parameter
+#' @param sigma a hyper parameter
+#' @param D a scale constant
+#' @export
+#'
+pitheta <- function(dat,a,b,c,sigma,D){
   # 2PLM irf
   theta <- dat[1]
   xi <- dat[-1]
@@ -76,12 +135,12 @@ pitheta_r <- function(dat,a,b,c,sigma,D){
 # likelihood function with weight
 WL <- function(xi, theta, a, b,c,D){
   p <- ptheta(theta,a,b,c,D)
-  pi <- pitheta(theta,a,b,c,D)
+  pi <- tif(theta,a,b,c,D)
   W <- sqrt(pi)
   #L1 <- sum(xi*log(p)+(xi-1)*log(1-p),na.rm = T)
   #L2 <- sum(xi*log(p),na.rm=T)
-  L <- LL(xi,theta,a,b,c,D)
-  L * W
+  LL <- LL(xi,theta,a,b,c,D)
+  LL + log(W)
 }
 
 # E_3(theta) : expectation
@@ -331,10 +390,10 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@param mintheta the minimum value of theta in integration.
 #'@param mu a hyperparameter of prior distribution.
 #'@param sigma same as above.
-#'@param sampling_engine an option of sampling engine. if select "rejection_R", the rejection samplimg method is conducted and this engine loop witten in R lang this is so too slow, but "rejection_pp" is for loop in C++ lang so very fast. If select "slice_R" , the slice sampling method will be conducted.
+#'@param sampling_engine an option of sampling engine. if select "rejection_R", the rejection samplimg method is conducted and this engine loop witten in R lang this is so somewhat slow, but "rejection_Cpp" is for loop in C++ lang so very fast. If select "slice_R" , the slice sampling method will be conducted.
 #'@param warm_up the number of iteration times for warm up in slice sampling
 #'@return a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
-#'@author Takumi, Shibuya., Daisuke, Ejiri., Tasashi, Shibayama. in Tohoku University.
+#'@author Takumi, Shibuya., Daisuke, Ejiri., Tadashi, Shibayama. in Tohoku University.
 #'
 #'@importFrom stats sd
 #'@importFrom stats var
@@ -349,15 +408,16 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
   arg_method <- c("NR","Brent","SANN")
   arg_engine <- c("rejection_R","rejection_Cpp","slice_R")
 
-  if(est != arg_est) stop("'est' argument is incorrect!")
-  if(method != arg_engine) stop("'method' argument is incorrect!")
-  if(sampling_engine != arg_engine) stop("'sampling_engune' argument is incorrect!")
+  if(!(est %in% arg_est)) stop("'est' argument is incorrect!")
+  if(!(method %in% arg_method)) stop("'method' argument is incorrect!")
+  if(!(sampling_engine %in% arg_engine)) stop("'sampling_engune' argument is incorrect!")
+
   #check the data
   ID <- xall[,IDc]
   if(gc == 0){
     group <- rep(1, nrow(xall))
     G <- 1
-    x.all <- xall[,fc:ncol(xall)]
+    x.all <- as.matrix(xall[,fc:ncol(xall)])
   }else{
     group <- xall[,gc]
     G <- max(as.numeric(group))
@@ -477,7 +537,7 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
 
   }else if(est == "MAP"){
     #estimate standard error for MAP estimator
-    SE <- apply(cbind(map_apply, x.all), 1, pitheta_r, a=a,b=b,c=c,sigma=sigma,D=D) %>% round(digits = 5)
+    SE <- apply(cbind(map_apply, x.all), 1, pitheta, a=a,b=b,c=c,sigma=sigma,D=D) %>% round(digits = 5)
     z3 <- apply(cbind(map_apply, x.all), 1, pfit, a=a,b=b,c=c,D=D) %>% round(digits = 5)
     lol <- apply(cbind(map_apply, x.all), 1, lolF, a=a,b=b,c=c,D=D) %>% round(digits = 5)
 
@@ -485,15 +545,14 @@ estheta <- function(xall, param, est="EAP", nofrands=10, method="NR", file="defa
     list("res" = result, "MAPmean&sd" = c(mean(map_apply), sd(map_apply)) %>% round(digits = 5))
 
   }else if(est == "WLE"){
-
+    SE <- apply(matrix(wle_apply, ncol = 1), 1, FI, a=a, b=b,c=c,D=D) %>% round(digits = 5)
     z3 <- apply(cbind(wle_apply, x.all), 1, pfit, a=a,b=b,c=c,D=D) %>% round(digits = 5)
     lol <- apply(cbind(wle_apply, x.all), 1, lolF, a=a,b=b,c=c,D=D) %>% round(digits = 5)
-    result <- data.frame(ID=ID,GROUP=group,SCORE=xscore,WLE=wle_apply,z3=z3,lol=lol)
+    result <- data.frame(ID=ID,GROUP=group,SCORE=xscore,WLE=wle_apply %>% round(digits = 5),SE=SE,z3=z3,lol=lol)
     list("res" = result, "WLEmean&sd" = c(mean(wle_apply), sd(wle_apply)))
 
   }else if(est == "MLE"){
-    SE <- apply(matrix(mle_apply, ncol = 1), 1, pitheta, a=a, b=b,c=c,D=D) %>% round(digits = 5)
-
+    SE <- apply(matrix(mle_apply, ncol = 1), 1, FI, a=a, b=b,c=c,D=D) %>% round(digits = 5)
     # person fit index
     z3 <- apply(cbind(mle_apply, x.all), 1, pfit, a=a,b=b,c=c,D=D) %>% round(digits = 5)
     lol <- apply(cbind(mle_apply, x.all), 1, lolF, a=a,b=b,c=c,D=D) %>% round(digits = 5)

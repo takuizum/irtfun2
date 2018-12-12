@@ -1,5 +1,14 @@
 # general item response model
 
+#' ICC of GIRT model
+#'
+#' @param theta the location parameter of person
+#' @param phi the disprecision parameter of person
+#' @param a the discrimination parameter of item
+#' @param b the difficulty parameter of item
+#' @param D a scale constant
+#' @export
+#'
 gptheta <- function(theta,phi,a,b,D){
   A <- sqrt(1+phi^2*a^2)
   e <- exp(-D*a/A*(theta-b))
@@ -11,6 +20,11 @@ gptheta <- function(theta,phi,a,b,D){
 gL <- function(u,theta,phi,a,b,D){
   p <- gptheta(theta,phi,a,b,D)
   prod(p^u*(1-p)^(1-u))
+}
+
+gLL <- function(u,theta,phi,a,b,D){
+  p <- gptheta(theta,phi,a,b,D)
+  sum(u*log(p)+(1-u)*log(1-p))
 }
 
 #' The density of chi inv dist
@@ -43,7 +57,7 @@ sub_rinvx <- function(max, v, tau){
 #'The random number of chi inv dist
 #'
 #'@param n the numeber of random variable to generate
-#'@param maz max ov vector
+#'@param max max ov vector
 #'@param v hyper parameter
 #'@param tau hyper parameter
 #'@export
@@ -57,26 +71,65 @@ rinvchi <- function(n, max=5, v=1, tau=1){
 }
 
 # M step
-Elnk_j <- function(rj,N,t0,Xq,Yr,D){
-  res <- 0
+# gradient
+gr_j <- function(r, N, X, Y, t0, D){
   a <- t0[1]
   b <- t0[2]
-  nq <- length(Xq)
-  nr <- length(Yr)
-  for(r in 1:nr){
-    for(q in 1:nq){
-      p <- gptheta(theta=Xq[q],phi=Yr[r],a=a,b=b,D=D)
-      A <- rj[q,r]*log(p)
-      B <- (N[q,r]-rj[q,r])*log(1-p)
-      res <- res + A+B
-    }
-  }
-  res
+  p <- gptheta(X, Y, a, b, D)
+  ga <- sum(D*(r-N*p)*(X-b)/sqrt((1+Y^2*a^2)^3))
+  gb <- sum(-D*(r-N*p)*a/sqrt(1+Y^2*a^2))
+  c(ga,gb)
+}
+
+Elnk_j <- function(r,N,t0,X,Y,D){
+  a <- t0[1]
+  b <- t0[2]
+  p <- gptheta(theta=X,phi=Y,a=a,b=b,D=D)
+  A <- r*log(p)
+  B <- (N-r)*log(1-p)
+  sum(A+B)
+}
+
+# gradient
+grj <- function(r, N, X, Y, a, b, D){
+  p <- gptheta(X, Y, a, b, D)
+  ga <- sum(D*(r-N*p)*(X-b)/sqrt((1+Y^2*a^2)^3))
+  gb <- sum(-D*(r-N*p)*a/sqrt(1+Y^2*a^2))
+  c(ga,gb)
+}
+
+# Fisher information matrix
+Ij <- function(r, N, X, Y, a, b, D){
+  p <- gptheta(theta=X, phi=Y, a, b, D)
+  ja <- sum(D^2*N*p*(1-p)*(X-b)^2/(1+Y^2*a^2)^3)
+  jb <- sum(D^2*N*p*(1-p)*a^2/(1+Y^2*a^2))
+  jab <- sum(-D^2*N*p*(1-p)*(X-b)*a/(1+Y^2*a^2)^2)
+  matrix(c(ja,jab,jab,jb),nrow = 2)
+}
+
+#'Generalized Beta Distribution Beta Distribution in min < x < max
+#'
+#'@param x A vector consisting of the random variable.
+#'@param paramab A vector consisting of a and b parameters.
+#'@param rangex A vector consisting of min and max of the random variable.
+#'@author Shin-ichi Mayekawa <mayekawa@nifty.com>
+#'@export
+#'
+dgbeta <- function (x, paramab, rangex){
+  # copy from lazy.girt package
+  # Author: Shin-ichi Mayekawa <mayekawa@nifty.com>
+  minscore = rangex[1]
+  maxscore = rangex[2]
+  a = paramab[1]
+  b = paramab[2]
+  pdf = stats::dbeta((x - minscore)/(maxscore - minscore), a, b)
+  pd = pdf/(maxscore - minscore)^(a + b - 1)
+  return(pdf)
 }
 
 # functionalize
 
-#'Genelar Item Response Theory parameter estimation
+#'Generalized Item Response Theory parameter estimation
 #'
 #' @param x DataFrame.
 #' @param fc the first column.
@@ -84,32 +137,53 @@ Elnk_j <- function(rj,N,t0,Xq,Yr,D){
 #' @param Ntheta the number of the nodes of theta dist.
 #' @param Nphi the number of the nodes of phi dist.
 #' @param engine Estep calculation engine.`Cpp` is very faster than `R`.
+#' @param method the method of optimiser `optim()` function. Default is "L-BFG-S".
+#' @param phi_dist a prior distribution of phi. `invchi` is inverse chi distribution. `lognormal` is log normal distribution.
+#' @param v a hyper parameter of invchi for phi
+#' @param tau a hyper parameter of invchi for phi
+#' @param mu_ph a hyper parameter of lognormal dist for phi
+#' @param sigma_ph a hyper parameter of lognormal dist for phi
+#' @param min_ph a minimum value of phi distribution
+#' @param max_ph a maximum value of phi distribution
+#' @param paramab a hyper parameter of generalized beta distribution
+#' @param mu_th a hyper parameter of normal dist for theta
+#' @param sigma_th a hyper parameter of normal dist for theta
+#' @param min_th a minimum value of theta distribution
+#' @param max_th a maximum value of theta distribution
 #' @param eEM a convergence criterion of item parameters in EM cycle.
 #' @param eMLL a convergence criterion of marginal log likelihood in EM cycle.
 #' @param maxiter_em the number of iteration of EM cycle.
+#'
 #' @export
 #'
-estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, eMLL=0.001, maxiter_em=100, method="L-BFGS-B",
-                   phi_dist = "invchi", v=1, tau=1, mu_ph=0, sigma_ph=1, mu_th=0, sigma_th=1){
+estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="L-BFGS-B",
+                   phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0, max_ph=5, paramab=c(1,4),
+                   mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=0.001, maxiter_em=100){
 
-  if(!(method %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent"))) stop("argument input of `method` is improper string!!")
+  if(!(method %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent","Fisher_Scoring"))) stop("argument input of `method` is improper string!!")
 
-  ID <- x[,IDc]
-  X <- x[,fc:ncol(x)]
+  X <- as.matrix(x[,fc:ncol(x)])
   nj <- ncol(X)
   nn <- nrow(X)
   nq <- Ntheta
   nr <- Nphi
+  if(is.null(IDc)) ID <- 1:nn
+  else  ID <- x[,IDc]
 
   # weight and nodes
-  Xq <- seq(-4,4, length.out = nq)
+  Xq <- seq(min_th, max_th, length.out = nq)
   AX <- dnorm(Xq, mean=mu_th, sd=sigma_th)/sum(dnorm(Xq, mean=mu_th, sd=sigma_th)) # for theta
-  Yr <- seq(0.001,5, length.out = nr)
+  Yr <- seq(min_ph, max_ph, length.out = nr)
   if(phi_dist == "invchi"){
-    BY <- dinvch(Yr, v=v, tau=tau)/sum(dinvch(Yr, v=v, tau=tau)) # for phi
+    BY <- dinvchi(Yr, v=v, tau=tau)/sum(dinvchi(Yr, v=v, tau=tau)) # for phi
   }else if(phi_dist == "lognormal"){
-    BY <- dlnorm(Yr)/sum(dlnorm(Yr)) # for phi
-  }else{
+    BY <- dlnorm(Yr,mu_ph,sigma_ph)/sum(dlnorm(Yr,mu_ph,sigma_ph)) # for phi
+  }else if(phi_dist == "uniform"){
+    BY <- rep(1/nr,nr)
+  }else if(phi_dist == "gbeta"){
+    BY <- dgbeta(Yr,paramab = paramab, rangex = c(min_ph,max_ph+1))
+    BY <- BY/sum(BY)
+  }else {
     stop("argument input of `phi_dist` is improper string!!")
   }
   #
@@ -118,7 +192,7 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
   pass <- colMeans(X)
   a0 <- 1.702*r/sqrt(1-r^2)
   b0 <- qnorm(pass,0,1, lower.tail = F)/r
-  t0 <- cbind(a0,b0)
+  t0 <- data.frame(a=a0,b=b0)
 
   mll_history <- c(0)
 
@@ -174,12 +248,31 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
     }
 
     # M step
+    # Let Nqr tidyr for FS
+    Nqr_dat <- data.frame(Nqr)
+    Nqr_dat <- Nqr_dat %>% gather(key=dummy, value=prob)
+
     t1 <- t0
     for(j in 1:nj){
       cat("Optimising item ",j,"\r")
-      res <- optim(par=c(a0[j],b0[j]), fn=Elnk_j, control = list(fnscale = -1),
-                   rj=rjqr[j,,], N=Nqr, Xq=Xq, Yr=Yr, D=1.702, method = method)
-      t1[j,] <- res$par
+      # Let Nqr tidyr for FS
+      rjqr_dat <- data.frame(rjqr[j,,])
+      rjqr_dat <- rjqr_dat %>% gather(key=dummy, value=prob)
+      # convert to longer and longer vector
+      X_long <- rep(Xq, nr)
+      Y_long <- apply(matrix(Yr), 2, rep.int, nq)
+      # gradient
+      if(method != "Fisher_Scoring"){
+        res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j, gr=gr_j, control = list(fnscale = -1),
+                     r=rjqr_dat$prob, N=Nqr_dat$prob, X=X_long, Y=Y_long, D=1.702, method = method)
+        t1[j,] <- res$par
+      }else{
+        # Fisher scoring
+        gr <- grj(rjqr_dat$prob, Nqr_dat$prob, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
+        FI <- Ij(rjqr_dat$prob, Nqr_dat$prob, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
+        # solve
+        t1[j,] <- t0[j,] + solve(FI)%*%gr
+      }
     }
 
     # convergence check
@@ -200,10 +293,28 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
 
   }
 
+  # Standard Error
+  SE <- t1
+  Nqr_dat <- data.frame(Nqr)
+  Nqr_dat <- Nqr_dat %>% gather(key=dummy, value=prob)
+
+  for(j in 1:nj){
+    cat("Optimising item ",j,"\r")
+    # Let Nqr tidyr for FS
+    rjqr_dat <- data.frame(rjqr[j,,])
+    rjqr_dat <- rjqr_dat %>% gather(key=dummy, value=prob)
+    # convert to longer and longer vector
+    X_long <- rep(Xq, nr)
+    Y_long <- apply(matrix(Yr), 2, rep.int, nq)
+    # Fisher score matrix
+    FI <- Ij(rjqr_dat$prob, Nqr_dat$prob, X_long, Y_long, t1[j,1], t1[j,2], D=1.702)
+    # solve
+    SE[j,] <- sqrt(diag(solve(FI)))
+  }
+
   cat("Estimating EAP!\n")
-  # 個人パラメタの推
+  # 個人パラメタの推定
   p1 <- p2 <- numeric(nn)
-  # EAP
   for(n in 1:nn){
     cat(round(100/nn*n),"% / 100%\r")
     theta0 <- rep(0,nq)
@@ -216,11 +327,14 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", eEM=0.001, 
     }
     p1[n] <- sum(Xq*theta0)
     p2[n] <- sum(Yr*phi0)
+
   }
+
+
 
   person_para <- data.frame("ID"=ID,"SCORE"=rowSums(X),"theta"=p1, "phi"=p2)
 
-  res <- list(item=item_para, person=person_para)
+  res <- list(item=item_para, item_SE=SE, person=person_para, hqr=hqr, knqr=knqr)
 
   return(res)
 }
