@@ -137,7 +137,7 @@ dgbeta <- function (x, paramab, rangex){
 #' @param Ntheta the number of the nodes of theta dist.
 #' @param Nphi the number of the nodes of phi dist.
 #' @param engine Estep calculation engine.`Cpp` is very faster than `R`.
-#' @param method the method of optimiser `optim()` function. Default is "L-BFG-S".
+#' @param method the method of optimiser.  Default is "Fisher_Scoring", but `optim()` function also be able to use.
 #' @param phi_dist a prior distribution of phi. `invchi` is inverse chi distribution. `lognormal` is log normal distribution.
 #' @param v a hyper parameter of invchi for phi
 #' @param tau a hyper parameter of invchi for phi
@@ -156,7 +156,7 @@ dgbeta <- function (x, paramab, rangex){
 #'
 #' @export
 #'
-estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="L-BFGS-B",
+estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fisher_Scoring",
                    phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0, max_ph=5, paramab=c(1,4),
                    mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=0.001, maxiter_em=100){
 

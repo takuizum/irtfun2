@@ -145,22 +145,14 @@ WL <- function(xi, theta, a, b,c,D){
 
 # E_3(theta) : expectation
 E3 <- function(theta, a, b,c,D){
-  sum(
-    ptheta(theta,a,b,c,D) * log(ptheta(theta,a,b,c,D)) +
-      (1 - ptheta(theta,a,b,c,D)) * log(1- ptheta(theta,a,b,c,D))
-    ,na.rm = T
-  )
+  p <- ptheta(theta,a,b,c,D)
+  sum(p * log(p) + (1-p) * log(1-p),na.rm = T)
 }
 
 # sigma3
 S3 <- function(theta, a, b,c,D){
-  sqrt(
-    sum(
-      ptheta(theta,a,b,c,D) * (1 - ptheta(theta,a,b,c,D)) *
-        (log(ptheta(theta,a,b,c,D)/(1 - ptheta(theta,a,b,c,D))))^2
-      ,na.rm = T
-    )
-  )
+  p <- ptheta(theta,a,b,c,D)
+  sqrt(sum(p * (1 - p) * (log(p/(1-p)))^2,na.rm = T))
 }
 
 # person fit index: z_3 statistics
@@ -190,7 +182,8 @@ Fmaxpdc <- function(xi,theta,a,b,c,D){
 
 #the function for "fg"
 Ffg <- function(xi,theta,a,b,c,mu,sigma,D){
-  exp(sum(xi*log( c+(1-c)/(1+exp(-D*a*(theta-b)))) + (1-xi)*log(1- (c+(1-c)/(1+exp(-D*a*(theta-b))))), na.rm=T))*dnorm(theta,mean=mu,sd=sigma)
+  p <- ptheta(theta,a,b,c,D)
+  exp(sum(xi*log(p) + (1-xi)*log(1-p), na.rm=T))*dnorm(theta,mean=mu,sd=sigma)
 }
 
 FthetaEAP <- function(xi,theta,w,a,b,c,D){
@@ -774,7 +767,7 @@ stat_pv <- function(PVs_only){
   data.frame(group=c(1:G),mean=MEAN,var=VAR,V_imp_mean=V_imp_mean,V_imp_var=V_imp_var)
 }
 
-cf <- function(x,af,bf,at,bt,D=D,p=p,N=N,w=w){
+cf <- function(x,af,bf,at,bt,D,p,N,w){
   A <- x[1]
   K <- x[2]
   Q1 <- 0
@@ -790,7 +783,7 @@ cf <- function(x,af,bf,at,bt,D=D,p=p,N=N,w=w){
   return(Q)
 }
 
-cf2 <- function(x,af,bf,at,bt,D=D,p=p,N=N,w=w){
+cf2 <- function(x,af,bf,at,bt,D,p,N,w){
   A <- x[1]
   K <- x[2]
   Q1 <- 0
