@@ -861,13 +861,13 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
 
   if(method == "HB"){
     #criterion function
-    res <- stats::nlm(f=cf, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D)#initial value is equating coefficient estimated by mean & sigma
+    res <- stats::nlm(f=cf, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D,p=p,w=w,N=N)#initial value is equating coefficient estimated by mean & sigma
 
     A <- res$estimate[1]
     K <- res$estimate[2]
 
   } else if (method == "SL"){
-    res <- stats::nlm(f=cf2, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D)
+    res <- stats::nlm(f=cf2, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D,p=p,w=w,N=N)
 
     A <- res$estimate[1]
     K <- res$estimate[2]
