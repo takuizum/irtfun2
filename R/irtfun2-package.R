@@ -767,14 +767,14 @@ stat_pv <- function(PVs_only){
   data.frame(group=c(1:G),mean=MEAN,var=VAR,V_imp_mean=V_imp_mean,V_imp_var=V_imp_var)
 }
 
-cf <- function(x,af,bf,at,bt,D,p,N,w){
+cf <- function(x,af,bf,at,bt,D,q,N,w){
   A <- x[1]
   K <- x[2]
   Q1 <- 0
   Q2 <- 0
   for(m in 1:N){
-    HC1 <- (ptheta(p[m],at,bt,c=0,D)-ptheta(p[m],af,bf,c=0,D))^2
-    HC2 <- (ptheta(p[m],af,bf,c=0,D)-ptheta(p[m],at*A,(bt-K)/A,c=0,D))^2
+    HC1 <- (ptheta(q[m],at,bt,c=0,D)-ptheta(q[m],af,bf,c=0,D))^2
+    HC2 <- (ptheta(q[m],af,bf,c=0,D)-ptheta(q[m],at*A,(bt-K)/A,c=0,D))^2
 
     Q1 <- Q1 + sum(HC1*w[m])
     Q2 <- Q2 + sum(HC2*w[m])
@@ -783,14 +783,14 @@ cf <- function(x,af,bf,at,bt,D,p,N,w){
   return(Q)
 }
 
-cf2 <- function(x,af,bf,at,bt,D,p,N,w){
+cf2 <- function(x,af,bf,at,bt,D,q,N,w){
   A <- x[1]
   K <- x[2]
   Q1 <- 0
   Q2 <- 0
   for(m in 1:N){
-    SLC1 <- (sum(ptheta(p[m],at,bt,c=0,D))-sum(ptheta(p[m],af,bf,c=0,D)))^2
-    SLC2 <- (sum(ptheta(p[m],af,bf,c=0,D))-sum(ptheta(p[m],at*A,(bt-K)/A,c=0,D)))^2
+    SLC1 <- (sum(ptheta(q[m],at,bt,c=0,D))-sum(ptheta(q[m],af,bf,c=0,D)))^2
+    SLC2 <- (sum(ptheta(q[m],af,bf,c=0,D))-sum(ptheta(q[m],at*A,(bt-K)/A,c=0,D)))^2
 
     Q1 <- Q1 + SLC1*w[m]
     Q2 <- Q2 + SLC2*w[m]
@@ -854,20 +854,20 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
   msA <- ts/fs
   msK <- tm - fm * msA
 
-  p <- seq(mintheta,maxtheta,length.out = N)   #nodes of division quadrature
+  q <- seq(mintheta,maxtheta,length.out = N)   #nodes of division quadrature
   w <- numeric(N)      #weights of division quadrature
-  for (m in 1:N){    w[m] <- dnorm(p[m],0,1)  }
+  for (m in 1:N){    w[m] <- dnorm(q[m],0,1)  }
   w <- w/sum(w) # calibration
 
   if(method == "HB"){
     #criterion function
-    res <- stats::nlm(f=cf, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D,p=p,w=w,N=N)#initial value is equating coefficient estimated by mean & sigma
+    res <- stats::nlm(f=cf, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D,w=w,N=N,q=q)#initial value is equating coefficient estimated by mean & sigma
 
     A <- res$estimate[1]
     K <- res$estimate[2]
 
   } else if (method == "SL"){
-    res <- stats::nlm(f=cf2, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D,p=p,w=w,N=N)
+    res <- stats::nlm(f=cf2, p=c(msA,msK),af=af,bf=bf,at=at,bt=bt,D=D,w=w,N=N,q=q)
 
     A <- res$estimate[1]
     K <- res$estimate[2]
