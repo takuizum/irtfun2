@@ -581,6 +581,7 @@ List estip (DataFrame x,
       while(conv2 != 1){ // Fisher scoring starts in item j
 
         count2 = count2 + 1;
+        if(count2 >= maxiter_j)conv2 = 1;
 
         double a = t0m(j,0);
         double b = t0m(j,1);
@@ -676,12 +677,10 @@ List estip (DataFrame x,
           da += -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
           db += -(b-mu_b)/(sigma_b*sigma_b);
           dc += (alpha_c-2)/c - (beta_c-2)/(1-c);
-
-          //ニュートンラフソンに拡張したとき用に保存。フィッシャースコアリングでは要らない（情報行列なので）
-          // second partial derivatives
-          //daa += 1/(a*a) - (1-log(a)+mu_a)/(a*a*sigma_a*sigma_a);
-          //dbb += -1/(sigma_b*sigma_b);
-          //dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
+          // Information matrix
+          daa += 1/(a*a) - (1-log(a)+mu_a)/(a*a*sigma_a*sigma_a);
+          dbb += -1/(sigma_b*sigma_b);
+          dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
           //非対角要素は通常の二階偏微分と同じ。
 
         }
@@ -691,7 +690,6 @@ List estip (DataFrame x,
           //double per=0.5;
           da += lambda*((1-per)*a*per);
         }
-        //Rcout<<"daa"<<daa<<"dbb"<<dbb<<"dcc"<<dcc<<"dac"<<dab<<"dac"<<dac<<"dbc"<<dbc<<"da"<<da<<"db"<<db<<"dc"<<dc<<"\r";
 
         double a1 = 1.702/D;
         double b1 = 0;
@@ -730,14 +728,9 @@ List estip (DataFrame x,
           b1 = b + db/dbb;
         }
 
-        if(print >= 3) Rprintf("item %d -- abs a is %.7f, abs b is %.7f, abs c is %.7f \r", j+1, fabs(a-a1), fabs(b-b1), fabs(c-c1));
-        //Rcout <<"fabs a is"<<fabs(a-a1)<<". fabs b is"<<fabs(b-b1)<<". fabs c is"<<fabs(c-c1)<<"\r";
+        if(print >= 3) Rprintf("item %d -- abs a is %.7f, abs b is %.7f, abs c is %.7f in count %d\r", j+1, fabs(a-a1), fabs(b-b1), fabs(c-c1), count2);
 
-
-        if( ( fabs(a1 - a) < eM && fabs(b1 - b) < eM && fabs(c1 - c) < eM ) || count2 == maxiter_j){
-          //Rcout << "eval M conv\n";
-          conv2 = 1;
-        }
+        if( fabs(a1 - a) < eM && fabs(b1 - b) < eM && fabs(c1 - c) < eM ) conv2 = 1;
 
         // 次回の更新用に代入
 
