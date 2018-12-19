@@ -4,14 +4,16 @@
 \alias{probability}
 \title{a function generates conditional probability for fixed ability on 2-parameter logistic model}
 \usage{
-probability(trait, a, b, D = 1.702)
+probability(trait, a, b, c, D = 1.702)
 }
 \arguments{
-\item{trait}{a vector of theta on IRT.}
+\item{trait}{a vector of theta in IRT.}
 
 \item{a}{a slope parameter}
 
 \item{b}{a location parameter}
+
+\item{c}{a lower asymptote parameter}
 
 \item{D}{a factor constant}
 }

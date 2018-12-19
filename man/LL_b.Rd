@@ -2,8 +2,7 @@
 % Please edit documentation in R/irtfun2-package.R
 \name{LL_b}
 \alias{LL_b}
-\title{The log likelihood function of Bayesian IRT 1~3PLM
-a prior distribution is Gaussian(normal) distribution}
+\title{The log likelihood function of Bayesian IRT 1~3PLM}
 \usage{
 LL_b(u, theta, a, b, c, mu, sigma, D)
 }
@@ -25,6 +24,5 @@ LL_b(u, theta, a, b, c, mu, sigma, D)
 \item{D}{a scale constant}
 }
 \description{
-The log likelihood function of Bayesian IRT 1~3PLM
 a prior distribution is Gaussian(normal) distribution
 }

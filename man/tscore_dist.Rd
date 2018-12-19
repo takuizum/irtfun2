@@ -4,7 +4,7 @@
 \alias{tscore_dist}
 \title{A function calculates IRT true score.}
 \usage{
-tscore_dist(theta, a, b, D = 1.702)
+tscore_dist(theta, a, b, c, D = 1.702)
 }
 \arguments{
 \item{theta}{a vector of theta estimator EAP, MAP or MLE...}
@@ -12,6 +12,8 @@ tscore_dist(theta, a, b, D = 1.702)
 \item{a}{a slope parameter.}
 
 \item{b}{a location parameter}
+
+\item{c}{a lower asymptote parameter}
 
 \item{D}{a factor constant}
 }

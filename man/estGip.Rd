@@ -56,6 +56,9 @@ estGip(x, fc = 3, IDc = 1, Ntheta = 31, Nphi = 31,
 
 \item{maxiter_em}{the number of iteration of EM cycle.}
 }
+\value{
+the output is a list that has item parameter and person parameter.
+}
 \description{
 Generalized Item Response Theory parameter estimation
 }

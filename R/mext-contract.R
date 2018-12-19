@@ -1,22 +1,23 @@
 
 #' a function generates conditional probability for fixed ability on 2-parameter logistic model
 #'
-#' @param trait a vector of theta on IRT.
+#' @param trait a vector of theta in IRT.
 #' @param a a slope parameter
 #' @param b a location parameter
+#' @param c a lower asymptote parameter
 #' @param D a factor constant
 #' @author The original Fortran77 program was developed by Inoue,S., December 1990., extended by Shibayama,T., January 1991., translated into R by Shibayama,T. September 2008., functionalized by Itamiya, C., & Shibuya. T., June 2018.
 #' @references Kolen, M. J., & Brennan, R. L. (2014). Test Equating, Scaling, and Linking. Springer.
 #' @export
 
-probability <- function(trait,a,b,D=1.702){
-  m <- nrow(a)
+probability <- function(trait,a,b,c,D=1.702){
+  m <- a %>% as.vector() %>% length()
   m1 <- m+1
   ptheta <- matrix(0,m,1)
   qtheta <- matrix(0,m,1)
   prb <- matrix(0,m1,1)
   #
-  ptheta<- 1/(1+exp(-D*a*(trait-b)))
+  ptheta<- c+(1-c)/(1+exp(-D*a*(trait-b)))
   qtheta<- 1-ptheta
   #
   prb[1] <- qtheta[1]
@@ -49,6 +50,7 @@ probability <- function(trait,a,b,D=1.702){
 #' @param theta a vector of theta estimator EAP, MAP or MLE...
 #' @param a a slope parameter.
 #' @param b a location parameter
+#' @param c a lower asymptote parameter
 #' @param D a factor constant
 #' @param output int. if 1 score vector, if 2 cumulative distribution plot.
 #' @param name a plot title
@@ -56,10 +58,11 @@ probability <- function(trait,a,b,D=1.702){
 #' @export
 
 
-obscore_dist <- function(theta,a,b,D=1.702,name="test",color="cyan", output=1){
+obscore_dist <- function(theta,a,b,c,D=1.702,name="test",color="cyan", output=1){
 
   a <- as.matrix(a)
   b <- as.matrix(b)
+  c <- as.matrix(c)
   theta <- as.matrix(theta)
 
 
@@ -84,7 +87,7 @@ obscore_dist <- function(theta,a,b,D=1.702,name="test",color="cyan", output=1){
 
   prbtestscore<-matrix(0,n,m1)
   for(i in 1:n){
-    prbtestscore[i,]<- t(probability(theta[i],a,b,D=D))
+    prbtestscore[i,]<- t(probability(theta[i],a,b,c,D=D))
   }
 
   #--------------------------------------------------------------#
@@ -105,12 +108,9 @@ obscore_dist <- function(theta,a,b,D=1.702,name="test",color="cyan", output=1){
 
 
 # Comditional Probabilities of True Scores
-truescore<-function(trait,a,b,D){
-
-  m <- nrow(a)
-  m1 <- m+1
-  ptheta<- 1/(1+exp(-D*a*(trait-b)))
-  truescore <- sum(ptheta)
+truescore<-function(trait,a,b,c,D){
+  ptheta<- c+(1-c)/(1+exp(-D*a*(trait-b)))
+  truescore <- sum(ptheta, na.rm = T)
 }
 
 
@@ -119,13 +119,15 @@ truescore<-function(trait,a,b,D){
 #' @param theta a vector of theta estimator EAP, MAP or MLE...
 #' @param a a slope parameter.
 #' @param b a location parameter
+#' @param c a lower asymptote parameter
 #' @param D a factor constant
 #' @export
 
-tscore_dist <- function(theta,a,b,D=1.702){
+tscore_dist <- function(theta,a,b,c,D=1.702){
   #--------------------------------------------------------------#
   a <- as.matrix(a)
   b <- as.matrix(b)
+  c <- as.matrix(c)
   theta <- as.matrix(theta)
 
   # Number of Items and Subjects
@@ -141,7 +143,7 @@ tscore_dist <- function(theta,a,b,D=1.702){
   tscore <- matrix(0,n,1)
 
   for(i in 1:n){
-    tscore[i,] <- t(truescore(theta[i],a,b,D=D))
+    tscore[i,] <- t(truescore(theta[i],a,b,c,D=D))
   }
 
   return(as.vector(round(tscore)))

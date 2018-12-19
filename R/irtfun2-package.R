@@ -9,6 +9,11 @@
 #' @importFrom stats qnorm
 #' @importFrom stats dlnorm
 #' @importFrom tidyr gather
+#' @importFrom ggplot2 ggplot
+#' @importFrom ggplot2 aes
+#' @importFrom ggplot2 stat_function
+#' @importFrom ggplot2 labs
+#' @importFrom latex2exp TeX
 #' @useDynLib irtfun2, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 "_PACKAGE"
@@ -49,6 +54,7 @@ LL <- function(u,theta,a,b,c,D){
 
 # 対数尤度関数
 #' The log likelihood function of Bayesian IRT 1~3PLM
+#'
 #' a prior distribution is Gaussian(normal) distribution
 #' @param u the item response pattern
 #' @param theta the person ability parameter
@@ -89,6 +95,43 @@ spd <- function(xi,theta,a,b,c,D){
   D^2*sum(a^2*(p-c)*(xi*c-p^2)*(1-p)/(p^2*(1-c)^2),na.rm = T)
 }
 
+#' Item Information Function for IRT 1~3PLM
+#'
+#' @param theta the person ability parameter
+#' @param a the slope parameter
+#' @param b the location parameter
+#' @param c the guessing parameter
+#' @param D a scale constant
+#' @export
+#'
+iif <- function(theta,a,b,c,D){
+  p <- ptheta(theta,a,b,c,D)
+  I <- D^2*a^2*(1-p)*(p-c)^2/((1-c)^2*p)
+}
+
+#' Item Information Function for IRT 1~3PLM
+#'
+#' This function returns data.frame of iif in selected sequence.
+#' @param para the item parameter data.frame estimated by \code{\link{estip}}
+#' @param min the slope parameter
+#' @param max the location parameter
+#' @param length.out desired length of the sequence.
+#' @param D a scale constant
+#' @param labs logical. If TRUE, result data.frame has theta column.
+#' @param simplify logical. If TRUE, result is vactor not data.frame.
+#' @export
+#'
+tif_auto <- function(para, min=-6, max=6, length.out=301, D=1.702, labs=F, simplify=T){
+  if(labs==simplify) stop("'stop' must not be same logical to 'simplify'.")
+  a <- para$a
+  b <- para$b
+  c <- para$c
+  theta <- seq(from=min,to=max,length.out=length.out)
+  p <- apply(matrix(theta), 1, iif, a=a, b=b, c=c, D=D) %>% t() %>% rowSums(na.rm=T) %>% as.vector()
+  if(simplify==F) p <- data.frame(tif=p)
+  if(labs==T) p <- data.frame(theta=theta, tif=p)
+  p
+}
 
 #' Test Information Function for IRT 1~3PLM
 #'

@@ -112,7 +112,7 @@ Ij <- function(r, N, X, Y, a, b, D){
 #'@param x A vector consisting of the random variable.
 #'@param paramab A vector consisting of a and b parameters.
 #'@param rangex A vector consisting of min and max of the random variable.
-#'@author Shin-ichi Mayekawa <mayekawa@nifty.com>
+#'@author Shin-ichi Mayekawa <mayekawa@@nifty.com>
 #'@export
 #'
 dgbeta <- function (x, paramab, rangex){
@@ -153,6 +153,9 @@ dgbeta <- function (x, paramab, rangex){
 #' @param eEM a convergence criterion of item parameters in EM cycle.
 #' @param eMLL a convergence criterion of marginal log likelihood in EM cycle.
 #' @param maxiter_em the number of iteration of EM cycle.
+#'
+#' @return the output is a list that has item parameter and person parameter.
+#'
 #'
 #' @export
 #'

@@ -8,6 +8,7 @@ using namespace Rcpp;
 // [[Rcpp::depends(BH)]]
 
 //'Estimate item parameter for binary{0,1} response data.
+//'
 //'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.
 //'@param x an item response data which class is data.frame object.
 //'@param model0 Character.U can select which one, "1PL","2PL","3PL".
@@ -44,9 +45,11 @@ using namespace Rcpp;
 //'@param rm_list a vector of item U want to remove for estimation. NOT list.
 //'@param thdist Which distribution do you want `normal` or `empirical` for E step.
 //'@param EM_dist If 1, calculate esimated population distribution via EM argorithm.
-//'@param Elastic_Net If 1, add penalize in a parameter by Elastic-Net.
-//'@param lambda a constant of penalty.
-//'@param per Hyper parameter to adjust the relative contribution.
+//'@examples
+//'res <- estip(x=sim_data_1, fc=2)
+//'# check the parameters
+//'res$para
+//'res$SE
 //'@export
 // [[Rcpp::export]]
 
@@ -68,7 +71,7 @@ List estip (DataFrame x,
             const double max = 6.0,
             const double min = -6.0,
             const double mu = 0,
-            const double sigma = 1,
+            const double sigma = 2,
             const int Bayes = 0,
             const double mu_a = 0,
             const double sigma_a = 1,
@@ -85,10 +88,7 @@ List estip (DataFrame x,
             const int maxskip_j = 0,
             CharacterVector rm_list = CharacterVector::create("NONE"),
             const String thdist = "normal",
-            const int EM_dist = 1,
-            const int Elastic_Net = 1,
-            const double lambda = 0.1,
-            const double per = 0.5
+            const int EM_dist = 1
 ){
   // argument check
   for(int j=0; j<model0.length(); j++){
@@ -683,12 +683,6 @@ List estip (DataFrame x,
           dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
           //非対角要素は通常の二階偏微分と同じ。
 
-        }
-
-        if(Elastic_Net==1){
-          //double lambda=0.1;
-          //double per=0.5;
-          da += lambda*((1-per)*a*per);
         }
 
         double a1 = 1.702/D;
@@ -1357,7 +1351,7 @@ List estip (DataFrame x,
   //
   boost::multi_array <double, 3> EMfit (boost::extents[ng][nj][N]);
 
-  Rcout<<"expected frequency of subjects in each nodes calculation.\n";
+  if( print > 0) Rcout<<"expected frequency of subjects in each nodes calculation.\n";
   double k,kk;
   for(int g=0; g<ng; g++){
     for(int j=0; j<nj; j++){ // 各分点の期待度数
@@ -1375,7 +1369,7 @@ List estip (DataFrame x,
     }
   }
 
-  Rcout<<"expected freqency of correct response number in each nodes calculation.\n";
+  if( print > 0) Rcout<<"expected freqency of correct response number in each nodes calculation.\n";
 
   double h,gg,hh,u;
   for(int g=0; g<ng; g++){

@@ -4,8 +4,8 @@
 \alias{obscore_dist}
 \title{A function calculates IRT observed score using recursion formula.}
 \usage{
-obscore_dist(theta, a, b, D = 1.702, name = "test", color = "cyan",
-  output = 1)
+obscore_dist(theta, a, b, c, D = 1.702, name = "test",
+  color = "cyan", output = 1)
 }
 \arguments{
 \item{theta}{a vector of theta estimator EAP, MAP or MLE...}
@@ -13,6 +13,8 @@ obscore_dist(theta, a, b, D = 1.702, name = "test", color = "cyan",
 \item{a}{a slope parameter.}
 
 \item{b}{a location parameter}
+
+\item{c}{a lower asymptote parameter}
 
 \item{D}{a factor constant}
 
