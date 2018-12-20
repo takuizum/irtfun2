@@ -10,6 +10,8 @@
 #'@param H the munber of cut point. To know how to cut, see\code{\link[Hmisc]{cut2}}
 #'@param p \emph{p} value.
 #'@param D a scale constant
+#'@param dot_size a point size of ggplot.See\code{\link[ggpplot2]{geom_point}}
+#'@param line_sizea line size of ggplot.See\code{\link[ggpplot2]{geom_linea}}
 #'@examples
 #'res <- ifind(sim_data_1, sim_param$para, sim_eap$res$EAP, fc=2)
 #'# result
@@ -18,7 +20,7 @@
 #'res$ggplot
 #'@export
 #'
-ifind <- function(x, para, theta, fc=3, H = 10 , p = 0.05, D = 1.702){
+ifind <- function(x, para, theta, fc=3, H = 10 , p = 0.05, D = 1.702, dot_size=1, line_size=1){
   #--------------------------------------------------------#
   # estimate item fit index
   # Yen's Q1
@@ -92,9 +94,11 @@ ifind <- function(x, para, theta, fc=3, H = 10 , p = 0.05, D = 1.702){
                       res$observed[,-1] %>% tidyr::gather(key=H3, value=observed))
   # ggplot
   g_fit <- fit_d %>% ggplot(aes(x=theta, group=Item))+
-    ggplot2::geom_point(aes(y=observed))+
-    ggplot2::geom_line(aes(y=observed))+
-    ggplot2::geom_line(aes(y=predict, colour=Item))+
+    ggplot2::geom_point(aes(y=observed), size=dot_size)+
+    ggplot2::geom_line(aes(y=observed), size=line_size)+
+    # ggplot2::geom_smooth(aes(y=predict, colour=Item), size=line_size,
+    #                      method = "glm", method.arg=list(family="binomial"), se=FALSE)+
+    ggplot2::geom_line(aes(y=predict, colour=Item), size=line_size)+
     ggplot2::labs(x=TeX("$\\theta$"), y=TeX("$P(\\theta)$"))+
     ggplot2::theme(legend.position = 'none')+
     ggplot2::facet_wrap(~Item, ncol=floor(sqrt(m)))

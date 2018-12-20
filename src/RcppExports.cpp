@@ -24,8 +24,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // estip
-List estip(DataFrame x, CharacterVector model0, const int N, const int bg0, int fc0, int ng, int gc0, const double eMLL, const double eEM, const double eM, const double emu, const double esd, const double D, const double ic, const double max, const double min, const double mu, const double sigma, const int Bayes, const double mu_a, const double sigma_a, const double mu_b, const double sigma_b, const double mu_c, const double w_c, const int fix, const int print, const double min_a, const double maxabs_b, const int maxiter_em, const int maxiter_j, const int maxskip_j, CharacterVector rm_list, const String thdist, const int EM_dist);
-RcppExport SEXP _irtfun2_estip(SEXP xSEXP, SEXP model0SEXP, SEXP NSEXP, SEXP bg0SEXP, SEXP fc0SEXP, SEXP ngSEXP, SEXP gc0SEXP, SEXP eMLLSEXP, SEXP eEMSEXP, SEXP eMSEXP, SEXP emuSEXP, SEXP esdSEXP, SEXP DSEXP, SEXP icSEXP, SEXP maxSEXP, SEXP minSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP BayesSEXP, SEXP mu_aSEXP, SEXP sigma_aSEXP, SEXP mu_bSEXP, SEXP sigma_bSEXP, SEXP mu_cSEXP, SEXP w_cSEXP, SEXP fixSEXP, SEXP printSEXP, SEXP min_aSEXP, SEXP maxabs_bSEXP, SEXP maxiter_emSEXP, SEXP maxiter_jSEXP, SEXP maxskip_jSEXP, SEXP rm_listSEXP, SEXP thdistSEXP, SEXP EM_distSEXP) {
+List estip(DataFrame x, CharacterVector model0, const int N, const int bg0, int fc0, int ng, int gc0, const double eMLL, const double eEM, const double eM, const double emu, const double esd, const double D, const double ic, const double max, const double min, const double mu, const double sigma, const int Bayes, const String method, const double mu_a, const double sigma_a, const double mu_b, const double sigma_b, const double mu_c, const double w_c, const int fix, const int print, const double min_a, const double maxabs_b, const int maxiter_em, const int maxiter_j, const int maxskip_j, CharacterVector rm_list, const String thdist, const int EM_dist);
+RcppExport SEXP _irtfun2_estip(SEXP xSEXP, SEXP model0SEXP, SEXP NSEXP, SEXP bg0SEXP, SEXP fc0SEXP, SEXP ngSEXP, SEXP gc0SEXP, SEXP eMLLSEXP, SEXP eEMSEXP, SEXP eMSEXP, SEXP emuSEXP, SEXP esdSEXP, SEXP DSEXP, SEXP icSEXP, SEXP maxSEXP, SEXP minSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP BayesSEXP, SEXP methodSEXP, SEXP mu_aSEXP, SEXP sigma_aSEXP, SEXP mu_bSEXP, SEXP sigma_bSEXP, SEXP mu_cSEXP, SEXP w_cSEXP, SEXP fixSEXP, SEXP printSEXP, SEXP min_aSEXP, SEXP maxabs_bSEXP, SEXP maxiter_emSEXP, SEXP maxiter_jSEXP, SEXP maxskip_jSEXP, SEXP rm_listSEXP, SEXP thdistSEXP, SEXP EM_distSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,6 +48,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type mu(muSEXP);
     Rcpp::traits::input_parameter< const double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< const int >::type Bayes(BayesSEXP);
+    Rcpp::traits::input_parameter< const String >::type method(methodSEXP);
     Rcpp::traits::input_parameter< const double >::type mu_a(mu_aSEXP);
     Rcpp::traits::input_parameter< const double >::type sigma_a(sigma_aSEXP);
     Rcpp::traits::input_parameter< const double >::type mu_b(mu_bSEXP);
@@ -64,7 +65,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< CharacterVector >::type rm_list(rm_listSEXP);
     Rcpp::traits::input_parameter< const String >::type thdist(thdistSEXP);
     Rcpp::traits::input_parameter< const int >::type EM_dist(EM_distSEXP);
-    rcpp_result_gen = Rcpp::wrap(estip(x, model0, N, bg0, fc0, ng, gc0, eMLL, eEM, eM, emu, esd, D, ic, max, min, mu, sigma, Bayes, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, fix, print, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, EM_dist));
+    rcpp_result_gen = Rcpp::wrap(estip(x, model0, N, bg0, fc0, ng, gc0, eMLL, eEM, eM, emu, esd, D, ic, max, min, mu, sigma, Bayes, method, mu_a, sigma_a, mu_b, sigma_b, mu_c, w_c, fix, print, min_a, maxabs_b, maxiter_em, maxiter_j, maxskip_j, rm_list, thdist, EM_dist));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -95,7 +96,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_irtfun2_Estep_girt", (DL_FUNC) &_irtfun2_Estep_girt, 8},
-    {"_irtfun2_estip", (DL_FUNC) &_irtfun2_estip, 35},
+    {"_irtfun2_estip", (DL_FUNC) &_irtfun2_estip, 36},
     {"_irtfun2_theta_pv", (DL_FUNC) &_irtfun2_theta_pv, 14},
     {NULL, NULL, 0}
 };

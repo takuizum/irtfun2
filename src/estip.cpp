@@ -31,6 +31,7 @@ using namespace Rcpp;
 //'@param mu hyperparameter for theta dist.
 //'@param sigma same as above.
 //'@param Bayes If 1, marginal Bayesian estimation runs.
+//'@param method Optimising method in M step. "Fisher_Scoring" or "Newton_Raphson" can be selected.
 //'@param mu_a hyperparameter of log normal dist for slope parameter.
 //'@param sigma_a same as above.
 //'@param mu_b hyperparameter of normal dist for location parameter.
@@ -71,8 +72,9 @@ List estip (DataFrame x,
             const double max = 6.0,
             const double min = -6.0,
             const double mu = 0,
-            const double sigma = 2,
+            const double sigma = 1,
             const int Bayes = 0,
+            const String method = "Fisher_Scoring",
             const double mu_a = 0,
             const double sigma_a = 1,
             const double mu_b = 0,
@@ -588,101 +590,158 @@ List estip (DataFrame x,
         double c = t0m(j,2);
         // each element of Fisher scoring matrix and gradient vector
 
-        double daa,dbb,dcc,dab,dac,dbc;
-        double da, db, dc;
-        double d, rr, rrr, nm, nmm;
-        double P,Q;
-        // initialize
-        daa=0;
-        dbb=0;
-        dcc=0;
-        dab=0;
-        dac=0;
-        dbc=0;
-        da=0;
-        db=0;
-        dc=0;
-        P=0;
-        Q=0;
+        double daa=0;
+        double dbb=0;
+        double dcc=0;
+        double dab=0;
+        double dac=0;
+        double dbc=0;
+        double da=0;
+        double db=0;
+        double dc=0;
+        double d=0;
+        double rr=0;
+        double rrr=0;
+        double nm=0;
+        double nmm=0;
+        double P=0;
+        double Q=0;
 
-        for(int m=0; m<N; m++){ // 行列計算
+        if(method == "Fisher_Scoring"){
 
-          nm = 0;
-          for(int g=0; g<ng; g++){
-            nmm = Nm[g][j][m];
-            d = indj[g]; // 当該集団が受検していれば1，そうでなければ0
-            nm = nm + nmm * d;
+          for(int m=0; m<N; m++){ // 行列計算
+            nm = 0;
+            for(int g=0; g<ng; g++){
+              nmm = Nm[g][j][m];
+              d = indj[g]; // 当該集団が受検していれば1，そうでなければ0
+              nm = nm + nmm * d;
+            }
+            rr = 0;
+            for(int g=0; g<ng; g++){
+              rrr = rjm[g][j][m];
+              d = indj[g]; // 当該集団が受検していれば1，そうでなければ0
+              rr = rr + rrr * d;
+            }
+            double xm = Xm[m];
+            P = c + (1-c)/(1+exp(-D*a*(xm-b)));
+            Q = 1-P;
+            // the element of Fisher Information Matrix
+            // matrix[0,0]
+            double daam = nm * (P-c) * (P-c) * Q * (xm - b) * (xm - b) * D * D
+              / ((1-c) * (1-c) * P);
+            daa = daa + daam;
+            // matrix[1,1]
+            double dbbm = nm * (P-c) * (P-c) * Q * a * a * D * D
+              / ((1-c) * (1-c) * P);
+            dbb = dbb + dbbm;
+            // matrix[2,2]
+            double dccm = nm * Q
+              / (P * (1-c) * (1-c));
+            dcc = dcc + dccm;
+            //matrix[1,0], [0,1]
+            double dabm = -nm * (P-c) * (P-c) * Q * a * (xm - b) * D * D
+              / ((1-c) * (1-c) * P);
+            dab = dab + dabm;
+            // matrix[2,0],[0,2]
+            double dacm = nm * (P-c) * Q * (xm - b) * D
+              / ((1-c) * (1-c) * P);
+            dac = dac + dacm;
+            // matrix[2,1],[1,2]
+            double dbcm = -nm * (P-c) * Q * a * D
+              / ((1-c) * (1-c) * P);
+            dbc = dbc + dbcm;
+
+            // the elements of gradient vector
+            double dad = D*(xm - b) * (rr - nm * P) * (P-c)
+              / ((1-c) * P);
+            da = da + dad;
+            double dbd = -D*a*(rr - nm * P) * (P-c)
+              / ((1-c) * P);
+            db = db + dbd;
+            double dcd = (rr - nm * P)
+              /( (1-c) * P);
+            dc = dc + dcd;
+          } // 行列計算の下準備終了 // end of m
+
+          if(Bayes==1){
+            // the elements of gradient vector
+            da += -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
+            db += -(b-mu_b)/(sigma_b*sigma_b);
+            dc += (alpha_c-2)/c - (beta_c-2)/(1-c);
+            // Information matrix
+            //daa += 1/(a*a) - (1-log(a)+mu_a)/(a*a*sigma_a*sigma_a);
+            //dbb += -1/(sigma_b*sigma_b);
+            //dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
+            //非対角要素は通常の二階偏微分と同じ。
           }
+        }else if(method == "Newton_Raphson"){
+          for(int m=0; m<N; m++){ // 行列計算
+            nm = 0;
+            for(int g=0; g<ng; g++){
+              nmm = Nm[g][j][m];
+              d = indj[g]; // 当該集団が受検していれば1，そうでなければ0
+              nm = nm + nmm * d;
+            }
+            rr = 0;
+            for(int g=0; g<ng; g++){
+              rrr = rjm[g][j][m];
+              d = indj[g]; // 当該集団が受検していれば1，そうでなければ0
+              rr = rr + rrr * d;
+            }
+            double xm = Xm[m];
+            P = c + (1-c)/(1+exp(-D*a*(xm-b)));
+            Q = 1-P;
+            // the element of Hessian Matrix
+            // matrix[0,0]
+            double daam = (P-c)*Q*(xm - b)*(xm - b)*D*D
+            / ((1-c)*(1-c)*P*P);
+            daam *= -nm * P*P + rr*c;
+            daa += daam;
+            // matrix[1,1]
+            double dbbm = (P-c)*Q*a*a*D*D
+              / ((1-c)*(1-c)*P*P);
+            dbbm *= -nm*P*P + rr*c;
+            dbb += dbbm;
+            // matrix[2,2]
+            double dccm = (rr/(nm*P) -1) - rr*Q/(P*P);
+            dccm /= (1-c)*(1-c);
+            dcc = dcc + dccm;
+            //matrix[1,0], [0,1]
+            double dabm = 1;
+            dabm -= a*D*(xm-b)*Q/(1-c)*(rr/(nm*P)-1);
+            dabm += D*a/(1-c)*(xm-b)*Q/P*(rr*c/P-rr);
+            dabm *= -D /(1-c)*(P-c);
+            dab += dabm;
+            // matrix[2,0],[0,2]
+            double dacm = -D/((1-c)*(1-c))*(xm-b)*(P-c)*Q/(P*P)*rr;
+            dac += dacm;
+            // matrix[2,1],[1,2]
+            double dbcm = D/((1-c)*(1-c))*a*(P-c)*Q/(P*P)*rr;
+            dbc += dbcm;
 
-          rr = 0;
-          for(int g=0; g<ng; g++){
-            rrr = rjm[g][j][m];
-            d = indj[g]; // 当該集団が受検していれば1，そうでなければ0
-            rr = rr + rrr * d;
+            // the elements of gradient vector
+            double dad = D*(xm - b) * (rr - nm * P) * (P-c)
+              / ((1-c) * P);
+            da = da + dad;
+            double dbd = -D*a*(rr - nm * P) * (P-c)
+              / ((1-c) * P);
+            db = db + dbd;
+            double dcd = (rr - nm * P)
+              /( (1-c) * P);
+            dc = dc + dcd;
+          } // 行列計算の下準備終了 // end of m
+
+          if(Bayes==1){
+            // the elements of gradient vector
+            da += -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
+            db += -(b-mu_b)/(sigma_b*sigma_b);
+            dc += (alpha_c-2)/c - (beta_c-2)/(1-c);
+            // Information matrix
+            daa += 1/(a*a) - (1-log(a)+mu_a)/(a*a*sigma_a*sigma_a);
+            dbb += -1/(sigma_b*sigma_b);
+            dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
+            //非対角要素は通常の二階偏微分と同じ。
           }
-
-          double xm = Xm[m];
-
-          P = c + (1-c)/(1+exp(-D*a*(xm-b)));
-          Q = 1-P;
-
-          // matrix[0,0]
-          double daam = nm * (P-c) * (P-c) * Q * (xm - b) * (xm - b) * D * D
-            / ((1-c) * (1-c) * P);
-          daa = daa + daam;
-
-
-          // matrix[1,1]
-          double dbbm = nm * (P-c) * (P-c) * Q * a * a * D * D
-            / ((1-c) * (1-c) * P);
-          dbb = dbb + dbbm;
-
-          // matrix[2,2]
-          double dccm = nm * Q
-            / (P * (1-c) * (1-c));
-          dcc = dcc + dccm;
-
-          //matrix[1,0], [0,1]
-          double dabm = -nm * (P-c) * (P-c) * Q * a * (xm - b) * D * D
-            / ((1-c) * (1-c) * P);
-          dab = dab + dabm;
-
-          // matrix[2,0],[0,2]
-          double dacm = nm * (P-c) * Q * (xm - b) * D
-            / ((1-c) * (1-c) * P);
-          dac = dac + dacm;
-
-          // matrix[2,1],[1,2]
-          double dbcm = -nm * (P-c) * Q * a * D
-            / ((1-c) * (1-c) * P);
-          dbc = dbc + dbcm;
-
-          // the elements of gradient vector
-          double dad = D*(xm - b) * (rr - nm * P) * (P-c)
-            / ((1-c) * P);
-          da = da + dad;
-
-          double dbd = -D*a*(rr - nm * P) * (P-c)
-            / ((1-c) * P);
-          db = db + dbd;
-
-          double dcd = (rr - nm * P)
-            /( (1-c) * P);
-          dc = dc + dcd;
-
-        } // 行列計算の下準備終了 // end of m
-
-        if(Bayes==1){
-          // the elements of gradient vector
-          da += -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
-          db += -(b-mu_b)/(sigma_b*sigma_b);
-          dc += (alpha_c-2)/c - (beta_c-2)/(1-c);
-          // Information matrix
-          daa += 1/(a*a) - (1-log(a)+mu_a)/(a*a*sigma_a*sigma_a);
-          dbb += -1/(sigma_b*sigma_b);
-          dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
-          //非対角要素は通常の二階偏微分と同じ。
-
         }
 
         double a1 = 1.702/D;
@@ -702,9 +761,16 @@ List estip (DataFrame x,
           double inv_dac = (dab*dbc-dbb*dac) * det;
           double inv_dbc = (dab*dac-daa*dbc) * det;
 
-          a1 = a + inv_daa*da + inv_dab*db + inv_dac*dc;
-          b1 = b + inv_dab*da + inv_dbb*db + inv_dbc*dc;
-          c1 = c + inv_dac*da + inv_dbc*db + inv_dcc*dc;
+          if(method == "Newton_Raphson"){
+            a1 = a - inv_daa*da - inv_dab*db - inv_dac*dc;
+            b1 = b - inv_dab*da - inv_dbb*db - inv_dbc*dc;
+            c1 = c - inv_dac*da - inv_dbc*db - inv_dcc*dc;
+          }
+          if(method == "Fisher_Scoring") {
+            a1 = a + inv_daa*da + inv_dab*db + inv_dac*dc;
+            b1 = b + inv_dab*da + inv_dbb*db + inv_dbc*dc;
+            c1 = c + inv_dac*da + inv_dbc*db + inv_dcc*dc;
+          }
 
         } else if (model[j] == "2PL"){
           // determinant of Fisher's information matrix
@@ -715,11 +781,23 @@ List estip (DataFrame x,
           double inv_dbb = daa * det_Itj;
           double inv_dab = -dab * det_Itj;
 
-          a1 = a + inv_daa * da + inv_dab * db;
-          b1 = b + inv_dab * da + inv_dbb * db;
+          if(method == "Newton_Raphson"){
+            a1 = a - inv_daa * da - inv_dab * db;
+            b1 = b - inv_dab * da - inv_dbb * db;
+          }
+          if(method == "Fisher_Scoring") {
+            a1 = a + inv_daa * da + inv_dab * db;
+            b1 = b + inv_dab * da + inv_dbb * db;
+          }
 
         } else {
-          b1 = b + db/dbb;
+          if(method == "Newton_Raphson"){
+            b1 = b - db/dbb;
+          }
+          if(method == "Fisher_Scoring") {
+            b1 = b + db/dbb;
+          }
+
         }
 
         if(print >= 3) Rprintf("item %d -- abs a is %.7f, abs b is %.7f, abs c is %.7f in count %d\r", j+1, fabs(a-a1), fabs(b-b1), fabs(c-c1), count2);

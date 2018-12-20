@@ -41,8 +41,6 @@ subfunc <- function(prob,power){
 #' @param prob response probabirity matrix
 #' @param power a power of probability of NA. for example power = 1/5
 #' @export
-
-
 resfunc <- function(prob,power){
   # 反応確率と一様乱数から01データを発生させる関数。
   # 受検者一人分の正答確率を与える。（apply関数などで）
@@ -55,7 +53,7 @@ resfunc <- function(prob,power){
 
 #' Generate simulation binary data in IRT.
 #'
-#' This function contains `resfunc` and `subfunc`.
+#' This function contains \code{\link{resfunc}} and \code{\link{subfunc}}.
 #' @param theta theta vector
 #' @param phi vector of hyperparameter of phi in GIRT model. Default is `NULL`
 #' @param a slope parameter.
