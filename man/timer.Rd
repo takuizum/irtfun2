@@ -8,11 +8,11 @@ timer(StopTime, MESSAGE = "STOP!!", disp = T, units = "secs",
   cex = 5, font = 1, col = 1, family = "")
 }
 \arguments{
-\item{StopTime}{How long time U want to measure?}
+\item{StopTime}{How long time you want to measure?}
 
 \item{MESSAGE}{What message U want to display when stop timer.}
 
-\item{disp}{logical. If \code{FALSE} don't display the message.}
+\item{disp}{logical. If FALSE, don't display the message.}
 
 \item{units}{time units. auto", "secs", "mins", "hours", "days", "weeks". The default is "secs".}
 

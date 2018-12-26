@@ -8,6 +8,7 @@
 #' @importFrom stats cor
 #' @importFrom stats qnorm
 #' @importFrom stats dlnorm
+#' @importFrom stats dbeta
 #' @importFrom tidyr gather
 #' @importFrom ggplot2 ggplot
 #' @importFrom ggplot2 aes

@@ -10,8 +10,8 @@
 #'@param H the munber of cut point. To know how to cut, see\code{\link[Hmisc]{cut2}}
 #'@param p \emph{p} value.
 #'@param D a scale constant
-#'@param dot_size a point size of ggplot.See\code{\link[ggpplot2]{geom_point}}
-#'@param line_sizea line size of ggplot.See\code{\link[ggpplot2]{geom_linea}}
+#'@param dot_size a point size of ggplot.See\code{\link[ggplot2]{geom_point}}
+#'@param line_size line size of ggplot.See\code{\link[ggplot2]{geom_path}}
 #'@examples
 #'res <- ifind(sim_data_1, sim_param$para, sim_eap$res$EAP, fc=2)
 #'# result
@@ -86,24 +86,24 @@ ifind <- function(x, para, theta, fc=3, H = 10 , p = 0.05, D = 1.702, dot_size=1
   ppre <- data.frame(Item=Item, ppre)
   pobs <- data.frame(Item=Item, pobs)
   thetam <- data.frame(Item=Item, thetam)
-  res <- list(X2=X2, G2=G2, predict=ppre, observed=pobs, cut=thetam)
+  res <- list(X2=X2, G2=G2, "predict"=ppre, "observed"=pobs, cut=thetam)
 
   # tidyr for ggplot
-  fit_d <- data.frame(res$cut %>% tidyr::gather(key=H1, value=theta, -Item),
-                      res$predict[,-1] %>% tidyr::gather(key=H2, value=predict),
-                      res$observed[,-1] %>% tidyr::gather(key=H3, value=observed))
+  fit_d <- data.frame(res$cut %>% tidyr::gather(key="H1", value="theta", -Item),
+                      res$"predict"[,-1] %>% tidyr::gather(key="H2", value="predict"),
+                      res$"observed"[,-1] %>% tidyr::gather(key="H3", value="observed"))
   # ggplot
   g_fit <- fit_d %>% ggplot(aes(x=theta, group=Item))+
-    ggplot2::geom_point(aes(y=observed), size=dot_size)+
-    ggplot2::geom_line(aes(y=observed), size=line_size)+
-    # ggplot2::geom_smooth(aes(y=predict, colour=Item), size=line_size,
+    ggplot2::geom_point(aes(y="observed"), size=dot_size)+
+    ggplot2::geom_line(aes(y="observed"), size=line_size)+
+    # ggplot2::geom_smooth(aes(y="predict", colour=Item), size=line_size,
     #                      method = "glm", method.arg=list(family="binomial"), se=FALSE)+
-    ggplot2::geom_line(aes(y=predict, colour=Item), size=line_size)+
+    ggplot2::geom_line(aes(y="predict", colour=Item), size=line_size)+
     ggplot2::labs(x=TeX("$\\theta$"), y=TeX("$P(\\theta)$"))+
     ggplot2::theme(legend.position = 'none')+
     ggplot2::facet_wrap(~Item, ncol=floor(sqrt(m)))
 
-  res <- list(X2=X2, G2=G2, predict=ppre, observed=pobs, cut=thetam, gg_data=fit_d, ggplot=g_fit)
+  res <- list(X2=X2, G2=G2, "predict"=ppre, "observed"=pobs, cut=thetam, gg_data=fit_d, ggplot=g_fit)
 
   return(res)
 }
@@ -270,8 +270,8 @@ ifind3 <- function(x, para, theta, fc=3, D=1.702){
     THETA <- theta[key]
     N <- length(u)
     Fit$N[j] <- N
-    Fit$F0.025p[j] <- qf(0.025, N-1, Inf)
-    Fit$F0.975p[j] <- qf(0.975, N-1, Inf)
+    Fit$F0.025p[j] <- stats::qf(0.025, N-1, Inf)
+    Fit$F0.975p[j] <- stats::qf(0.975, N-1, Inf)
     # set data
     p <- ptheta(THETA,a[j],b[j],c[j],D=D)
     w <- p*(1-p)

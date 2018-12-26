@@ -668,11 +668,6 @@ List estip (DataFrame x,
             da += -1/a - (log(a)-mu_a)/(a*sigma_a*sigma_a);
             db += -(b-mu_b)/(sigma_b*sigma_b);
             dc += (alpha_c-2)/c - (beta_c-2)/(1-c);
-            // Information matrix
-            //daa += 1/(a*a) - (1-log(a)+mu_a)/(a*a*sigma_a*sigma_a);
-            //dbb += -1/(sigma_b*sigma_b);
-            //dcc += (alpha_c-2)/(c*c) - (beta_c-2)/(1-c)*(1-c);
-            //非対角要素は通常の二階偏微分と同じ。
           }
         }else if(method == "Newton_Raphson"){
           for(int m=0; m<N; m++){ // 行列計算

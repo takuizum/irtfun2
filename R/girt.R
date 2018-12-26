@@ -137,7 +137,7 @@ dgbeta <- function (x, paramab, rangex){
 #' @param Ntheta the number of the nodes of theta dist.
 #' @param Nphi the number of the nodes of phi dist.
 #' @param engine Estep calculation engine.`Cpp` is very faster than `R`.
-#' @param method the method of optimiser.  Default is "Fisher_Scoring", but `optim()` function also be able to use.
+#' @param method the method of optimiser.  Default is "Fisher_Scoring", but \code{\link[stats]{optim}} function also be able to use.
 #' @param phi_dist a prior distribution of phi. `invchi` is inverse chi distribution. `lognormal` is log normal distribution.
 #' @param v a hyper parameter of invchi for phi
 #' @param tau a hyper parameter of invchi for phi
@@ -155,8 +155,13 @@ dgbeta <- function (x, paramab, rangex){
 #' @param maxiter_em the number of iteration of EM cycle.
 #'
 #' @return the output is a list that has item parameter and person parameter.
-#'
-#'
+#' @examples
+#' res <- estGip(x=sim_dat_girt,fc=2, Ntheta=10, Nphi = 5, min_ph = 0.001, max_ph = 2)
+#' # check the parameters
+#' res$item
+#' res$item
+#' head(res$person)
+#' head(res$phi)
 #' @export
 #'
 estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fisher_Scoring",
@@ -194,7 +199,7 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fis
   r <- as.vector(cor(rowSums(X),X))
   pass <- colMeans(X)
   a0 <- 1.702*r/sqrt(1-r^2)
-  b0 <- qnorm(pass,0,1, lower.tail = F)/r
+  b0 <- -log(pass/(1-pass))
   t0 <- data.frame(a=a0,b=b0)
 
   mll_history <- c(0)
@@ -204,7 +209,7 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fis
   convergence <- T
   while(convergence){
     t <- t + 1
-    cat(t,"time EM cycle NOW\n")
+    #cat(t,"time EM cycle NOW\n")
 
     # E step
     knqr <- array(dim = c(nn,nq,nr))
@@ -233,7 +238,7 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fis
       mll <- sum(log(ml))
     }
 
-    cat("-2 Marginal Loglikelihood is",-2*mll,"\n")
+    cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\n")
     mll_history <- c(mll_history,mll)
 
     # 規格化
@@ -253,26 +258,26 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fis
     # M step
     # Let Nqr tidyr for FS
     Nqr_dat <- data.frame(Nqr)
-    Nqr_dat <- Nqr_dat %>% gather(key=dummy, value=prob)
+    Nqr_dat <- Nqr_dat %>% gather(key="dummy", value="prob")
 
     t1 <- t0
     for(j in 1:nj){
-      cat("Optimising item ",j,"\r")
+      #cat("Optimising item ",j,"\r")
       # Let Nqr tidyr for FS
       rjqr_dat <- data.frame(rjqr[j,,])
-      rjqr_dat <- rjqr_dat %>% gather(key=dummy, value=prob)
+      rjqr_dat <- rjqr_dat %>% gather(key="dummy", value="prob")
       # convert to longer and longer vector
       X_long <- rep(Xq, nr)
       Y_long <- apply(matrix(Yr), 2, rep.int, nq)
       # gradient
       if(method != "Fisher_Scoring"){
         res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j, gr=gr_j, control = list(fnscale = -1),
-                     r=rjqr_dat$prob, N=Nqr_dat$prob, X=X_long, Y=Y_long, D=1.702, method = method)
+                     r=rjqr_dat$"prob", N=Nqr_dat$"prob", X=X_long, Y=Y_long, D=1.702, method = method)
         t1[j,] <- res$par
       }else{
         # Fisher scoring
-        gr <- grj(rjqr_dat$prob, Nqr_dat$prob, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
-        FI <- Ij(rjqr_dat$prob, Nqr_dat$prob, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
+        gr <- grj(rjqr_dat$"prob", Nqr_dat$"prob", X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
+        FI <- Ij(rjqr_dat$"prob", Nqr_dat$"prob", X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
         # solve
         t1[j,] <- t0[j,] + solve(FI)%*%gr
       }
@@ -299,18 +304,18 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fis
   # Standard Error
   SE <- t1
   Nqr_dat <- data.frame(Nqr)
-  Nqr_dat <- Nqr_dat %>% gather(key=dummy, value=prob)
+  Nqr_dat <- Nqr_dat %>% gather(key="dummy", value="prob")
 
   for(j in 1:nj){
     cat("Optimising item ",j,"\r")
     # Let Nqr tidyr for FS
     rjqr_dat <- data.frame(rjqr[j,,])
-    rjqr_dat <- rjqr_dat %>% gather(key=dummy, value=prob)
+    rjqr_dat <- rjqr_dat %>% gather(key="dummy", value="prob")
     # convert to longer and longer vector
     X_long <- rep(Xq, nr)
     Y_long <- apply(matrix(Yr), 2, rep.int, nq)
     # Fisher score matrix
-    FI <- Ij(rjqr_dat$prob, Nqr_dat$prob, X_long, Y_long, t1[j,1], t1[j,2], D=1.702)
+    FI <- Ij(rjqr_dat$"prob", Nqr_dat$"prob", X_long, Y_long, t1[j,1], t1[j,2], D=1.702)
     # solve
     SE[j,] <- sqrt(diag(solve(FI)))
   }

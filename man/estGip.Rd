@@ -24,7 +24,7 @@ estGip(x, fc = 3, IDc = 1, Ntheta = 31, Nphi = 31,
 
 \item{engine}{Estep calculation engine.\code{Cpp} is very faster than \code{R}.}
 
-\item{method}{the method of optimiser.  Default is "Fisher_Scoring", but \code{optim()} function also be able to use.}
+\item{method}{the method of optimiser.  Default is "Fisher_Scoring", but \code{\link[stats]{optim}} function also be able to use.}
 
 \item{phi_dist}{a prior distribution of phi. \code{invchi} is inverse chi distribution. \code{lognormal} is log normal distribution.}
 
@@ -61,4 +61,12 @@ the output is a list that has item parameter and person parameter.
 }
 \description{
 Generalized Item Response Theory parameter estimation
+}
+\examples{
+res <- estGip(x=sim_dat_girt,fc=2, Ntheta=10, Nphi = 5, min_ph = 0.001, max_ph = 2)
+# check the parameters
+res$item
+res$item
+head(res$person)
+head(res$phi)
 }

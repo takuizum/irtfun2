@@ -23,6 +23,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// Estep_irt
+List Estep_irt(IntegerMatrix xall, NumericMatrix t0, NumericVector Xm, NumericMatrix Wm, IntegerVector group, IntegerMatrix ind, IntegerMatrix resp, double D, NumericVector MLL);
+RcppExport SEXP _irtfun2_Estep_irt(SEXP xallSEXP, SEXP t0SEXP, SEXP XmSEXP, SEXP WmSEXP, SEXP groupSEXP, SEXP indSEXP, SEXP respSEXP, SEXP DSEXP, SEXP MLLSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type xall(xallSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type t0(t0SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Xm(XmSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Wm(WmSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type group(groupSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ind(indSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type resp(respSEXP);
+    Rcpp::traits::input_parameter< double >::type D(DSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type MLL(MLLSEXP);
+    rcpp_result_gen = Rcpp::wrap(Estep_irt(xall, t0, Xm, Wm, group, ind, resp, D, MLL));
+    return rcpp_result_gen;
+END_RCPP
+}
 // estip
 List estip(DataFrame x, CharacterVector model0, const int N, const int bg0, int fc0, int ng, int gc0, const double eMLL, const double eEM, const double eM, const double emu, const double esd, const double D, const double ic, const double max, const double min, const double mu, const double sigma, const int Bayes, const String method, const double mu_a, const double sigma_a, const double mu_b, const double sigma_b, const double mu_c, const double w_c, const int fix, const int print, const double min_a, const double maxabs_b, const int maxiter_em, const int maxiter_j, const int maxskip_j, CharacterVector rm_list, const String thdist, const int EM_dist);
 RcppExport SEXP _irtfun2_estip(SEXP xSEXP, SEXP model0SEXP, SEXP NSEXP, SEXP bg0SEXP, SEXP fc0SEXP, SEXP ngSEXP, SEXP gc0SEXP, SEXP eMLLSEXP, SEXP eEMSEXP, SEXP eMSEXP, SEXP emuSEXP, SEXP esdSEXP, SEXP DSEXP, SEXP icSEXP, SEXP maxSEXP, SEXP minSEXP, SEXP muSEXP, SEXP sigmaSEXP, SEXP BayesSEXP, SEXP methodSEXP, SEXP mu_aSEXP, SEXP sigma_aSEXP, SEXP mu_bSEXP, SEXP sigma_bSEXP, SEXP mu_cSEXP, SEXP w_cSEXP, SEXP fixSEXP, SEXP printSEXP, SEXP min_aSEXP, SEXP maxabs_bSEXP, SEXP maxiter_emSEXP, SEXP maxiter_jSEXP, SEXP maxskip_jSEXP, SEXP rm_listSEXP, SEXP thdistSEXP, SEXP EM_distSEXP) {
@@ -96,6 +115,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_irtfun2_Estep_girt", (DL_FUNC) &_irtfun2_Estep_girt, 8},
+    {"_irtfun2_Estep_irt", (DL_FUNC) &_irtfun2_Estep_irt, 9},
     {"_irtfun2_estip", (DL_FUNC) &_irtfun2_estip, 36},
     {"_irtfun2_theta_pv", (DL_FUNC) &_irtfun2_theta_pv, 14},
     {NULL, NULL, 0}

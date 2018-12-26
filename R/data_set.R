@@ -21,7 +21,7 @@
 #'Simulated multi group item response data for 2PLM
 #'
 #'This data set contains 30 item responses of 9,000 subjects of 3 diffelent level groups.
-#'@format a dataset with 31 cols, first col is ID line and second col is group ID line.
+#'@format a dataset with 32 cols, first col is ID line and second col is group ID line.
 "sim_data_4"
 
 #'Estimated 2PLM item parameter.
@@ -53,4 +53,16 @@
 #'sim_eap$res
 "sim_eap"
 
-
+#'Simulated multi group item response data for GIRT model
+#'
+#'A list of estimated result from \code{\link{estGip}}.
+#'@format See \code{\link{estGip}}.
+#'@examples
+#'# GIRT estimated parameter
+#'set.seed(0204)
+#'theta <- rnorm(3000)
+#'phi <- rinvchi(3000, max = 2)
+#'a <- rlnorm(30, sdlog = 0.25)
+#'b <- rnorm(30)
+#'#sim_dat_girt <- sim_gen(theta=theta, phi=phi, a=a, b=b)
+"sim_dat_girt"

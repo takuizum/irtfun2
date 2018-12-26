@@ -22,9 +22,9 @@ ifind(x, para, theta, fc = 3, H = 10, p = 0.05, D = 1.702,
 
 \item{D}{a scale constant}
 
-\item{dot_size}{a point size of ggplot.See\code{\link[ggpplot2]{geom_point}}}
+\item{dot_size}{a point size of ggplot.See\code{\link[ggplot2]{geom_point}}}
 
-\item{line_sizea}{line size of ggplot.See\code{\link[ggpplot2]{geom_linea}}}
+\item{line_size}{line size of ggplot.See\code{\link[ggplot2]{geom_path}}}
 }
 \description{
 Item Fit indexes 'chi^2' and 'g^2' statistics

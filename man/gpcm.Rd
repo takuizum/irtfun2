@@ -22,10 +22,21 @@ Graded Item Response Model, Generalized Percial Credit Model
 }
 \examples{
 tp <- c(-1.5, 0, 1)
-ggplot2::ggplot(data = data.frame(x=c(-4:4)), ggplot2::aes(x=x))+
- ggplot2::stat_function(fun=gpcm, args = list(a=1.5, b=tp, D=1.702, k=0), ggplot2::aes(colour="category0"))+
- ggplot2::stat_function(fun=gpcm, args = list(a=1.5, b=tp, D=1.702, k=1), ggplot2::aes(colour="category1"))+
- ggplot2::stat_function(fun=gpcm, args = list(a=1.5, b=tp, D=1.702, k=2), ggplot2::aes(colour="category2"))+
- ggplot2::stat_function(fun=gpcm, args = list(a=1.5, b=tp, D=1.702, k=3), ggplot2::aes(colour="category3"))+
- ggplot2::labs(x=latex2exp::TeX("$\\\\theta$"), y=latex2exp::TeX("$P(\\\\theta)$"), colour="Category")
+ggplot2::ggplot(data = data.frame(x=c(-4:4)),
+               ggplot2::aes(x=x))+
+ ggplot2::stat_function(fun=gpcm,
+   args = list(a=1.5, b=tp, D=1.702, k=0),
+   ggplot2::aes(colour="category0"))+
+ ggplot2::stat_function(fun=gpcm,
+   args = list(a=1.5, b=tp, D=1.702, k=1),
+   ggplot2::aes(colour="category1"))+
+ ggplot2::stat_function(fun=gpcm,
+   args = list(a=1.5, b=tp, D=1.702, k=2),
+   ggplot2::aes(colour="category2"))+
+ ggplot2::stat_function(fun=gpcm,
+   args = list(a=1.5, b=tp, D=1.702, k=3),
+   ggplot2::aes(colour="category3"))+
+ ggplot2::labs(x=latex2exp::TeX("$\\\\theta$"),
+               y=latex2exp::TeX("$P(\\\\theta)$"),
+               colour="Category")
 }

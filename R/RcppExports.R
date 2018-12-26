@@ -16,6 +16,22 @@ Estep_girt <- function(x, a0, b0, Xq, AX, Yr, BY, D) {
     .Call(`_irtfun2_Estep_girt`, x, a0, b0, Xq, AX, Yr, BY, D)
 }
 
+#'Estep in girt.
+#'
+#'@param xall Item response matrix.
+#'@param t0 item parameter vector
+#'@param Xm node of theta dist.
+#'@param Wm weight of theta dist.
+#'@param group a vector.
+#'@param ind a design matrix for group.
+#'@param resp a design matrix for person.
+#'@param D factor constant.
+#'@param MLL a vector
+#'@export
+Estep_irt <- function(xall, t0, Xm, Wm, group, ind, resp, D, MLL) {
+    .Call(`_irtfun2_Estep_irt`, xall, t0, Xm, Wm, group, ind, resp, D, MLL)
+}
+
 #'Estimate item parameter for binary{0,1} response data.
 #'
 #'1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.

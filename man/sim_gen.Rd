@@ -27,3 +27,21 @@ sim_gen(theta, phi = NULL, a, b, c = NULL, item = "A", power = 0,
 \description{
 This function contains \code{\link{resfunc}} and \code{\link{subfunc}}.
 }
+\examples{
+
+# single test data: subjects=3,000 and item=30, 2PLM
+set.seed(0204)
+theta <- rnorm(3000)
+a <- rlnorm(30, sdlog = 0.25)
+b <- rnorm(30)
+#sim_data_2 <- irtfun2::sim_gen(theta=theta, b=b, a=a)
+
+# GIRT estimated parameter
+set.seed(0204)
+theta <- rnorm(3000)
+phi <- rinvchi(3000, max = 2)
+a <- rlnorm(30, sdlog = 0.25)
+b <- rnorm(30)
+#sim_dat_girt <- sim_gen(theta=theta, phi=phi, a=a, b=b)
+
+}
