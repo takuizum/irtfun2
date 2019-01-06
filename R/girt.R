@@ -157,12 +157,12 @@ dgbeta <- function (x, paramab, rangex){
 #'
 #' @return the output is a list that has item parameter and person parameter.
 #' @examples
-#' res <- estGip(x=sim_dat_girt,fc=2, Ntheta=10, Nphi = 5, min_ph = 0.001, max_ph = 2)
+#' #res <- estGip(x=sim_dat_girt,fc=2, Ntheta=10, Nphi = 5, min_ph = 0.001, max_ph = 2)
 #' # check the parameters
-#' res$item
-#' res$item
-#' head(res$person)
-#' head(res$phi)
+#' #res$item
+#' #res$item
+#' #head(res$person)
+#' #head(res$phi)
 #' @export
 #'
 estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="Fisher_Scoring",
