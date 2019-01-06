@@ -8,8 +8,9 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
   D = 1.702, method = "Fisher_Scoring", model = "2PL",
   max_func = "N", mu_th = 0, sigma_th = 1, min_th = -4,
   max_th = 4, eEM = 0.001, eMLL = 0.001, maxiter_em = 100,
-  fix_a = 1, mu_a = 0, sigma_a = 1, mu_b = 0, sigma_b = 1,
-  mu_c = 0, sigma_c = 1, w_c = 1)
+  th_dist = "normal", fix_a = 1, mu_a = 0, sigma_a = 1, mu_b = 0,
+  sigma_b = 1, mu_c = 0, sigma_c = 1, w_c = 1, alpha = 0.5,
+  lambda = 1)
 }
 \arguments{
 \item{x}{DataFrame.}
@@ -30,7 +31,7 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
 
 \item{model}{a model vector}
 
-\item{max_func}{a character of object function. "N" is MML-EM, "B" is marginal Bayes.}
+\item{max_func}{a character of object function. "N" is MML-EM, "B" is marginal Bayes and "R" is Regularized MML.}
 
 \item{mu_th}{a hyper parameter of normal dist for theta}
 
@@ -45,6 +46,8 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
 \item{eMLL}{a convergence criterion of marginal log likelihood in EM cycle.}
 
 \item{maxiter_em}{the number of iteration of EM cycle.}
+
+\item{th_dist}{a type of theta dist."normal" or "empirical"}
 
 \item{fix_a}{a fix parameter for slope parameter of 1PLM}
 
@@ -61,6 +64,10 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
 \item{sigma_c}{a hyper parameter for lower asymptote parameter prior distribution(beta) in marginal Bayes estimation.}
 
 \item{w_c}{a weight parameter for lower asymptote parameter prior distribution(beta) in marginal Bayes estimation.}
+
+\item{alpha}{tuning parameter of elastic net penalty.}
+
+\item{lambda}{tuning parameter of elastic net penalty.}
 }
 \value{
 the output is a list that has item parameters data.frame and these Standard Error.
@@ -69,10 +76,18 @@ the output is a list that has item parameters data.frame and these Standard Erro
 Unidimensional Item Response Theory parameter estimation
 }
 \examples{
+# MMLE
 res1 <- estip2(x=sim_data_2, Gc=NULL, fc=2, Ntheta=21)
 # check the parameters
 res1$para
 res1$SE
 
-res2 <- estip2(x=sim_data_4, Gc=2, bg=2, fc=3, Ntheta=21)
+# Multigroup MMLE
+res2 <- estip2(x=sim_dat_st, Gc=2, bg=3, fc=3, Ntheta=21)
+
+# Marginal Bayes
+res3 <- estip2(x=sim_data_2, Gc=NULL, fc=2, Ntheta=21, max_func="B")
+
+# Regularized MMLE
+res4 <- estip2(x=sim_data_2, Gc=NULL, fc=2, Ntheta=21, max_func="R")
 }

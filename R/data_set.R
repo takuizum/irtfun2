@@ -53,10 +53,10 @@
 #'sim_eap$res
 "sim_eap"
 
-#'Simulated multi group item response data for GIRT model
+#'Simulated item response data for GIRT model
 #'
-#'A list of estimated result from \code{\link{estGip}}.
-#'@format See \code{\link{estGip}}.
+#'This data set contains 30 item responses of 3,000 subjects for GIRT model
+#'@format a dataset with 31 cols, first col is ID line.See \code{\link{estGip}}.
 #'@examples
 #'# GIRT estimated parameter
 #'set.seed(0204)
@@ -66,3 +66,15 @@
 #'b <- rnorm(30)
 #'#sim_dat_girt <- sim_gen(theta=theta, phi=phi, a=a, b=b)
 "sim_dat_girt"
+
+#'true 2PLM item parameter of 'sim_dat_st'.
+#'
+#'A list of true parameter .
+#'@format See \code{\link{sim_dat_st}}.
+"true_param_st"
+
+#'Simulated multi group item response data for scaling test design.
+#'
+#'This data set contains 70 item responses of 2,500 subjects for scaling test design.
+#'@format a dataset with 72 cols, first col is ID line and second col is group ID line.
+"sim_dat_st"

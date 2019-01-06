@@ -133,10 +133,11 @@ dgbeta <- function (x, paramab, rangex){
 #'
 #' @param x DataFrame.
 #' @param fc the first column.
+#' @param Gc the grade column.
+#' @param bg a mumber of base grade.
 #' @param IDc the ID column.
 #' @param Ntheta the number of the nodes of theta dist.
 #' @param Nphi the number of the nodes of phi dist.
-#' @param engine Estep calculation engine.`Cpp` is very faster than `R`.
 #' @param method the method of optimiser.  Default is "Fisher_Scoring", but \code{\link[stats]{optim}} function also be able to use.
 #' @param phi_dist a prior distribution of phi. `invchi` is inverse chi distribution. `lognormal` is log normal distribution.
 #' @param v a hyper parameter of invchi for phi
@@ -164,23 +165,44 @@ dgbeta <- function (x, paramab, rangex){
 #' head(res$phi)
 #' @export
 #'
-estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fisher_Scoring",
-                   phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0, max_ph=5, paramab=c(1,4),
+estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="Fisher_Scoring",
+                   phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0, max_ph=2, paramab=c(1,4),
                    mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=0.001, maxiter_em=100){
 
   if(!(method %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent","Fisher_Scoring"))) stop("argument input of `method` is improper string!!")
 
+
+  # data check
   X <- as.matrix(x[,fc:ncol(x)])
+  Item <- colnames(X)
   nj <- ncol(X)
-  nn <- nrow(X)
+  ni <- nrow(X)
   nq <- Ntheta
   nr <- Nphi
-  if(is.null(IDc)) ID <- 1:nn
+  if(is.null(IDc)) ID <- 1:ni
   else  ID <- x[,IDc]
+  if(is.null(Gc)) group <- rep(1,ni)
+  else group <- x[,Gc]
+  ng <- max(group)
+  if(!is.numeric(group)) stop("A group column must be numeric, but has non numeric scalar.")
+  if(min(group)==0) stop("A group column must be above 1, but has 0.")
+  p_mean <- rep(mu_th, ng)
+  p_sd <- rep(sigma_th,ng)
+
+  # design matrix
+  ind <- matrix(nrow=ng, ncol=nj)
+  for(g in 1:ng){
+    ind[g,] <- X[group==g, ] %>% colSums(na.rm = T)
+  }
+  ind[ind!=0] <- 1
+  resp <- X %>% as.matrix()
+  resp[!is.na(resp)] <- 1
+  resp[is.na(resp)] <- 0
 
   # weight and nodes
   Xq <- seq(min_th, max_th, length.out = nq)
   AX <- dnorm(Xq, mean=mu_th, sd=sigma_th)/sum(dnorm(Xq, mean=mu_th, sd=sigma_th)) # for theta
+  AX <- AX %>% rep.int(times=ng) %>% matrix(ncol=ng)
   Yr <- seq(min_ph, max_ph, length.out = nr)
   if(phi_dist == "invchi"){
     BY <- dinvchi(Yr, v=v, tau=tau)/sum(dinvchi(Yr, v=v, tau=tau)) # for phi
@@ -194,17 +216,24 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fis
   }else {
     stop("argument input of `phi_dist` is improper string!!")
   }
+  BY <- BY %>% rep.int(times=ng) %>% matrix(ncol=ng)
   #
   # initial value
-  r <- as.vector(cor(rowSums(X),X))
-  pass <- colMeans(X)
-  a0 <- 1.702*r/sqrt(1-r^2)
+  r <- as.vector(cor(rowSums(X, na.rm = T),X, use = "pair"))
+  pass <- colMeans(X, na.rm = T)
+  a0 <- D*r/sqrt(1-r^2)
   b0 <- -log(pass/(1-pass))
-  t0 <- data.frame(a=a0,b=b0)
+  init <- t0 <- t1 <- data.frame(a=a0,b=b0)
 
+  # for update imputation
+  a1 <- b1 <- numeric(nj)
+
+  # set mll history vector
   mll_history <- c(0)
 
   cat("Estimating Item Parameter!\n")
+
+  # stand FLUG
   t <- 0
   convergence <- T
   while(convergence){
@@ -212,47 +241,20 @@ estGip <- function(x, fc=3, IDc=1, Ntheta=31, Nphi=31, engine="Cpp", method="Fis
     #cat(t,"time EM cycle NOW\n")
 
     # E step
-    knqr <- array(dim = c(nn,nq,nr))
-    mll <- 0
-    ml <- numeric(nn)
-    if(engine=="R"){
-      for(r in 1:nr){
-        cat(round(100/nr*r, digits = 1),"% / 100%\r")
-        for(q in 1:nq){
-          l <- apply(X, 1, gL, theta=Xq[q], phi=Yr[r], a=a0, b=b0, D=1.702)*AX[q]*BY[r]
-          knqr[,q,r] <- l
-          ml <- ml + l
-        }
-      }
-      mll <- sum(log(ml))
-    } else if(engine=="Cpp"){
-      temp <- Estep_girt(X,a0,b0,Xq,AX,Yr,BY,D=1.702)
-      for(i in 1:nn){
-        #cat(round(100/nn*i, digits = 1),"% / 100%\r")
-        for(q in 1:nq){
-          l <- temp$knqr[[i]][[q]]
-          knqr[i,q,] <- l
-          ml[i] <- ml[i] + sum(l)
-        }
-      }
-      mll <- sum(log(ml))
-    }
+    Estep <- Estep_girt_mg(X,a0,b0,Xq,AX,Yr,BY,D=1.702,
+                           group=group, ind=ind, resp=resp, MLL=mll_history)
 
-    cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\n")
-    mll_history <- c(mll_history,mll)
+    mll <- Estep$MLL[t+1]
+    cat(t ," times -2 Marginal Loglikelihood is",-2*mll,"\n")
+    mll_history <- Estep$MLL
 
-    # 規格化
-    std_mat <- apply(knqr,1,sum)
-    hqr <- sweep(knqr, 1, std_mat, FUN="/")
-
-    rjqr <- array(dim=c(nj,nq,nr))
-    Nqr <- array(dim=c(nq,nr))
-
-    for(r in 1:nr){
-      for(q in 1:nq){
-        rjqr[,q,r] <- t(X)%*%hqr[,q,r]
-        Nqr[q,r] <- sum(hqr[,q,r])
-      }
+    # 3次元配列になっているのでそのままでは使えなさそう・
+    Njm <- matrix(0,nrow=nj, ncol=nq)
+    rjm <- matrix(0,nrow=nj, ncol=nq)
+    for(g in 1:ng){
+      # purrr::map(Estep$Njm,function(x){purrr::invoke(.f=rbind, .x=x)})
+      Njm <- Njm + purrr::invoke(rbind,Estep$Njqr[[g]])
+      rjm <- rjm + purrr::invoke(rbind,Estep$rjm[[g]])
     }
 
     # M step

@@ -73,39 +73,10 @@ List Estep_irt(
     }
   }
 
-
-  //Rcout<<"marginal log likelihood calculation.\n";
-  // Calculation marginal log likelihood
-
-  double f = 0; // 周辺対数尤度代入用
-  double ff,fff,l,w;
-
-  for(int g=0; g<ng; g++){
-    for(int i=0; i<ni; i++){
-      if(group[i] != g+1) continue; // 集団に属さない受験者の部分はスキップ
-      ff = 0; // 受検者iの周辺対数尤度代入用
-      for(int m=0; m<N; m++){
-        l = Lim[g][i][m];
-        w = Wm(m,g);
-        fff =  l*w ;
-        ff += fff;
-      }
-      f += log(ff);
-    }
-  }
-
-  MLL.push_back(f);
-  //diff = fabs(MLL[count1-1] - MLL[count1]); // 周辺対数尤度の差
-
-  //Rprintf("%d times -2 Marginal Log Likelihood is %f \r",count1,-2*f); // 小数点形式の出力に対応
-
-  if(traits::is_nan<REALSXP>(f)){
-    // 対数尤度の計算に失敗したら，計算を中止する。
-    stop("Can't calculate marginal log likelihood.");
-  }
-
   // 各受検者のthetaごとに事後分布の重みを計算する。
   double uu;
+  double f = 0; // 周辺対数尤度代入用
+  double l,w;
   for(int g=0; g<ng; g++){
     for(int i=0; i<ni; i++){
       if(group[i] != g+1) continue; // 集団に属さない受験者の部分はスキップ
@@ -116,14 +87,20 @@ List Estep_irt(
         uu = l*w;
         u += uu;
       }
+      f += log(u);
       for(int m=0; m<N; m++){
         l = Lim[g][i][m];
         w = Wm(m,g);
         Gim[g][i][m] =  l * w / u;
       }
+
     }
   }
-
+  MLL.push_back(f);
+  if(traits::is_nan<REALSXP>(f)){
+    // 対数尤度の計算に失敗したら，計算を中止する。
+    stop("Can't calculate marginal log likelihood.");
+  }
 
   //Rcout<<"expected frequency of subjects in each nodes calculation.\n";
   double k,kk;

@@ -3,13 +3,13 @@
 \docType{data}
 \name{sim_dat_girt}
 \alias{sim_dat_girt}
-\title{Simulated multi group item response data for GIRT model}
-\format{See \code{\link{estGip}}.}
+\title{Simulated item response data for GIRT model}
+\format{a dataset with 31 cols, first col is ID line.See \code{\link{estGip}}.}
 \usage{
 sim_dat_girt
 }
 \description{
-A list of estimated result from \code{\link{estGip}}.
+This data set contains 30 item responses of 3,000 subjects for GIRT model
 }
 \examples{
 # GIRT estimated parameter
