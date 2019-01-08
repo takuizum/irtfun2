@@ -223,6 +223,7 @@ Ijm <- function(N, X, a, b, c, D, model){
 #' @param eEM a convergence criterion of item parameters in EM cycle.
 #' @param eMLL a convergence criterion of marginal log likelihood in EM cycle.
 #' @param maxiter_em the number of iteration of EM cycle.
+#' @param rm_list a vector of item U want to remove for estimation. NOT list.
 #' @param fix_a a fix parameter for slope parameter of 1PLM
 #' @param mu_a a hyper parameter for slope parameter prior distribution(lognormal) in marginal Bayes estimation.
 #' @param sigma_a a hyper parameter for slope parameter prior distribution(lognormal) in marginal Bayes estimation.
@@ -253,7 +254,7 @@ Ijm <- function(N, X, a, b, c, D, model){
 #' res4 <- estip2(x=sim_data_2, Gc=NULL, fc=2, Ntheta=21, max_func="R")
 #' @export
 #'
-estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fisher_Scoring", model="2PL", max_func="N",
+estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fisher_Scoring", model="2PL", max_func="N", rm_list=NULL,
                    mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=0.001, maxiter_em=100, th_dist="normal",
                    fix_a=1, mu_a=0, sigma_a=1, mu_b=0, sigma_b=1, mu_c=0, sigma_c=1, w_c=1, alpha=0.5, lambda=1){
 
@@ -313,6 +314,14 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
     if(model[j]=="1PL")a0 <- fix_a
   }
   init <- t0 <- t1 <- data.frame(a=a0,b=b0,c=c0)
+
+  # remove selected item
+  if(!is.null(rm_list)){
+    rm_ind <- c(1:nj)[Item %in% rm_list]
+    model[rm_ind] <- "NONE"
+    init[rm_ind,] <- 0
+    cat("Remove Item ", rm_list, "\n")
+  }
 
   # for imputation
   a1 <- b1 <- c1 <- numeric(nj)

@@ -6,11 +6,11 @@
 \usage{
 estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
   D = 1.702, method = "Fisher_Scoring", model = "2PL",
-  max_func = "N", mu_th = 0, sigma_th = 1, min_th = -4,
-  max_th = 4, eEM = 0.001, eMLL = 0.001, maxiter_em = 100,
-  th_dist = "normal", fix_a = 1, mu_a = 0, sigma_a = 1, mu_b = 0,
-  sigma_b = 1, mu_c = 0, sigma_c = 1, w_c = 1, alpha = 0.5,
-  lambda = 1)
+  max_func = "N", rm_list = NULL, mu_th = 0, sigma_th = 1,
+  min_th = -4, max_th = 4, eEM = 0.001, eMLL = 0.001,
+  maxiter_em = 100, th_dist = "normal", fix_a = 1, mu_a = 0,
+  sigma_a = 1, mu_b = 0, sigma_b = 1, mu_c = 0, sigma_c = 1,
+  w_c = 1, alpha = 0.5, lambda = 1)
 }
 \arguments{
 \item{x}{DataFrame.}
@@ -32,6 +32,8 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
 \item{model}{a model vector}
 
 \item{max_func}{a character of object function. "N" is MML-EM, "B" is marginal Bayes and "R" is Regularized MML.}
+
+\item{rm_list}{a vector of item U want to remove for estimation. NOT list.}
 
 \item{mu_th}{a hyper parameter of normal dist for theta}
 

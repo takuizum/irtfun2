@@ -6,7 +6,7 @@
 \usage{
 estGip(x, fc = 3, Gc = NULL, bg = 1, IDc = 1, Ntheta = 31,
   Nphi = 10, method = "Fisher_Scoring", phi_dist = "invchi", v = 3,
-  tau = 1, mu_ph = 0, sigma_ph = 0.25, min_ph = 0, max_ph = 2,
+  tau = 1, mu_ph = 0, sigma_ph = 0.25, min_ph = 0.01, max_ph = 2,
   paramab = c(1, 4), mu_th = 0, sigma_th = 1, min_th = -4,
   max_th = 4, eEM = 0.001, eMLL = 0.001, maxiter_em = 100)
 }
