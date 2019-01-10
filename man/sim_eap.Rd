@@ -12,6 +12,6 @@ sim_eap
 A list of estimated result from \code{\link{estheta}}.
 }
 \examples{
-sim_eap$res
+head(sim_eap$res)
 }
 \keyword{datasets}

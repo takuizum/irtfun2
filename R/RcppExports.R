@@ -11,21 +11,6 @@
 #'@param Yr node of phi dist.
 #'@param BY weighit of phi dist.
 #'@param D factor constant.
-#'@export
-Estep_girt <- function(x, a0, b0, Xq, AX, Yr, BY, D) {
-    .Call(`_irtfun2_Estep_girt`, x, a0, b0, Xq, AX, Yr, BY, D)
-}
-
-#'Estep in girt.
-#'
-#'@param x DataFrame.
-#'@param a0 discrinimation parameter vector.
-#'@param b0 difficulty parameter vector.
-#'@param Xq node of theta dist.
-#'@param AX weight of theta dist.
-#'@param Yr node of phi dist.
-#'@param BY weighit of phi dist.
-#'@param D factor constant.
 #'@param group a vector.
 #'@param ind a design matrix for group.
 #'@param resp a design matrix for person.

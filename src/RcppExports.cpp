@@ -5,24 +5,6 @@
 
 using namespace Rcpp;
 
-// Estep_girt
-List Estep_girt(DataFrame x, NumericVector a0, NumericVector b0, NumericVector Xq, NumericVector AX, NumericVector Yr, NumericVector BY, double D);
-RcppExport SEXP _irtfun2_Estep_girt(SEXP xSEXP, SEXP a0SEXP, SEXP b0SEXP, SEXP XqSEXP, SEXP AXSEXP, SEXP YrSEXP, SEXP BYSEXP, SEXP DSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type x(xSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type a0(a0SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type b0(b0SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type Xq(XqSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type AX(AXSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type Yr(YrSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type BY(BYSEXP);
-    Rcpp::traits::input_parameter< double >::type D(DSEXP);
-    rcpp_result_gen = Rcpp::wrap(Estep_girt(x, a0, b0, Xq, AX, Yr, BY, D));
-    return rcpp_result_gen;
-END_RCPP
-}
 // Estep_girt_mg
 List Estep_girt_mg(DataFrame x, NumericVector a0, NumericVector b0, NumericVector Xq, NumericMatrix AX, NumericVector Yr, NumericMatrix BY, double D, IntegerVector group, IntegerMatrix ind, IntegerMatrix resp, NumericVector MLL);
 RcppExport SEXP _irtfun2_Estep_girt_mg(SEXP xSEXP, SEXP a0SEXP, SEXP b0SEXP, SEXP XqSEXP, SEXP AXSEXP, SEXP YrSEXP, SEXP BYSEXP, SEXP DSEXP, SEXP groupSEXP, SEXP indSEXP, SEXP respSEXP, SEXP MLLSEXP) {
@@ -161,7 +143,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_irtfun2_Estep_girt", (DL_FUNC) &_irtfun2_Estep_girt, 8},
     {"_irtfun2_Estep_girt_mg", (DL_FUNC) &_irtfun2_Estep_girt_mg, 12},
     {"_irtfun2_Estep_irt", (DL_FUNC) &_irtfun2_Estep_irt, 9},
     {"_irtfun2_MML_EM_dist", (DL_FUNC) &_irtfun2_MML_EM_dist, 15},

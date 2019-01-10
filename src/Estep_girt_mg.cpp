@@ -100,17 +100,17 @@ List Estep_girt_mg(DataFrame x,
   for(int g=0; g<ng; g++){
     for(int i=0; i<nn; i++){
       if(group[i] != g+1) continue; // 集団に属さない受験者の部分はスキップ
-      u = 0;
+      double Z = 0;
       for(int q=0; q<nq; q++){ // 総和を1にするための分母の計算 // sum
         for(int r=0; r<nr; r++){
-          u += knqr[g][i][q][r];
+          Z += knqr[g][i][q][r];
         }
       }
-      f += log(u);
+      f += log(Z);
       for(int q=0; q<nq; q++){ // 総和を1にするための分母の計算 // sum
         for(int r=0; r<nr; r++){
           double l = knqr[g][i][q][r];
-          hqr[g][i][q][r] =  l / u;
+          hqr[g][i][q][r] =  l / Z;
         }
       }
     }

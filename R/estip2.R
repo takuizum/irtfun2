@@ -235,6 +235,7 @@ Ijm <- function(N, X, a, b, c, D, model){
 #' @param alpha tuning parameter of elastic net penalty.
 #' @param lambda tuning parameter of elastic net penalty.
 #' @param th_dist a type of theta dist."normal" or "empirical"
+#' @param print How much information you want to display? from 1 to 3. The larger, more information is displayed.
 #'
 #' @return the output is a list that has item parameters data.frame and these Standard Error.
 #' @examples
@@ -256,7 +257,7 @@ Ijm <- function(N, X, a, b, c, D, model){
 #'
 estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fisher_Scoring", model="2PL", max_func="N", rm_list=NULL,
                    mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=0.001, maxiter_em=100, th_dist="normal",
-                   fix_a=1, mu_a=0, sigma_a=1, mu_b=0, sigma_b=1, mu_c=0, sigma_c=1, w_c=1, alpha=0.5, lambda=1){
+                   fix_a=1, mu_a=0, sigma_a=1, mu_b=0, sigma_b=1, mu_c=0, sigma_c=1, w_c=1, alpha=0.5, lambda=1, print=0){
 
   if(!(method %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Fisher_Scoring"))) stop("argument input of 'method' is improper string!!")
   if(!(max_func %in% c("B","N","R"))) stop("argument input of 'max_func' is improper string!!")
@@ -319,9 +320,18 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
   if(!is.null(rm_list)){
     rm_ind <- c(1:nj)[Item %in% rm_list]
     model[rm_ind] <- "NONE"
-    init[rm_ind,] <- 0
+    resp[,rm_ind] <- 0
+    ind[,rm_ind] <- 0
+    init[rm_ind,] <- t0[rm_ind,] <- t1[rm_ind,] <- 0
+    a0 <- init$a
+    b0 <- init$b
+    c0 <- init$c
     cat("Remove Item ", rm_list, "\n")
   }
+
+  # cat
+  cat("The number of subject is " ,ni, ".\nThe number of item is ", nj-length(rm_list),
+      ".\nThe number of remove item is ", length(rm_list), ".\n")
 
   # for imputation
   a1 <- b1 <- c1 <- numeric(nj)
@@ -335,7 +345,7 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
 
   cat("Estimating Item Parameter!\n")
 
-  # stand FLUG
+  # stand FLAG
   t <- 0
   convergence <- T
   while(convergence){
@@ -347,7 +357,8 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
                        ind=ind, resp=resp, D=D, MLL=mll_history)
 
     mll <- Estep$MLL[t+1]
-    cat(t ," times -2 Marginal Loglikelihood is",-2*mll,"\n")
+    if(print == 0) cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\r")
+    if(print >= 1) cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\n")
     mll_history <- Estep$MLL
 
     Njm <- matrix(0,nrow=nj, ncol=nq)
@@ -493,6 +504,7 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
     }
     # calibrate item parameter
     for(j in 1:nj){
+      if(model[j]=="NONE") next
       if(model[j] != "1PL"){
         a1[j] <- t1$a[j]/A
         b1[j] <- t1$b[j]*A+K
@@ -503,6 +515,9 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
         c1[j] <- t1$c[j]
       }
     }
+    t1$a <- a1
+    t1$b <- b1
+    t1$c <- c1
 
     # convergence check
     conv1 <- c(abs(a0-a1),abs(b0-b1),abs(c0-c1))
@@ -520,13 +535,18 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
       item_para <- as.data.frame(t1)
       break
     }else{
+      if(print >= 1){
+        cat("Item maximum changed a is", Item[max(abs(a0-a1))==abs(a0-a1)],"=",max(abs(a0-a1)),"\n")
+        cat("Item maximum changed b is", Item[max(abs(b0-b1))==abs(b0-b1)],"=",max(abs(b0-b1)),"\n")
+        cat("Item maximum changed c is", Item[max(abs(c0-c1))==abs(c0-c1)],"=",max(abs(c0-c1)),"\n")
+      }
       t0 <- t1
     }
   }
 
   # LAST E step
   # E step
-  Estep <- Estep_irt(xall=X, t0=as.matrix(t0), Xm=Xq, Wm=AX, group=group,
+  Estep <- Estep_irt(xall=X, t0=as.matrix(t1), Xm=Xq, Wm=AX, group=group,
                      ind=ind, resp=resp, D=D, MLL=mll_history)
 
   mll <- Estep$MLL[t+1]
@@ -549,6 +569,7 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
   }
   for(j in 1:nj){
     #cat("Optimising item ",j,"\r")
+    if(model[j]=="NONE") next
     # Let Nqr tidyr for FS
     N <- Njm[j,]
     rr <- rjm[j,]

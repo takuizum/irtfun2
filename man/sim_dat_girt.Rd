@@ -18,6 +18,6 @@ theta <- rnorm(3000)
 phi <- rinvchi(3000, max = 2)
 a <- rlnorm(30, sdlog = 0.25)
 b <- rnorm(30)
-#sim_dat_girt <- sim_gen(theta=theta, phi=phi, a=a, b=b)
+sim_dat_girt <- sim_gen(theta=theta, phi=phi, a=a, b=b)
 }
 \keyword{datasets}

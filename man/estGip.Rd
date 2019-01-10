@@ -5,10 +5,11 @@
 \title{Generalized Item Response Theory parameter estimation}
 \usage{
 estGip(x, fc = 3, Gc = NULL, bg = 1, IDc = 1, Ntheta = 31,
-  Nphi = 10, method = "Fisher_Scoring", phi_dist = "invchi", v = 3,
-  tau = 1, mu_ph = 0, sigma_ph = 0.25, min_ph = 0.01, max_ph = 2,
-  paramab = c(1, 4), mu_th = 0, sigma_th = 1, min_th = -4,
-  max_th = 4, eEM = 0.001, eMLL = 0.001, maxiter_em = 100)
+  Nphi = 10, method = "Fisher_Scoring", th_dist = "normal",
+  rm_list = NULL, phi_dist = "invchi", v = 3, tau = 1, mu_ph = 0,
+  sigma_ph = 0.25, min_ph = 0.01, max_ph = 2, paramab = c(1, 4),
+  mu_th = 0, sigma_th = 1, min_th = -4, max_th = 4, eEM = 0.001,
+  eMLL = 1e-06, maxiter_em = 100, print = 0)
 }
 \arguments{
 \item{x}{DataFrame.}
@@ -26,6 +27,10 @@ estGip(x, fc = 3, Gc = NULL, bg = 1, IDc = 1, Ntheta = 31,
 \item{Nphi}{the number of the nodes of phi dist.}
 
 \item{method}{the method of optimiser.  Default is "Fisher_Scoring", but \code{\link[stats]{optim}} function also be able to use.}
+
+\item{th_dist}{a type of theta dist."normal" or "empirical"}
+
+\item{rm_list}{a vector of item U want to remove for estimation. NOT list.}
 
 \item{phi_dist}{a prior distribution of phi. \code{invchi} is inverse chi distribution. \code{lognormal} is log normal distribution.}
 
@@ -56,6 +61,8 @@ estGip(x, fc = 3, Gc = NULL, bg = 1, IDc = 1, Ntheta = 31,
 \item{eMLL}{a convergence criterion of marginal log likelihood in EM cycle.}
 
 \item{maxiter_em}{the number of iteration of EM cycle.}
+
+\item{print}{How much information you want to display? from 1 to 3. The larger, more information is displayed.}
 }
 \value{
 the output is a list that has item parameter and person parameter.
@@ -67,7 +74,6 @@ Generalized Item Response Theory parameter estimation
 #res <- estGip(x=sim_dat_girt,fc=2, Ntheta=10, Nphi = 5, min_ph = 0.001, max_ph = 2)
 # check the parameters
 #res$item
-#res$item
 #head(res$person)
-#head(res$phi)
+
 }

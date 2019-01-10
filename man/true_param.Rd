@@ -16,6 +16,6 @@ set.seed(0204)
 theta <- rnorm(3000)
 a <- rlnorm(30, sdlog = 0.25)
 b <- rnorm(30)
-list(theta,a,b)
+#list(theta,a,b)
 }
 \keyword{datasets}

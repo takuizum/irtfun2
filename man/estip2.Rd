@@ -10,7 +10,7 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
   min_th = -4, max_th = 4, eEM = 0.001, eMLL = 0.001,
   maxiter_em = 100, th_dist = "normal", fix_a = 1, mu_a = 0,
   sigma_a = 1, mu_b = 0, sigma_b = 1, mu_c = 0, sigma_c = 1,
-  w_c = 1, alpha = 0.5, lambda = 1)
+  w_c = 1, alpha = 0.5, lambda = 1, print = 0)
 }
 \arguments{
 \item{x}{DataFrame.}
@@ -70,6 +70,8 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
 \item{alpha}{tuning parameter of elastic net penalty.}
 
 \item{lambda}{tuning parameter of elastic net penalty.}
+
+\item{print}{How much information you want to display? from 1 to 3. The larger, more information is displayed.}
 }
 \value{
 the output is a list that has item parameters data.frame and these Standard Error.

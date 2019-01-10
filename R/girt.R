@@ -72,7 +72,7 @@ rinvchi <- function(n, max=5, v=1, tau=1){
 
 # M step
 # gradient
-gr_j <- function(r, N, X, Y, t0, D){
+gr_j_g <- function(r, N, X, Y, t0, D){
   a <- t0[1]
   b <- t0[2]
   p <- gptheta(X, Y, a, b, D)
@@ -81,7 +81,7 @@ gr_j <- function(r, N, X, Y, t0, D){
   c(ga,gb)
 }
 
-Elnk_j <- function(r,N,t0,X,Y,D){
+Elnk_j_g <- function(r,N,t0,X,Y,D){
   a <- t0[1]
   b <- t0[2]
   p <- gptheta(theta=X,phi=Y,a=a,b=b,D=D)
@@ -91,7 +91,7 @@ Elnk_j <- function(r,N,t0,X,Y,D){
 }
 
 # gradient
-grj <- function(r, N, X, Y, a, b, D){
+grj_g <- function(r, N, X, Y, a, b, D){
   p <- gptheta(X, Y, a, b, D)
   ga <- sum(D*(r-N*p)*(X-b)/sqrt((1+Y^2*a^2)^3))
   gb <- sum(-D*(r-N*p)*a/sqrt(1+Y^2*a^2))
@@ -99,7 +99,7 @@ grj <- function(r, N, X, Y, a, b, D){
 }
 
 # Fisher information matrix
-Ij <- function(r, N, X, Y, a, b, D){
+Ij_g <- function(r, N, X, Y, a, b, D){
   p <- gptheta(theta=X, phi=Y, a, b, D)
   ja <- sum(D^2*N*p*(1-p)*(X-b)^2/(1+Y^2*a^2)^3)
   jb <- sum(D^2*N*p*(1-p)*a^2/(1+Y^2*a^2))
@@ -154,23 +154,24 @@ dgbeta <- function (x, paramab, rangex){
 #' @param eEM a convergence criterion of item parameters in EM cycle.
 #' @param eMLL a convergence criterion of marginal log likelihood in EM cycle.
 #' @param maxiter_em the number of iteration of EM cycle.
+#' @param rm_list a vector of item U want to remove for estimation. NOT list.
+#' @param th_dist a type of theta dist."normal" or "empirical"
+#' @param print How much information you want to display? from 1 to 3. The larger, more information is displayed.
 #'
 #' @return the output is a list that has item parameter and person parameter.
 #' @examples
 #' #res <- estGip(x=sim_dat_girt,fc=2, Ntheta=10, Nphi = 5, min_ph = 0.001, max_ph = 2)
 #' # check the parameters
 #' #res$item
-#' #res$item
 #' #head(res$person)
-#' #head(res$phi)
+#'
 #' @export
 #'
-estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="Fisher_Scoring",
+estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="Fisher_Scoring", th_dist="normal", rm_list=NULL,
                    phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0.01, max_ph=2, paramab=c(1,4),
-                   mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=0.001, maxiter_em=100){
+                   mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=1e-6, maxiter_em=100, print=0){
 
   if(!(method %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent","Fisher_Scoring"))) stop("argument input of `method` is improper string!!")
-
 
   # data check
   X <- as.matrix(x[,fc:ncol(x)])
@@ -185,9 +186,10 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
   else group <- x[,Gc]
   ng <- max(group)
   if(!is.numeric(group)) stop("A group column must be numeric, but has non numeric scalar.")
-  if(min(group)==0) stop("A group column must be above 1, but has 0.")
+  if(min(group)==0) stop("A group column must be above 1, but is 0.")
   p_mean <- rep(mu_th, ng)
   p_sd <- rep(sigma_th,ng)
+  model <- "GIRT" %>% rep(nj)
 
   # design matrix
   ind <- matrix(nrow=ng, ncol=nj)
@@ -219,17 +221,70 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
   BY <- BY %>% rep.int(times=ng) %>% matrix(ncol=ng)
   #
   # initial value
-  r <- as.vector(cor(rowSums(X, na.rm = T),X, use = "pair"))
+  D <- 1.702
+  r <- cor(rowSums(X, na.rm = T),X, use = "pair") %>% as.numeric()
   pass <- colMeans(X, na.rm = T)
   a0 <- D*r/sqrt(1-r^2)
+  names(a0) <- Item
   b0 <- -log(pass/(1-pass))
   init <- t0 <- t1 <- data.frame(a=a0,b=b0)
+
+  # remove selected item
+  if(!is.null(rm_list)){
+    rm_ind <- c(1:nj)[Item %in% rm_list]
+    model[rm_ind] <- "NONE"
+    resp[,rm_ind] <- 0
+    ind[,rm_ind] <- 0
+    init[rm_ind,] <- t0[rm_ind,] <- t1[rm_ind,] <- 0
+    a0 <- init$a
+    b0 <- init$b
+    cat("Remove Item ", rm_list, "\n")
+  }
+
+  # cat
+  cat("The number of subject is " ,ni, ".\nThe number of item is ", nj-length(rm_list),
+      ".\nThe number of remove item is ", length(rm_list), ".\n")
 
   # for update imputation
   a1 <- b1 <- numeric(nj)
 
   # set mll history vector
   mll_history <- c(0)
+
+  # for split unlist vector by group in E step
+  g_ind_E <- c(1:ng) %>% matrix() %>% apply(1,rep.int, times=nj*nr*nq) %>% as.data.frame() %>% tidyr::gather(key=dummy, value=value)
+  g_ind_E <- g_ind_E$value
+  Ngjqr_long <- data.frame(g=g_ind_E, prob=rep(0,ng*nj*nq*nr))
+  rgjqr_long <- data.frame(g=g_ind_E, prob=rep(0,ng*nj*nq*nr))
+  # empty data.frame
+  # group label col
+  # item label col
+  J <- c(1:nj) %>%
+    matrix() %>%
+    apply(1,rep.int, times=nr*nq) %>%
+    as.data.frame() %>%
+    tidyr::gather(key=dummy, value=value)
+  J <- J$value# %>% rep.int(times=ng)
+  # theta node label col
+  Q <- c(1:nq) %>%
+    matrix() %>%
+    apply(1,rep.int, times=nr) %>%
+    as.data.frame() %>%
+    tidyr::gather(key=dummy, value=value)
+  Q <- Q$value %>%
+    rep.int(times=nj)
+  # phi label node col
+  R <- c(1:nr) %>%
+    rep.int(times=nq) %>%
+    rep.int(times=nj)
+  # data.frame
+  Njqr_long <- data.frame(j=J, q=Q, r=R, prob=rep(0,nr*nq*nj))
+  rjqr_long <- data.frame(j=J, q=Q, r=R, prob=rep(0,nr*nq*nj))
+  #rm(J,Q,R,g_ind_E)
+
+  # convert to longer and longer vector
+  X_long <- apply(matrix(Xq), 1, rep.int, nr) %>% as.vector()
+  Y_long <- rep(Yr, nq)
 
   cat("Estimating Item Parameter!\n")
 
@@ -245,106 +300,211 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
                            group=group, ind=ind, resp=resp, MLL=mll_history)
 
     mll <- Estep$MLL[t+1]
-    cat(t ," times -2 Marginal Loglikelihood is",-2*mll,"\n")
+    if(print == 0) cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\r")
+    if(print >= 1) cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\n")
     mll_history <- Estep$MLL
 
-    # 3次元配列になっているのでそのままでは使えなさそう・
-    Njm <- matrix(0,nrow=nj, ncol=nq)
-    rjm <- matrix(0,nrow=nj, ncol=nq)
-    for(g in 1:ng){
-      # purrr::map(Estep$Njm,function(x){purrr::invoke(.f=rbind, .x=x)})
-      Njm <- Njm + purrr::invoke(rbind,Estep$Njqr[[g]])
-      rjm <- rjm + purrr::invoke(rbind,Estep$rjm[[g]])
-    }
+    # unlist
+    Ngjqr_long$prob <- Estep$Njqr %>% unlist()
+    rgjqr_long$prob <- Estep$rjqr %>% unlist()
+
+    # aggregate
+    Njqr_long$prob <- Ngjqr_long %>%
+      dplyr::mutate(id=c(1:(nj*nq*nr)) %>% rep(ng)) %>%
+      tidyr::spread(key=g, value=prob) %>%
+      dplyr::select(-id) %>%
+      rowSums()
+    rjqr_long$prob <- rgjqr_long %>%
+      dplyr::mutate(id=c(1:(nj*nq*nr)) %>% rep(ng)) %>%
+      tidyr::spread(key=g, value=prob) %>%
+      dplyr::select(-id) %>%
+      rowSums()
 
     # M step
-    # Let Nqr tidyr for FS
-    Nqr_dat <- data.frame(Nqr)
-    Nqr_dat <- Nqr_dat %>% gather(key="dummy", value="prob")
-
     t1 <- t0
+    a0 <- t1$a
+    b0 <- t1$b
     for(j in 1:nj){
-      #cat("Optimising item ",j,"\r")
-      # Let Nqr tidyr for FS
-      rjqr_dat <- data.frame(rjqr[j,,])
-      rjqr_dat <- rjqr_dat %>% gather(key="dummy", value="prob")
-      # convert to longer and longer vector
-      X_long <- rep(Xq, nr)
-      Y_long <- apply(matrix(Yr), 2, rep.int, nq)
+      if(model[j]=="NONE") next
+      Nqr <- Njqr_long$prob[Njqr_long$j==j]
+      rqr <- rjqr_long$prob[rjqr_long$j==j]
       # gradient
       if(method != "Fisher_Scoring"){
-        res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j, gr=gr_j, control = list(fnscale = -1),
-                     r=rjqr_dat$"prob", N=Nqr_dat$"prob", X=X_long, Y=Y_long, D=1.702, method = method)
+        res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j_g, gr=gr_j_g, control = list(fnscale = -1),
+                     r=rqr, N=Nqr, X=X_long, Y=Y_long, D=1.702, method = method)
         t1[j,] <- res$par
       }else{
         # Fisher scoring
-        gr <- grj(rjqr_dat$"prob", Nqr_dat$"prob", X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
-        FI <- Ij(rjqr_dat$"prob", Nqr_dat$"prob", X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
+        gr <- grj_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
+        FI <- Ij_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
         # solve
         t1[j,] <- t0[j,] + solve(FI)%*%gr
       }
     }
 
-    # convergence check
-    a1 <- t1[,1]
-    b1 <- t1[,2]
-    conv <- c(abs(a0-a1),abs(b0-b1))
+    # calibration
+    # calculate mean and sd
+    p_mean_t0 <- p_mean
+    p_sd_t0 <- p_sd
+    for(g in 1:ng){
+      gind <- c(1:nj)[ind[g,]!=0]
+      N_of_node <- Ngjqr_long[Ngjqr_long$g==g,] %>%
+        dplyr::mutate(J=J, R=R, Q=Q) %>%
+        dplyr::filter(J %in% gind)%>%
+        dplyr::select(-g) %>%
+        tidyr::spread(key=J, value=prob)%>%
+        aggregate(by=list(c(1:nq) %>% rep(nr)), FUN=sum) %>%
+        dplyr::select(-Group.1, -R, -Q) %>%
+        t()
+      p_mean[g] <- mean(N_of_node%*%matrix(Xq)/rowSums(N_of_node))
+      p_sd[g] <- mean(sqrt(N_of_node%*%matrix((Xq-p_mean[g])^2)/rowSums(N_of_node)))
+    }
+    # calculate calibration weight
+    A <- sigma_th/p_sd[bg]
+    K <- mu_th - A*p_mean[bg]
+    # calibrate mean and sd
+    p_mean <- A*p_mean+K
+    p_sd <- A*p_sd
+    for(g in 1:ng){
+      gind <- c(1:nj)[ind[g,]!=0]
+      N_of_node <- Ngjqr_long[Ngjqr_long$g==g,] %>%
+        dplyr::mutate(J=J, R=R, Q=Q) %>%
+        dplyr::filter(J %in% gind)%>%
+        dplyr::select(-g) %>%
+        tidyr::spread(key=J, value=prob)%>%
+        aggregate(by=list(c(1:nq) %>% rep(nr)), FUN=sum) %>%
+        dplyr::select(-Group.1, -R, -Q) %>%
+        t()
+      if(th_dist=="normal"){
+        # Gaussian dist
+        AX[,g] <- dnorm(Xq, mean=p_mean[g], sd=p_sd[g])/sum(dnorm(Xq, mean=p_mean[g], sd=p_sd[g]))
+      }
+      if(th_dist=="empirical"){
+        # empirical dist
+        constNjq <- rowSums(N_of_node) %>% rep.int(times=nq) %>% matrix(ncol=nq)
+        AX[,g] <- (N_of_node/constNjq) %>% colMeans(na.rm = T)
+      }
+    }
+    # calibrate item parameter
+    for(j in 1:nj){
+      if(model[j]=="NONE") next
+      a1[j] <- t1$a[j]/A
+      b1[j] <- t1$b[j]*A+K
+    }
 
-    if(all(conv<eEM) || abs(mll_history[t+1]-mll_history[t])<eMLL || maxiter_em == t){
+    t1$a <- a1
+    t1$b <- b1
+
+    # change phi dist weight
+    # DON'T USE
+    #
+    # for(g in 1:ng){
+    #   gind <- c(1:nj)[ind[g,]!=0]
+    #   pN_of_node <- Ngjqr_long[Ngjqr_long$g==g,] %>%
+    #     dplyr::mutate(J=J, R=R, Q=Q) %>%
+    #     dplyr::filter(J %in% gind)%>%
+    #     dplyr::select(-g) %>%
+    #     tidyr::spread(key=J, value=prob)%>%
+    #     aggregate(by=list(c(1:nr) %>% rep(nq)), FUN=sum) %>%
+    #     dplyr::select(-Group.1, -R, -Q) %>%
+    #     t()
+    #   constpNjr <- rowSums(pN_of_node) %>% rep.int(times=nr) %>% matrix(ncol=nr)
+    #   BY[,g] <- (pN_of_node/constpNjr) %>% colMeans(na.rm = T)
+    # }
+
+    # convergence check
+    conv1 <- c(abs(a0-a1),abs(b0-b1))
+    conv4 <- abs(mll_history[t+1]-mll_history[t])
+    if(ng > 1){
+      conv2 <- c(abs(p_mean - p_mean_t0))
+      conv3 <- c(abs(p_sd - p_sd_t0))
+    }else{
+      conv2 <- conv3 <- 1
+    }
+
+    if(all(conv1<eEM)|| conv4<eMLL || all(conv2<eMLL) || all(conv3<eMLL) || maxiter_em == t){#|| all(conv2<eEM) || all(conv3<eEM)
       convergence <- F
       cat("\nConverged!!\n")
       item_para <- as.data.frame(t1)
       break
+    }else{
+      if(print >= 1){
+        cat("Item maximum changed a is", Item[max(abs(a0-a1))==abs(a0-a1)],"=",max(abs(a0-a1)),"\n")
+        cat("Item maximum changed b is", Item[max(abs(b0-b1))==abs(b0-b1)],"=",max(abs(b0-b1)),"\n")
+      }
+      t0 <- t1
+      a0 <- t1$a
+      b0 <- t1$b
     }
-
-    t0 <- t1
-    a0 <- t0[,1]
-    b0 <- t0[,2]
-
   }
+
+  # last E step
+  Estep <- Estep_girt_mg(X,a1,b1,Xq,AX,Yr,BY,D=1.702,
+                         group=group, ind=ind, resp=resp, MLL=mll_history)
+
+  mll <- Estep$MLL[t+1]
+  mll_history <- Estep$MLL
+
+  # unlist
+  Ngjqr_long$prob <- Estep$Njqr %>% unlist()
+  rgjqr_long$prob <- Estep$rjqr %>% unlist()
+
+  # aggregate
+  Njqr_long$prob <- Ngjqr_long %>%
+    dplyr::mutate(id=c(1:(nj*nq*nr)) %>% rep(ng)) %>%
+    tidyr::spread(key=g, value=prob) %>%
+    dplyr::select(-id) %>%
+    rowSums()
+  rjqr_long$prob <- rgjqr_long %>%
+    dplyr::mutate(id=c(1:(nj*nq*nr)) %>% rep(ng)) %>%
+    tidyr::spread(key=g, value=prob) %>%
+    dplyr::select(-id) %>%
+    rowSums()
 
   # Standard Error
   SE <- t1
-  Nqr_dat <- data.frame(Nqr)
-  Nqr_dat <- Nqr_dat %>% gather(key="dummy", value="prob")
-
   for(j in 1:nj){
-    cat("Optimising item ",j,"\r")
-    # Let Nqr tidyr for FS
-    rjqr_dat <- data.frame(rjqr[j,,])
-    rjqr_dat <- rjqr_dat %>% gather(key="dummy", value="prob")
-    # convert to longer and longer vector
-    X_long <- rep(Xq, nr)
-    Y_long <- apply(matrix(Yr), 2, rep.int, nq)
+    #cat("Optimising item ",j,"\r")
+    if(model[j]=="NONE") next
+    Nqr <- Njqr_long$prob[Njqr_long$j==j]
+    rqr <- rjqr_long$prob[rjqr_long$j==j]
     # Fisher score matrix
-    FI <- Ij(rjqr_dat$"prob", Nqr_dat$"prob", X_long, Y_long, t1[j,1], t1[j,2], D=1.702)
+    FI <- Ij_g(rqr, Nqr, X_long, Y_long, t1[j,1], t1[j,2], D=1.702)
     # solve
     SE[j,] <- sqrt(diag(solve(FI)))
   }
 
   cat("Estimating EAP!\n")
-  # 個人パラメタの推定
-  p1 <- p2 <- numeric(nn)
-  for(n in 1:nn){
-    cat(round(100/nn*n),"% / 100%\r")
-    theta0 <- rep(0,nq)
-    phi0 <- rep(0,nr)
-    for(r in 1:nr){
-      theta0 <- theta0 + hqr[n,,r]
+  # estimate person theta and phi EAP
+  person_para <- data.frame(ID=ID, GROUP=group, SCORE=rowSums(X,na.rm = T), theta=rep(NA,ni), phi=rep(NA,ni))
+  for(g in 1:ng){
+    gID <- ID[group==g]
+    iID <- c(1:ni)[group==g]
+    ngi <- iID %>% length() # n of subjects of group g
+    hqr <- Estep$hqr[[g]][iID]
+    hqr_long <- hqr %>% unlist() %>%
+      as.data.frame() %>%
+      dplyr::mutate(id = matrix(as.factor(gID)) %>% apply(1, rep.int, times=nq*nr) %>% as.vector()) %>% # add col
+      dplyr::mutate(theta = matrix(c(1:nq)) %>% apply(1, rep.int, times=nr) %>% as.vector() %>% rep.int(times=ngi)) %>% # add col
+      dplyr::mutate(phi = matrix(c(1:nr)) %>% rep.int(times=ngi*nq) %>% as.vector()) # add col
+    hqr_long <- dplyr::rename(.data=hqr_long, prob=.) %>% # rename
+      tidyr::spread(key=theta, value=prob) # spread
+    for(i in gID){
+      i_hqr <- hqr_long %>% dplyr::filter(id==i) %>%
+        dplyr::select(-id, -phi) %>%
+        as.matrix()
+      # theta
+      person_para[person_para$ID == i, 4] <- i_hqr %>% colSums() %>% matrix(nrow=1) %*% Xq
+      # phi
+      person_para[person_para$ID == i, 5] <- i_hqr %>% rowSums() %>% matrix(nrow=1) %*% Yr
     }
-    for(q in 1:nq){
-      phi0 <- phi0 + hqr[n,q,]
-    }
-    p1[n] <- sum(Xq*theta0)
-    p2[n] <- sum(Yr*phi0)
-
   }
 
+  # tidyr output data
 
-
-  person_para <- data.frame("ID"=ID,"SCORE"=rowSums(X),"theta"=p1, "phi"=p2)
-
-  res <- list(item=item_para, item_SE=SE, person=person_para, hqr=hqr, knqr=knqr)
+  theta_dist <- data.frame(theta=Xq, AX)
+  phi2_dist <- data.frame(phi=Yr, BY)
+  res <- list(item=item_para, item_SE=SE, person=person_para, th_dist=theta_dist, phi_dist=phi2_dist)
 
   return(res)
 }

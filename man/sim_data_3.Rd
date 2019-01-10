@@ -11,4 +11,13 @@ sim_data_3
 \description{
 This data set contains 30 item responses of 3,000 subjects
 }
+\examples{
+set.seed(0204)
+# single test data: subjects=3,000 and item=30, 3PLM
+# data.frame(x=c(0:1)) \%>\%
+#   ggplot(aes(x=x))+stat_function(fun=dbeta, args = list(shape1=1, shape2=6))
+sim_data_3 <- irtfun2::sim_gen(theta=rnorm(3000),
+  b=rnorm(30), a=rlnorm(30, sdlog=0.25), c=rbeta(30, shape1=1, shape2=6))
+
+}
 \keyword{datasets}

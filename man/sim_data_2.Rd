@@ -11,4 +11,13 @@ sim_data_2
 \description{
 This data set contains 30 item responses of 3,000 subjects
 }
+\examples{
+# single test data: subjects=3,000 and item=30, 2PLM
+set.seed(0204)
+theta <- rnorm(3000)
+a <- rlnorm(30, sdlog = 0.25)
+b <- rnorm(30)
+sim_data_2 <- irtfun2::sim_gen(theta=theta, b=b, a=a)
+
+}
 \keyword{datasets}
