@@ -183,12 +183,12 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
   if(is.null(IDc)) ID <- 1:ni
   else  ID <- x[,IDc]
   if(is.null(Gc)) group <- rep(1,ni)
-  else group <- x[,Gc]
+  else group <- x[,Gc] %>% as.numeric()
   ng <- max(group)
   if(!is.numeric(group)) stop("A group column must be numeric, but has non numeric scalar.")
   if(min(group)==0) stop("A group column must be above 1, but is 0.")
   p_mean <- rep(mu_th, ng)
-  p_sd <- rep(sigma_th,ng)
+  p_sd <- rep(sigma_th, ng)
   model <- "GIRT" %>% rep(nj)
 
   # design matrix
@@ -422,7 +422,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
       conv2 <- conv3 <- 1
     }
 
-    if(all(conv1<eEM)|| conv4<eMLL || all(conv2<eMLL) || all(conv3<eMLL) || maxiter_em == t){#|| all(conv2<eEM) || all(conv3<eEM)
+    if(all(conv1<eEM)|| conv4<eMLL || all(conv2<eMLL) || all(conv3<eMLL) || maxiter_em == t){
       convergence <- F
       cat("\nConverged!!\n")
       item_para <- as.data.frame(t1)
@@ -474,9 +474,10 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
     SE[j,] <- sqrt(diag(solve(FI)))
   }
 
+  person_para <- data.frame(ID=ID, GROUP=group, SCORE=rowSums(X,na.rm = T), theta=rep(NA,ni), phi=rep(NA,ni))
+  # if(est_eap==TRUE){}
   cat("Estimating EAP!\n")
   # estimate person theta and phi EAP
-  person_para <- data.frame(ID=ID, GROUP=group, SCORE=rowSums(X,na.rm = T), theta=rep(NA,ni), phi=rep(NA,ni))
   for(g in 1:ng){
     gID <- ID[group==g]
     iID <- c(1:ni)[group==g]
@@ -500,11 +501,98 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
     }
   }
 
+  # estimating population distribution
+
+  #if(est_thdist==TRUE){}
+  cat("Estimating the population distribution!\n")
+  # initialize
+  UX <- (rep(1,nq)/nq) %>% rep.int(times=ng) %>% matrix(ncol=ng)
+  p_mean <- rep(mu_th, ng)
+  p_sd <- rep(sigma_th, ng)
+  # set mll history vector
+  mll_history2 <- c(0)
+  t <- 0
+  convergence <- T
+  while(convergence){
+    t <- t + 1
+    #cat(t,"time EM cycle NOW\n")
+
+    # E step
+    Estep <- Estep_girt_mg(X,t1[,1],t1[,2],Xq,UX,Yr,BY,D=1.702,
+                           group=group, ind=ind, resp=resp, MLL=mll_history2)
+
+    mll <- Estep$MLL[t+1]
+    if(print == 0) cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\r")
+    if(print >= 1) cat(t ,"times -2 Marginal Loglikelihood is",-2*mll,"\n")
+    mll_history2 <- Estep$MLL
+
+    # unlist
+    Ngjqr_long$prob <- Estep$Njqr %>% unlist()
+    rgjqr_long$prob <- Estep$rjqr %>% unlist()
+
+    # aggregate
+    Njqr_long$prob <- Ngjqr_long %>%
+      dplyr::mutate(id=c(1:(nj*nq*nr)) %>% rep(ng)) %>%
+      tidyr::spread(key=g, value=prob) %>%
+      dplyr::select(-id) %>%
+      rowSums()
+    rjqr_long$prob <- rgjqr_long %>%
+      dplyr::mutate(id=c(1:(nj*nq*nr)) %>% rep(ng)) %>%
+      tidyr::spread(key=g, value=prob) %>%
+      dplyr::select(-id) %>%
+      rowSums()
+
+    # update the weight of dist
+    for(g in 1:ng){
+      gind <- c(1:nj)[ind[g,]!=0]
+      N_of_node <- Ngjqr_long[Ngjqr_long$g==g,] %>%
+        dplyr::mutate(J=J, R=R, Q=Q) %>%
+        dplyr::filter(J %in% gind)%>%
+        dplyr::select(-g) %>%
+        tidyr::spread(key=J, value=prob)%>%
+        aggregate(by=list(c(1:nq) %>% rep(nr)), FUN=sum) %>%
+        dplyr::select(-Group.1, -R, -Q) %>%
+        t()
+      # empirical dist
+      constNjq <- rowSums(N_of_node) %>% rep.int(times=nq) %>% matrix(ncol=nq)
+      UX[,g] <- (N_of_node/constNjq) %>% colMeans(na.rm = T)
+    }
+
+    # calculate mean and sd
+    p_mean_t0 <- p_mean
+    p_sd_t0 <- p_sd
+    for(g in 1:ng){
+      gind <- c(1:nj)[ind[g,]!=0]
+      N_of_node <- Ngjqr_long[Ngjqr_long$g==g,] %>%
+        dplyr::mutate(J=J, R=R, Q=Q) %>%
+        dplyr::filter(J %in% gind)%>%
+        dplyr::select(-g) %>%
+        tidyr::spread(key=J, value=prob)%>%
+        aggregate(by=list(c(1:nq) %>% rep(nr)), FUN=sum) %>%
+        dplyr::select(-Group.1, -R, -Q) %>%
+        t()
+      p_mean[g] <- mean(N_of_node%*%matrix(Xq)/rowSums(N_of_node))
+      p_sd[g] <- mean(sqrt(N_of_node%*%matrix((Xq-p_mean[g])^2)/rowSums(N_of_node)))
+    }
+
+    # convergence check
+    conv2 <- c(abs(p_mean - p_mean_t0))
+    conv3 <- c(abs(p_sd - p_sd_t0))
+
+    if(all(conv2<eMLL) || all(conv3<eMLL) || maxiter_em == t){
+      convergence <- F
+      cat("\nConverged!!\n")
+      break
+    }
+  }
+
+
   # tidyr output data
 
-  theta_dist <- data.frame(theta=Xq, AX)
+  theta_dist1 <- data.frame(theta=Xq, AX)
+  theta_dist2 <- data.frame(theta=Xq, UX)
   phi2_dist <- data.frame(phi=Yr, BY)
-  res <- list(item=item_para, item_SE=SE, person=person_para, th_dist=theta_dist, phi_dist=phi2_dist)
+  res <- list(item=item_para, item_SE=SE, person=person_para, th_dist=theta_dist1, phi_dist=phi2_dist, pupulation_dist=theta_dist2)
 
   return(res)
 }
