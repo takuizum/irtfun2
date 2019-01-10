@@ -246,7 +246,7 @@ Ijm <- function(N, X, a, b, c, D, model){
 #' res1$SE
 #'
 #' # Multigroup MMLE
-#' res2 <- estip2(x=sim_dat_st, Gc=2, bg=3, fc=3, Ntheta=21)
+#' res2 <- estip2(x=sim_dat_st, Gc=2, bg=3, fc=3, Ntheta=10)
 #'
 #' # Marginal Bayes
 #' res3 <- estip2(x=sim_data_2, Gc=NULL, fc=2, Ntheta=21, max_func="B")
