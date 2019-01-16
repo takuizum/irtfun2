@@ -46,9 +46,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// MML_EM_dist
-List MML_EM_dist(DataFrame x, DataFrame para, const int N, const double eMLL, const double emu, int fc0, int ng, int gc0, const double D, const int fix, const int print, const double max, const double min, const int maxiter_em, CharacterVector rm_list);
-RcppExport SEXP _irtfun2_MML_EM_dist(SEXP xSEXP, SEXP paraSEXP, SEXP NSEXP, SEXP eMLLSEXP, SEXP emuSEXP, SEXP fc0SEXP, SEXP ngSEXP, SEXP gc0SEXP, SEXP DSEXP, SEXP fixSEXP, SEXP printSEXP, SEXP maxSEXP, SEXP minSEXP, SEXP maxiter_emSEXP, SEXP rm_listSEXP) {
+// estdist
+List estdist(DataFrame x, DataFrame para, const int N, const double eMLL, const double eDIST, int fc0, int ng, int gc0, const double D, const int fix, const int print, const double max, const double min, const int maxiter_em, CharacterVector rm_list);
+RcppExport SEXP _irtfun2_estdist(SEXP xSEXP, SEXP paraSEXP, SEXP NSEXP, SEXP eMLLSEXP, SEXP eDISTSEXP, SEXP fc0SEXP, SEXP ngSEXP, SEXP gc0SEXP, SEXP DSEXP, SEXP fixSEXP, SEXP printSEXP, SEXP maxSEXP, SEXP minSEXP, SEXP maxiter_emSEXP, SEXP rm_listSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -56,7 +56,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< DataFrame >::type para(paraSEXP);
     Rcpp::traits::input_parameter< const int >::type N(NSEXP);
     Rcpp::traits::input_parameter< const double >::type eMLL(eMLLSEXP);
-    Rcpp::traits::input_parameter< const double >::type emu(emuSEXP);
+    Rcpp::traits::input_parameter< const double >::type eDIST(eDISTSEXP);
     Rcpp::traits::input_parameter< int >::type fc0(fc0SEXP);
     Rcpp::traits::input_parameter< int >::type ng(ngSEXP);
     Rcpp::traits::input_parameter< int >::type gc0(gc0SEXP);
@@ -67,7 +67,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type min(minSEXP);
     Rcpp::traits::input_parameter< const int >::type maxiter_em(maxiter_emSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type rm_list(rm_listSEXP);
-    rcpp_result_gen = Rcpp::wrap(MML_EM_dist(x, para, N, eMLL, emu, fc0, ng, gc0, D, fix, print, max, min, maxiter_em, rm_list));
+    rcpp_result_gen = Rcpp::wrap(estdist(x, para, N, eMLL, eDIST, fc0, ng, gc0, D, fix, print, max, min, maxiter_em, rm_list));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -145,7 +145,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_irtfun2_Estep_girt_mg", (DL_FUNC) &_irtfun2_Estep_girt_mg, 12},
     {"_irtfun2_Estep_irt", (DL_FUNC) &_irtfun2_Estep_irt, 9},
-    {"_irtfun2_MML_EM_dist", (DL_FUNC) &_irtfun2_MML_EM_dist, 15},
+    {"_irtfun2_estdist", (DL_FUNC) &_irtfun2_estdist, 15},
     {"_irtfun2_estip", (DL_FUNC) &_irtfun2_estip, 36},
     {"_irtfun2_theta_pv", (DL_FUNC) &_irtfun2_theta_pv, 14},
     {NULL, NULL, 0}

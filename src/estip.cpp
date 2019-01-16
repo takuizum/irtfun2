@@ -1489,8 +1489,8 @@ List estip (DataFrame x,
   DataFrame SE_d = DataFrame::create(Named("Item")=Item, Named("a") = SE(_,0), Named("b") = SE(_,1), Named("c") = SE(_,2), Named("model") = model);
 
   List res = List::create(_["para"] = Para, _["SE"] = SE_d, _["initial"] = initial,
-                          _["theta.dist"] = dist, _["ms"] = ms,_["mean"] = mean, _["sd"] = sd,
-                          _["population_dist"] = unif_dist, _["population_mean"] = mean_pop, _["population_sd"] = sd_pop,
+                          _["th_dist1"] = dist, _["ms"] = ms,_["mean"] = mean, _["sd"] = sd,
+                          _["th_dist2"] = unif_dist, _["population_mean"] = mean_pop, _["population_sd"] = sd_pop,
                           _["MLL"] = MLL, _["conv"] = conv, _["count1"] = count1, _["count2"] = count2,
                           _["skip_para"] = skip_para, _["rm_n"] = rm_n, _["rm_id"] = rm_id ,
                           _["p_bis"] = r, _["passing_rate"] = p, _["itemfit_EM"] = EMfit

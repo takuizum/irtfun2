@@ -9,11 +9,12 @@ using namespace Rcpp;
 // [[Rcpp::depends(BH)]]
 //'Estimation of population distribution via EM algorithm.
 //'
+//'This function is new version of \code{MML_EM_dist}
 //'@param x Item response matrix.
 //'@param para item parameter data.frame estimated by \code{\link{estip}}
 //'@param N the number of nodes in integration.
 //'@param eMLL a convergence criteria(CC) for marginal log likelihood.
-//'@param emu a CC for population distribution mean.
+//'@param eDIST a CC for population distribution.
 //'@param fc0 a column of first item response.
 //'@param ng the number of groups
 //'@param gc0 a column of group. the element must be integer and the minimum number must be 1.
@@ -28,10 +29,10 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 
-List MML_EM_dist (DataFrame x, DataFrame para, const int N = 31, const double eMLL = 1e-6, const double emu = 1e-4,
-                 int fc0 = 2,int ng = 1, int gc0 = 2, const double D = 1.702, const int fix = 1, const int print = 0,
-                 const double max = 4.0, const double min = -4.0, const int maxiter_em = 200,
-                 CharacterVector rm_list = CharacterVector::create("NONE")
+List estdist(DataFrame x, DataFrame para, const int N = 31, const double eMLL = 1e-6, const double eDIST = 1e-4,
+             int fc0 = 2,int ng = 1, int gc0 = 2, const double D = 1.702, const int fix = 1, const int print = 0,
+             const double max = 4.0, const double min = -4.0, const int maxiter_em = 200,
+             CharacterVector rm_list = CharacterVector::create("NONE")
 ){
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Update Information
@@ -354,7 +355,7 @@ List MML_EM_dist (DataFrame x, DataFrame para, const int N = 31, const double eM
 
       int counti = sum(ind(g,_));
       // 収束判定用
-      if(fabs(mean_pop[g] - mean_g/counti)<emu && fabs(sd_pop[g] - sd_g/counti)<emu ) conv0[g] = 1;
+      if(fabs(mean_pop[g] - mean_g/counti)<eDIST && fabs(sd_pop[g] - sd_g/counti)<eDIST ) conv0[g] = 1;
 
       mean_pop[g] = mean_g/counti; // 全項目における母集団平均の，平均
       sd_pop[g] = sd_g/counti; // 全項目における母集団標準偏差の，平均

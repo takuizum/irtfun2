@@ -9,7 +9,8 @@ estGip(x, fc = 3, Gc = NULL, bg = 1, IDc = 1, Ntheta = 31,
   rm_list = NULL, phi_dist = "invchi", v = 3, tau = 1, mu_ph = 0,
   sigma_ph = 0.25, min_ph = 0.01, max_ph = 2, paramab = c(1, 4),
   mu_th = 0, sigma_th = 1, min_th = -4, max_th = 4, eEM = 0.001,
-  eMLL = 1e-06, maxiter_em = 100, print = 0)
+  eMLL = 1e-06, eDIST = 1e-04, maxiter_em = 100, print = 0,
+  esteap = FALSE, estdist = FALSE)
 }
 \arguments{
 \item{x}{DataFrame.}
@@ -56,13 +57,19 @@ estGip(x, fc = 3, Gc = NULL, bg = 1, IDc = 1, Ntheta = 31,
 
 \item{max_th}{a maximum value of theta distribution}
 
-\item{eEM}{a convergence criterion of item parameters in EM cycle.}
+\item{eEM}{a convergence criterion related to item parameters in EM cycle.}
 
-\item{eMLL}{a convergence criterion of marginal log likelihood in EM cycle.}
+\item{eMLL}{a convergence criterion related to negative twice log likelihood in EM cycle.}
+
+\item{eDIST}{a convergence criterion related to the parameter of theta distribution in EM cycle.}
 
 \item{maxiter_em}{the number of iteration of EM cycle.}
 
 \item{print}{How much information you want to display? from 1 to 3. The larger, more information is displayed.}
+
+\item{esteap}{logical. If \code{TRUE}, estimate subject theta & phi EAP.}
+
+\item{estdist}{logical. If \code{TRUE}, estimate population distribution theta & phi.}
 }
 \value{
 the output is a list that has item parameter and person parameter.

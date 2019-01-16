@@ -43,9 +43,9 @@ estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
 
 \item{max_th}{a maximum value of theta distribution}
 
-\item{eEM}{a convergence criterion of item parameters in EM cycle.}
+\item{eEM}{a convergence criterion related to item parameters in EM cycle.}
 
-\item{eMLL}{a convergence criterion of marginal log likelihood in EM cycle.}
+\item{eMLL}{a convergence criterion related to negative twice log likelihood in EM cycle.}
 
 \item{maxiter_em}{the number of iteration of EM cycle.}
 

@@ -38,11 +38,12 @@ Estep_irt <- function(xall, t0, Xm, Wm, group, ind, resp, D, MLL) {
 
 #'Estimation of population distribution via EM algorithm.
 #'
+#'This function is new version of \code{MML_EM_dist}
 #'@param x Item response matrix.
 #'@param para item parameter data.frame estimated by \code{\link{estip}}
 #'@param N the number of nodes in integration.
 #'@param eMLL a convergence criteria(CC) for marginal log likelihood.
-#'@param emu a CC for population distribution mean.
+#'@param eDIST a CC for population distribution.
 #'@param fc0 a column of first item response.
 #'@param ng the number of groups
 #'@param gc0 a column of group. the element must be integer and the minimum number must be 1.
@@ -54,8 +55,8 @@ Estep_irt <- function(xall, t0, Xm, Wm, group, ind, resp, D, MLL) {
 #'@param maxiter_em maximum iteration time for EM cycle.
 #'@param rm_list a vector of item U want to remove for estimation. NOT list.
 #'@export
-MML_EM_dist <- function(x, para, N = 31L, eMLL = 1e-6, emu = 1e-4, fc0 = 2L, ng = 1L, gc0 = 2L, D = 1.702, fix = 1L, print = 0L, max = 4.0, min = -4.0, maxiter_em = 200L, rm_list = as.character( c("NONE"))) {
-    .Call(`_irtfun2_MML_EM_dist`, x, para, N, eMLL, emu, fc0, ng, gc0, D, fix, print, max, min, maxiter_em, rm_list)
+estdist <- function(x, para, N = 31L, eMLL = 1e-6, eDIST = 1e-4, fc0 = 2L, ng = 1L, gc0 = 2L, D = 1.702, fix = 1L, print = 0L, max = 4.0, min = -4.0, maxiter_em = 200L, rm_list = as.character( c("NONE"))) {
+    .Call(`_irtfun2_estdist`, x, para, N, eMLL, eDIST, fc0, ng, gc0, D, fix, print, max, min, maxiter_em, rm_list)
 }
 
 #'Estimate item parameter for binary{0,1} response data.
