@@ -2,13 +2,13 @@
 % Please edit documentation in R/irtfun2-package.R
 \name{stat_pv}
 \alias{stat_pv}
-\title{Calculate the imputation variance}
+\title{Calculate the imputation mean and variance}
 \usage{
 stat_pv(PVs_only)
 }
 \arguments{
-\item{PVs_only}{a df given by the result of \code{estheta(est="PVs")}.}
+\item{PVs_only}{a df given by the result of \code{estheta(est="PVs")}. See\code{\link{estheta}}.}
 }
 \description{
-Calculate the imputation variance
+Calculate the imputation mean and variance
 }

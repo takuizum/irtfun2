@@ -12,7 +12,7 @@ estip(x, model0 = as.character(c("2PL")), N = 31L, bg0 = 1L,
   sigma_b = 2, mu_c = 1/5, w_c = 5, fix = 1L, print = 0L,
   min_a = 0.1, maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L,
   maxskip_j = 0L, rm_list = as.character(c("NONE")),
-  thdist = "normal", EM_dist = 1L)
+  thdist = "normal", estdist = 1L)
 }
 \arguments{
 \item{x}{an item response data which class is data.frame object.}
@@ -85,7 +85,7 @@ estip(x, model0 = as.character(c("2PL")), N = 31L, bg0 = 1L,
 
 \item{thdist}{Which distribution do you want \code{normal} or \code{empirical} for E step.}
 
-\item{EM_dist}{If 1, calculate esimated population distribution via EM argorithm.}
+\item{estdist}{If 1, calculate esimated population distribution via EM argorithm.}
 }
 \description{
 1PL,2PL,3PL,Bayes1PL,Bayes2PL and multigroup estimation is avairable now. U must install C++ compiler(Rtools for windows or Xcode for Mac)in your PC or Mac.

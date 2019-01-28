@@ -55,6 +55,18 @@ a list has ID, rawscore, theta, se, person fit index Z3 and log likelihood.
 \description{
 A estimation theta function.
 }
+\examples{
+set.seed(123)
+theta <- rnorm(200)
+b <- rnorm(15)
+a <- rlnorm(15,0,0.5)
+c <- rep(0,15)
+data <- irtfun2::sim_gen(theta,a,b,c)
+para <- cbind(a,b,c)
+pv <- estheta(data, param = para, est = "PVs", gc = 0, fc = 2)
+
+head(pv$OVs_df)
+}
 \author{
 Takumi, Shibuya., Daisuke, Ejiri., Tadashi, Shibayama. in Tohoku University.
 }

@@ -55,10 +55,10 @@ resfunc <- function(prob,power){
 #'
 #' This function contains \code{\link{resfunc}} and \code{\link{subfunc}}.
 #' @param theta theta vector
-#' @param phi vector of hyperparameter of phi in GIRT model. Default is `NULL`
 #' @param a slope parameter.
 #' @param b location parameter.
 #' @param c asymptote parameter. Default is `NULL`
+#' @param phi vector of hyperparameter of phi in GIRT model. Default is `NULL`
 #' @param item Character. item code.
 #' @param power a power of probability of NA. for example power = 1/5
 #' @param D a factor constant.
@@ -81,7 +81,7 @@ resfunc <- function(prob,power){
 #'
 #' @export
 
-sim_gen <- function(theta, phi=NULL, a, b, c=NULL, item = 'A', power=0, D=1.702){
+sim_gen <- function(theta, a, b, c=NULL, phi=NULL, item = 'A', power=0, D=1.702){
   if(is.null(phi)){
     # IRT
     if(is.null(c)) c <- rep(0,length(a))

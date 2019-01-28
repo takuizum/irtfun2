@@ -13,11 +13,11 @@ using namespace Rcpp;
 //'@param x Item response matrix.
 //'@param para item parameter data.frame estimated by \code{\link{estip}}
 //'@param N the number of nodes in integration.
-//'@param eMLL a convergence criteria(CC) for marginal log likelihood.
-//'@param eDIST a CC for population distribution.
 //'@param fc0 a column of first item response.
 //'@param ng the number of groups
 //'@param gc0 a column of group. the element must be integer and the minimum number must be 1.
+//'@param eMLL a convergence criteria(CC) for marginal log likelihood.
+//'@param eDIST a CC for population distribution.
 //'@param D factor constant.
 //'@param fix Don't use. If 1, fix population distribution mean and sigma each EM cycle.
 //'@param print How much information you want to display? from 1 to 3. The larger, more information is displayed.

@@ -45,7 +45,7 @@ using namespace Rcpp;
 //'@param maxskip_j Dont use.
 //'@param rm_list a vector of item U want to remove for estimation. NOT list.
 //'@param thdist Which distribution do you want `normal` or `empirical` for E step.
-//'@param EM_dist If 1, calculate esimated population distribution via EM argorithm.
+//'@param estdist If 1, calculate esimated population distribution via EM argorithm.
 //'@examples
 //'res <- estip(x=sim_data_1, fc=2)
 //'# check the parameters
@@ -90,7 +90,7 @@ List estip (DataFrame x,
             const int maxskip_j = 0,
             CharacterVector rm_list = CharacterVector::create("NONE"),
             const String thdist = "normal",
-            const int EM_dist = 1
+            const int estdist = 1
 ){
   // argument check
   for(int j=0; j<model0.length(); j++){
@@ -207,7 +207,7 @@ List estip (DataFrame x,
     }
   }
   IntegerVector cat (nj);
-  NumericMatrix t0 (nj, 3); // 初期値代入用の行列　いまのところ2PLのみ
+  NumericMatrix t0 (nj, 3); // 初期値代入用の行列
   NumericMatrix t0m (nj,3);
   NumericMatrix initial (nj,3);
   //NumericMatrix t1m (nj,cat);
@@ -417,6 +417,11 @@ List estip (DataFrame x,
           ff += fff;
         }
         f += log(ff);
+        for(int m=0; m<N; m++){
+          l = Lim[g][i][m];
+          w = Wm(m,g);
+          Gim[g][i][m] =  l * w / ff;
+        }
       }
     }
 
@@ -433,24 +438,24 @@ List estip (DataFrame x,
 
     //Rcout<<"weight of a posterir distribution calculation.\n";
     // 各受検者のthetaごとに事後分布の重みを計算する。
-    double uu;
-    for(int g=0; g<ng; g++){
-      for(int i=0; i<ni; i++){
-        if(group[i] != g) continue; // 集団に属さない受験者の部分はスキップ
-        u = 0;
-        for(int m=0; m<N; m++){ // 総和を1にするための分母の計算 // sum
-          l = Lim[g][i][m];
-          w = Wm(m,g);
-          uu = l*w;
-          u += uu;
-        }
-        for(int m=0; m<N; m++){
-          l = Lim[g][i][m];
-          w = Wm(m,g);
-          Gim[g][i][m] =  l * w / u;
-        }
-      }
-    }
+    // double uu;
+    // for(int g=0; g<ng; g++){
+    //   for(int i=0; i<ni; i++){
+    //     if(group[i] != g) continue; // 集団に属さない受験者の部分はスキップ
+    //     u = 0;
+    //     for(int m=0; m<N; m++){ // 総和を1にするための分母の計算 // sum
+    //       l = Lim[g][i][m];
+    //       w = Wm(m,g);
+    //       uu = l*w;
+    //       u += uu;
+    //     }
+    //     for(int m=0; m<N; m++){
+    //       l = Lim[g][i][m];
+    //       w = Wm(m,g);
+    //       Gim[g][i][m] =  l * w / u;
+    //     }
+    //   }
+    // }
 
 
     //Rcout<<"expected frequency of subjects in each nodes calculation.\n";
@@ -1221,7 +1226,7 @@ List estip (DataFrame x,
 
   // 推定母集団分布の計算
   // 初期値に一様分布をもちいた場合，Easy Estimationの計算結果とおおむね一致するはず。
-  if(EM_dist == 1) Rprintf("Start calculating estimated population distribution.\n");
+  if(estdist == 1) Rprintf("Start calculating estimated population distribution.\n");
 
   // result
   NumericVector mean_pop(ng);
@@ -1244,7 +1249,7 @@ List estip (DataFrame x,
   int conv3 = 0;
   LogicalVector conv0(ng);
 
-  if(EM_dist == 0) conv3 = 1;
+  if(estdist == 0) conv3 = 1;
   while(conv3 == 0){
     count3 += 1;
 
