@@ -876,19 +876,17 @@ cf2 <- function(x,af,bf,at,bt,D,q,N,w){
 #'
 #' @param T_para a parameter file equating TO.
 #' @param F_para a parameter file equating FROM.
-#' @param method equating method. U can select "SL" or "HB".
+#' @param method equating method. U can select "SL" = Stocking & Lord, "HB" = Haebara, "MS" = Mean & Sigma, "MM" = Mean & Mean.
 #' @param D a factor canstant.
 #' @param N the number of nodes.
 #' @param mintheta a minimum value of theta in integration.
 #' @param maxtheta a maximum value of theta in integration.
-#' @param output logical. if TRUE output CSV file.
-#' @param Fname character. a file name of csv file.
-#' @param Change int. if 0 equated parameter of common item is no transformed parameter from T_para, if 2 transformed parameter, if1 mean and geometric mean.
+#' @param Change integer. if 'to' equated parameter of common item is no transformed parameter from T_para, if 'transformed' transformed parameter, if 'mean' mean and geometric mean.
 #' @param Easy logical. if TRUE output file is adaptive for Easy Estimation.
 #' @export
 
 CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6, maxtheta = 6,
-                      output = F, Fname ="default", Change = 0, Easy = F){
+                      Change = "to", Easy = F){
 
   if(Easy==TRUE){
     Tpara <- T_para[T_para$V3 != 0,]   #remove item that a-parameter is 0
@@ -916,7 +914,7 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
     }
   }
 
-  #mean & sigma method
+  #mean & sigma method for initial value
   tm <- mean(bt)  #mean of diff para
   ts <- sqrt(mean((bt-tm)^2))    #standard deviation(It's not used unbiased estimator)
   fm <- mean(bf)
@@ -942,6 +940,14 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
     A <- res$estimate[1]
     K <- res$estimate[2]
 
+  } else if (method == "MS"){
+    A <- msA
+    K <- msK
+  } else if (method == "MM"){
+    A <- mean(at) / mean(af)
+    tm <- mean(bt)  #mean of diff para
+    fm <- mean(bf)
+    K <- tm - fm * A
   }
 
   if(Easy==TRUE){
@@ -957,13 +963,13 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
     }
     #non comon items
     for (i in CII){
-      if(Change == 0){
+      if(Change == "to"){
         Fpara[Fpara$V1==i,"V3"] <- Tpara[Tpara$V1==i,"V3"]
         Fpara[Fpara$V1==i,"V4"] <- Tpara[Tpara$V1==i,"V4"]
-      } else if(Change == 1){
+      } else if(Change == "mean"){
         Fpara[Fpara$V1 == i,"V3"] <- sqrt(Fpara[Fpara$V1 == i, "V3"]/A * Tpara[Tpara$V1 == i, "V3"]) # geometric mean
         Fpara[Fpara$V1 == i,"V4"] <- (Fpara[Fpara$V1 == i, "V4"]*A+K + Tpara[Tpara$V1 == i, "V4"])/2 # arithmetic mean
-      } else if(Change == 2){
+      } else if(Change == "transformed"){
         Fpara[Fpara$V1 == i,"V3"] <- Fpara[Fpara$V1 == i, "V3"]/A
         Fpara[Fpara$V1 == i,"V4"] <- Fpara[Fpara$V1 == i, "V4"]*A+K
       }
@@ -981,26 +987,22 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
     }
     #non comon items
     for (i in CII){
-      if(Change == 0){
+      if(Change == "to"){
         Fpara[Fpara$Item==i,"a"] <- Tpara[Tpara$Item==i,"a"]
         Fpara[Fpara$Item==i,"b"] <- Tpara[Tpara$Item==i,"b"]
-      } else if(Change == 1){
+      } else if(Change == "mean"){
         Fpara[Fpara$Item == i,"a"] <- sqrt(Fpara[Fpara$Item == i, "a"]/A * Tpara[Tpara$Item == i, "a"]) # geometric mean
         Fpara[Fpara$Item == i,"b"] <- (Fpara[Fpara$Item == i, "b"]*A+K + Tpara[Tpara$Item == i, "b"])/2 # arithmetic mean
-      } else if(Change == 2){
+      } else if(Change == "transformed"){
         Fpara[Fpara$Item == i,"a"] <- Fpara[Fpara$Item == i, "a"]/A
         Fpara[Fpara$Item == i,"b"] <- Fpara[Fpara$Item == i, "b"]*A+K
       }
     }
   }
 
-
   result <- list(D=paste0("D = ",D), para=Fpara, METHOD=method,
                  EquatingCoefficient_A_K=c(A,K), MeanSigma_A_K=c(msA,msK),ComonItem=CII,NonComonItem=nCII)
-  if(output == T){
-    utils::write.table(result[1],file=paste0(Fname,"ParaEquated.csv"),sep = "",quote = F, col.names = F, row.names = F)
-    utils::write.table(result[2],file=paste0(Fname,"ParaEquated.csv"),sep = ",",quote = F, append = T, col.names = F, row.names = F)
-  }
+
   return(result)
 
 }

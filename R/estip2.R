@@ -273,7 +273,7 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
 
   # data check
   X <- as.matrix(x[,fc:ncol(x)])
-  Item <- colnames(X)
+  Item <- colnames(X) %>% as.character()
   nj <- ncol(X)
   ni <- nrow(X)
   nq <- Ntheta

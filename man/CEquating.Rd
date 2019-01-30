@@ -5,15 +5,14 @@
 \title{Equating item parameter only sampled by common item design. FOR ONLY 2PLM}
 \usage{
 CEquating(T_para, F_para, method = "SL", D = 1.702, N = 31,
-  mintheta = -6, maxtheta = 6, output = F, Fname = "default",
-  Change = 0, Easy = F)
+  mintheta = -6, maxtheta = 6, Change = "to", Easy = F)
 }
 \arguments{
 \item{T_para}{a parameter file equating TO.}
 
 \item{F_para}{a parameter file equating FROM.}
 
-\item{method}{equating method. U can select "SL" or "HB".}
+\item{method}{equating method. U can select "SL" = Stocking & Lord, "HB" = Haebara, "MS" = Mean & Sigma, "MM" = Mean & Mean.}
 
 \item{D}{a factor canstant.}
 
@@ -23,11 +22,7 @@ CEquating(T_para, F_para, method = "SL", D = 1.702, N = 31,
 
 \item{maxtheta}{a maximum value of theta in integration.}
 
-\item{output}{logical. if TRUE output CSV file.}
-
-\item{Fname}{character. a file name of csv file.}
-
-\item{Change}{int. if 0 equated parameter of common item is no transformed parameter from T_para, if 2 transformed parameter, if1 mean and geometric mean.}
+\item{Change}{integer. if 'to' equated parameter of common item is no transformed parameter from T_para, if 'transformed' transformed parameter, if 'mean' mean and geometric mean.}
 
 \item{Easy}{logical. if TRUE output file is adaptive for Easy Estimation.}
 }
