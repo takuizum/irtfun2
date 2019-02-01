@@ -8,9 +8,9 @@ CEquating(T_para, F_para, method = "SL", D = 1.702, N = 31,
   mintheta = -6, maxtheta = 6, Change = "to", Easy = F)
 }
 \arguments{
-\item{T_para}{a parameter file equating TO.}
+\item{T_para}{a parameter data.frame equating TO, base item scale.}
 
-\item{F_para}{a parameter file equating FROM.}
+\item{F_para}{a parameter data.frame equating FROM, transromed item scale.}
 
 \item{method}{equating method. U can select "SL" = Stocking & Lord, "HB" = Haebara, "MS" = Mean & Sigma, "MM" = Mean & Mean.}
 
@@ -24,7 +24,7 @@ CEquating(T_para, F_para, method = "SL", D = 1.702, N = 31,
 
 \item{Change}{integer. if 'to' equated parameter of common item is no transformed parameter from T_para, if 'transformed' transformed parameter, if 'mean' mean and geometric mean.}
 
-\item{Easy}{logical. if TRUE output file is adaptive for Easy Estimation.}
+\item{Easy}{logical. if TRUE Easy Estimation out put file can be used. Default FALSE \code{\link{estip2}} output file is able to use.}
 }
 \description{
 Equating item parameter only sampled by common item design. FOR ONLY 2PLM

@@ -584,9 +584,9 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
 
   # output result
   # Item
-  t1 <- data.frame(Item=Item, t1, model=model)
+  t1 <- data.frame(Item = as.character(Item), t1, model = model)
   # SE
-  SE <- data.frame(Item=Item, SE, model=model)
+  SE <- data.frame(Item = as.character(Item), SE, model = model)
   # th_dist
   theta_dist <- data.frame(AX)
   colnames(theta_dist) <- as.character(c(1:ng))

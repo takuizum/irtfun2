@@ -5,16 +5,31 @@
 \title{Equipercentile equating function of row score.
 This function generates the Form Y equipercentle equivalent of score x on FormX, eY(x).}
 \usage{
-epe(x, y)
+epe(x, y, type = "both")
 }
 \arguments{
-\item{x}{test score of Form X}
+\item{x}{integer vector. test score of Form X}
 
-\item{y}{test score of Form Y}
+\item{y}{integer vector. test score of Form Y}
+
+\item{type}{character. if "U", result percentile is calculated by the smmallest integer score with a cum_percent that is  greater then p,
+"L", the largest score that is less than p or "both" output both of them.}
 }
 \description{
 Equipercentile equating function of row score.
 This function generates the Form Y equipercentle equivalent of score x on FormX, eY(x).
+}
+\examples{
+set.seed(0204)
+X <- round(rnorm(1000) * 10 + 50)
+Y <- round(rnorm(900) * 9 + 40)
+res <- epe(x = X, y = Y)
+
+set.seed(0507)
+X <- round(rnorm(1000) * 10 + 40)
+X[X < 0] <- 0
+Y <- round(rnorm(900) * 10 + 40)
+res2 <- epe(x = X, y = Y)
 }
 \author{
 Takumi Shibuya.

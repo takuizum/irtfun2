@@ -874,15 +874,15 @@ cf2 <- function(x,af,bf,at,bt,D,q,N,w){
 
 #' Equating item parameter only sampled by common item design. FOR ONLY 2PLM
 #'
-#' @param T_para a parameter file equating TO.
-#' @param F_para a parameter file equating FROM.
+#' @param T_para a parameter data.frame equating TO, base item scale.
+#' @param F_para a parameter data.frame equating FROM, transromed item scale.
 #' @param method equating method. U can select "SL" = Stocking & Lord, "HB" = Haebara, "MS" = Mean & Sigma, "MM" = Mean & Mean.
 #' @param D a factor canstant.
 #' @param N the number of nodes.
 #' @param mintheta a minimum value of theta in integration.
 #' @param maxtheta a maximum value of theta in integration.
 #' @param Change integer. if 'to' equated parameter of common item is no transformed parameter from T_para, if 'transformed' transformed parameter, if 'mean' mean and geometric mean.
-#' @param Easy logical. if TRUE output file is adaptive for Easy Estimation.
+#' @param Easy logical. if TRUE Easy Estimation out put file can be used. Default FALSE \code{\link{estip2}} output file is able to use.
 #' @export
 
 CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6, maxtheta = 6,
@@ -891,6 +891,8 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
   if(Easy==TRUE){
     Tpara <- T_para[T_para$V3 != 0,]   #remove item that a-parameter is 0
     Fpara <- F_para[F_para$V3 != 0,]
+    T_para$V1 <- T_para$V1 %>% as.character()
+    F_para$V1 <- F_para$V1 %>% as.character()
     CII <- Fpara[Fpara$V1 %in% Tpara$V1,1]  #Comon Item Index
     at <- bt <- af <- bf <- numeric(length(CII))
 
@@ -903,6 +905,8 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
   } else {
     Tpara <- T_para[T_para$a != 0,]   #remove item that a-parameter is 0
     Fpara <- F_para[F_para$a != 0,]
+    T_para$Item <- T_para$Item %>% as.character()
+    F_para$Item <- F_para$Item %>% as.character()
     CII <- Fpara[Fpara$Item %in% Tpara$Item,1]  #Comon Item Index
     at <- bt <- af <- bf <- numeric(length(CII))
 
@@ -1000,8 +1004,9 @@ CEquating <- function(T_para, F_para, method="SL", D =1.702, N = 31, mintheta=-6
     }
   }
 
-  result <- list(D=paste0("D = ",D), para=Fpara, METHOD=method,
-                 EquatingCoefficient_A_K=c(A,K), MeanSigma_A_K=c(msA,msK),ComonItem=CII,NonComonItem=nCII)
+  result <- list(D=paste0("D = ",D), para=Fpara, METHOD = method,
+                 res = data.frame(A = A, K = K), Mean_Sigma = data.frame(A = msA, K = msK),
+                 comon_item = CII, non_comon_item = nCII)
 
   return(result)
 

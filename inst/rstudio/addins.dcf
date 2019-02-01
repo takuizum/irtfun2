@@ -1,0 +1,4 @@
+Name: Insert %<>%
+Description: Inserts `%<>%`, which developed by `magrittr`, at the cursor position.
+Binding: insertPipeinAddin
+Interactive: false
