@@ -39,14 +39,18 @@ gpcm <- function(theta, a, b, D, k){
 
 
 # データセットは因子型のデータフレーム，もしくは整数型のdata.frameを想定(tibbleに対応できればなお良い)
+library(irtoys)
+library(tidyverse)
+library(magrittr)
 
 if(data_type == "f")
 Science %>% purrr::map_df(as.integer)
 
 X <- x %>% switch("f" = x %>% purrr::map_df(as.integer), # if factor type
-              "i" = x)
+                  "i" = x)
 
 X <- Science %>% purrr::map_df(as.integer)#%>% as.matrix()
+X %<>% dplyr::bind_rows(X) # %>% dplyr::mutate(id = 1:nrow(.)) # bind row (add more data lines)
 
 N <- nrow(X)
 J <- ncol(X)
@@ -60,14 +64,29 @@ max_cat_all <- max_cat_item %>% unlist() %>% max()
 min_cat_item <- cat_item %>% purrr::map(min, na.rm = T)
 min_cat_all <- min_cat_item %>% unlist() %>% min()
 
+# mapply(create_ujk, )
+
 # add group id column
-X %<>% dplyr::mutate(group = as.integer(1))
+set.seed(0204)
+X %<>% dplyr::mutate(group = as.integer(sample(c(1,2), nrow(X), replace = T)))
 
 # add count column
 X %<>% dplyr::mutate(count = 1)
 
 # unique response patterns and them count
 Xl <- X %>% group_by_if(is.integer) %>% dplyr::summarise(count = sum(count))
+
+# n of sunjects in each groups
+group_N <- X %>% dplyr::select(group, count) %>% group_by(group) %>% dplyr::summarise(count = sum(count))
+ng <- nrow(group_N)
+
+# design matrix for each groups
+design_each_g <- X %>% dplyr::select(-count) %>% group_by(group) %>% dplyr::summarise_all(sum, na.rm = T) %>% tibble::column_to_rownames("group")
+design_each_g[design_each_g != 0] <- 1
+
+# design matrix for all response pattern
+design_all <- Xl %>% dplyr::select(-count, -group)
+design_all[is.na(design_all)] <- 0
 
 # intial value
 b_init <- matrix(0, nrow = J, ncol = length(min_cat_all:max_cat_all))
@@ -78,11 +97,100 @@ cat_count <- X %>% purrr::map(table)
 for(j in 1:J){
   cat <- dimnames(cat_count[[j]])[[1]] %>% as.integer()
   cat_j <- cat_count[[j]] %>% as.integer()
-  prob <- cat_j / N
-  b_init[j, cat] <- -log(prob) / (1 - prob)
+  prob <- cat_j / (group_N[design_each_g[,j] == 1,] %>% dplyr::select(count) %>% sum())
+  b_init[j, cat] <- -log(prob / (1 - prob))
+}
+rm(prob)
+
+rl <- Xl %>% dplyr::arrange(group)
+rl <- rl$count
+group_id <- Xl %>% dplyr::arrange(group)
+group_id <- group_id$group
+Xl_tbl <- Xl # save tibble data as
+Xl %<>% dplyr::arrange(group) %>% dplyr::select(-count, -group) %>% as.matrix()
+L <- nrow(Xl) # n of response
+sf <- max_cat_item %>% unlist() # scoring function "T_j"
+
+
+# max category in each item vector and repeat it  n of subjects
+n_cat_vec <- max_cat_item %>% unlist(use.names = F) %>% rep.int(times = L)
+
+create_ujk <- function(response, max_category){ # both of them is vector
+  res <- rep(0, max_category)
+  res[response] <- 1
+  res
 }
 
-rl <- Xl$count
-group <- Xl$group
-Xl %<>% dplyr::select(-count, -group) %>% as.matrix()
+Xl_long <- Xl_tbl %>%
+  dplyr::arrange(group) %>%
+  tibble::rowid_to_column("id") %>%
+  dplyr::select(-count) %>%
+  tidyr::gather(key = item, value = response, -group, -id) %>%
+  dplyr::arrange(id)
+# Xl_long %<>% tibble(max_category = n_cat_vec)
 
+# create ujk
+ujk <- mapply(create_ujk, Xl_long$response, n_cat_vec) %>% as.vector()
+ujk <- tibble(u = as.integer(ujk))
+
+
+# prior of theta
+M <- 31 # of node
+min_th <- -4
+max_th <- 4
+xm <- seq(min_th, max_th, length.out = M)
+wm <- dnorm(xm)/sum(dnorm(xm)) %>% rep.int(times = ng) %>% matrix(nrow = M, ncol = ng, byrow = T)
+
+# EM algorithm starts
+Lw <- array(0, dim = c(ng, L, M))
+Ngjm <- array(0, dim = c(ng, J, M))
+rLw <- array(0, dim = c(ng, L, M))
+const <- array(0, dim = c(ng, L, M))
+# rLu <- matrix(0, nrow = J, ncol = M)
+for(l in 1:L){
+  for(g in 1:ng){
+    if(group_id[l] != g) next
+    cat("pattern ", l, "\r")
+    for(m in 1:M){
+      p <- wm[m, g]
+      for(j in 1:J){
+        if(design_all[l, j] == 0) next
+        p <- p * gpcm(xm[m], a = a_init[j], b = b_init[j,], k = Xl[l, j], D = 1.702) # irp of category k
+        # rgjkm[g][j][Xl[l, j]][m] <- p * wm * rl[l]
+      }
+      Lw[g, l, m] <- p
+      rLw[g, l, m] <- p * rl[l]
+      const[g, l,] <- const[g, l,] + p
+    }
+  }
+}
+
+# provisional sumple size
+Nf <- numeric(M)
+for(g in 1:ng){
+  Nf <- Nf + (colSums(rLw[g,group_id == g,]/const[g, group_id == g,]))
+}
+
+# expected frequency of subjects that responsed category k in item j
+rgjkm <- array(0, dim = c(ng, J, max_cat_all, M))
+for(l in 1:L){
+  for(g in 1:ng){
+    if(group_id[l] != g) next
+    cat("pattern ", l, "\r")
+    for(m in 1:M){
+      p <- wm[m, g]
+      for(j in 1:J){
+        if(design_all[l, j] == 0) next
+        rgjkm[g, j, Xl[l, j], m] <- rgjkm[g, j, Xl[l, j], m] + rLw[g, l, m] / const[g, l, m]
+      }
+    }
+  }
+}
+
+rjkm <- array(0, dim = c(J, max_cat_all, M))
+for(g in 1:ng){
+  rjkm <- rjkm + rgjkm[g,,,]
+}
+
+
+# M step algorithm
