@@ -71,10 +71,10 @@ set.seed(0204)
 X %<>% dplyr::mutate(group = as.integer(sample(c(1,2), nrow(X), replace = T)))
 
 # add count column
-X %<>% dplyr::mutate(count = 1)
+X %<>% dplyr::mutate(count = 1) %>% dplyr::arrange(group) # and arrange
 
 # unique response patterns and them count
-Xl <- X %>% group_by_if(is.integer) %>% dplyr::summarise(count = sum(count))
+Xl <- X %>% group_by_if(is.integer) %>% dplyr::summarise(count = sum(count)) %>% dplyr::arrange(group)
 
 # n of sunjects in each groups
 group_N <- X %>% dplyr::select(group, count) %>% group_by(group) %>% dplyr::summarise(count = sum(count))
@@ -89,8 +89,8 @@ design_all <- Xl %>% dplyr::select(-count, -group)
 design_all[is.na(design_all)] <- 0
 
 # intial value
-b_init <- matrix(0, nrow = J, ncol = length(min_cat_all:max_cat_all))
-a_init <- rep(1, J)
+b0 <- matrix(0, nrow = J, ncol = length(min_cat_all:max_cat_all))
+a0 <- rep(1, J)
 cat_count <- X %>% purrr::map(~ as.vector(table(.)))
 cat_count <- X %>% purrr::map(table)
 
@@ -98,7 +98,7 @@ for(j in 1:J){
   cat <- dimnames(cat_count[[j]])[[1]] %>% as.integer()
   cat_j <- cat_count[[j]] %>% as.integer()
   prob <- cat_j / (group_N[design_each_g[,j] == 1,] %>% dplyr::select(count) %>% sum())
-  b_init[j, cat] <- -log(prob / (1 - prob))
+  b0[j, cat] <- -log(prob / (1 - prob))
 }
 rm(prob)
 
@@ -121,6 +121,7 @@ create_ujk <- function(response, max_category){ # both of them is vector
   res
 }
 
+# tidyr for long type data.frame
 Xl_long <- Xl_tbl %>%
   dplyr::arrange(group) %>%
   tibble::rowid_to_column("id") %>%
@@ -128,6 +129,9 @@ Xl_long <- Xl_tbl %>%
   tidyr::gather(key = item, value = response, -group, -id) %>%
   dplyr::arrange(id)
 # Xl_long %<>% tibble(max_category = n_cat_vec)
+
+# group vector
+group_vec <- Xl_tbl %>% dplyr::arrange(group) %>% .$group
 
 # create ujk
 ujk <- mapply(create_ujk, Xl_long$response, n_cat_vec) %>% as.vector()
@@ -142,21 +146,50 @@ xm <- seq(min_th, max_th, length.out = M)
 wm <- dnorm(xm)/sum(dnorm(xm)) %>% rep.int(times = ng) %>% matrix(nrow = M, ncol = ng, byrow = T)
 
 # EM algorithm starts
+
+# E step
+
+# logit and probability
+Pjk <- array(0, dim = c(ng, J, max_cat_all, M))
+Zjk <- array(0, dim = c(ng, J, max_cat_all, M))
+Zjk_cum <- array(0, dim = c(ng, J, max_cat_all, M))
+Zj_bar <- array(0, dim = c(ng, J, M))
+Tj <- array(0, dim = c(ng, J, M))
+Zj <- array(0, dim = c(ng, J, M))
+for(g in 1:ng){
+  item_list <- which(design_each_g[g, ] == 1) # pattern location of group g in data.frame
+  for(j in item_list){
+    cat_list <- sort(cat_item[[j]])
+    for(m in 1:M){
+      for(k in cat_list){ # calculate Z_jk
+        Zjk[g, j, k, m] <- 1.702 * a0[j] * (xm[m] - b0[j, k])
+      }
+      temp <- cumsum(Zjk[g, j, , m])
+      Zjk_cum[g, j, , m] <- temp
+      p_const <- 1 + sum(exp(temp))
+      for(k in cat_list){ # calculate Zjk
+        Pjk[g, j, k, m] <- (1 + exp(Zjk_cum[g, j, k, m])) / p_const
+      }
+      Zj[g, j, m] <- Pjk[g, j, , m] %*% temp
+      Tj[g, j, m] <- Pjk[g, j, , m] %*% cat_list
+    }
+  }
+}
+
+
+# likelihood
 Lw <- array(0, dim = c(ng, L, M))
 Ngjm <- array(0, dim = c(ng, J, M))
 rLw <- array(0, dim = c(ng, L, M))
 const <- array(0, dim = c(ng, L, M))
-# rLu <- matrix(0, nrow = J, ncol = M)
-for(l in 1:L){
-  for(g in 1:ng){
-    if(group_id[l] != g) next
-    cat("pattern ", l, "\r")
+for(g in 1:ng){
+  pattern_location <- which(group_vec == g) # pattern location of group g in data.frame
+  for(l in pattern_location){
+    item_list <- which(design_all[l,] != 0) # item location that not NA
     for(m in 1:M){
       p <- wm[m, g]
-      for(j in 1:J){
-        if(design_all[l, j] == 0) next
-        p <- p * gpcm(xm[m], a = a_init[j], b = b_init[j,], k = Xl[l, j], D = 1.702) # irp of category k
-        # rgjkm[g][j][Xl[l, j]][m] <- p * wm * rl[l]
+      for(j in item_list){
+        p <- p * Pjk[g,j,Xl[l,j],m]
       }
       Lw[g, l, m] <- p
       rLw[g, l, m] <- p * rl[l]
@@ -164,6 +197,27 @@ for(l in 1:L){
     }
   }
 }
+
+# system.time(
+#   for(l in 1:L){
+#     for(g in 1:ng){
+#       if(group_id[l] != g) next
+#       # cat("pattern ", l, "\r")
+#       for(m in 1:M){
+#         p <- wm[m, g]
+#         for(j in 1:J){
+#           if(design_all[l, j] == 0) next
+#           # p <- p * gpcm(xm[m], a = a0[j], b = b0[j,], k = Xl[l, j], D = 1.702) # irp of category k
+#           p <- p * Pjk[g,j,Xl[l,j],m]
+#         }
+#         Lw[g, l, m] <- p
+#         rLw[g, l, m] <- p * rl[l]
+#         const[g, l,] <- const[g, l,] + p
+#       }
+#     }
+#   }
+# )
+
 
 # provisional sumple size
 Nf <- numeric(M)
@@ -173,14 +227,26 @@ for(g in 1:ng){
 
 # expected frequency of subjects that responsed category k in item j
 rgjkm <- array(0, dim = c(ng, J, max_cat_all, M))
-for(l in 1:L){
-  for(g in 1:ng){
-    if(group_id[l] != g) next
-    cat("pattern ", l, "\r")
+
+# for(l in 1:L){
+#   for(g in 1:ng){
+#     if(group_id[l] != g) next
+#     cat("pattern ", l, "\r")
+#     for(m in 1:M){
+#       p <- wm[m, g]
+#       for(j in 1:J){
+#         if(design_all[l, j] == 0) next
+#         rgjkm[g, j, Xl[l, j], m] <- rgjkm[g, j, Xl[l, j], m] + rLw[g, l, m] / const[g, l, m]
+#       }
+#     }
+#   }
+# }
+for(g in 1:ng){
+  pattern_location <- which(group_vec == g) # pattern location of group g in data.frame
+  for(l in pattern_location){
+    item_list <- which(design_all[l,] != 0) # item location that not NA
     for(m in 1:M){
-      p <- wm[m, g]
-      for(j in 1:J){
-        if(design_all[l, j] == 0) next
+      for(j in item_list){
         rgjkm[g, j, Xl[l, j], m] <- rgjkm[g, j, Xl[l, j], m] + rLw[g, l, m] / const[g, l, m]
       }
     }
@@ -194,3 +260,6 @@ for(g in 1:ng){
 
 
 # M step algorithm
+
+for(j in 1:J){
+}
