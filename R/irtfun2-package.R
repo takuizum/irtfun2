@@ -1,5 +1,6 @@
 #' @keywords internal
 #' @importFrom magrittr %>%
+#' @importFrom magrittr %<>%
 #' @importFrom stats dnorm
 #' @importFrom stats na.omit
 #' @importFrom stats optimise

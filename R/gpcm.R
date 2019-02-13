@@ -43,7 +43,6 @@ library(irtoys)
 library(tidyverse)
 library(magrittr)
 
-if(data_type == "f")
 Science %>% purrr::map_df(as.integer)
 
 X <- x %>% switch("f" = x %>% purrr::map_df(as.integer), # if factor type
@@ -57,7 +56,7 @@ J <- ncol(X)
 Item <- colnames(X)
 
 # list up all cat and min and max cat
-cat_item <- X %>% purrr::map(unique)
+cat_item <- X %>% purrr::map(unique) %>% purrr::map(sort)
 cat_item_n <- X %>% purrr::map(dplyr::n_distinct)
 max_cat_item <- cat_item %>% purrr::map(max, na.rm = T)
 max_cat_all <- max_cat_item %>% unlist() %>% max()
@@ -89,7 +88,8 @@ design_all <- Xl %>% dplyr::select(-count, -group)
 design_all[is.na(design_all)] <- 0
 
 # intial value
-b0 <- matrix(0, nrow = J, ncol = length(min_cat_all:max_cat_all))
+beta0 <- matrix(0, nrow = J, ncol = length(min_cat_all:max_cat_all))
+k0 <- matrix(0, nrow = J, ncol = length(min_cat_all:max_cat_all))
 a0 <- rep(1, J)
 cat_count <- X %>% purrr::map(~ as.vector(table(.)))
 cat_count <- X %>% purrr::map(table)
@@ -98,8 +98,12 @@ for(j in 1:J){
   cat <- dimnames(cat_count[[j]])[[1]] %>% as.integer()
   cat_j <- cat_count[[j]] %>% as.integer()
   prob <- cat_j / (group_N[design_each_g[,j] == 1,] %>% dplyr::select(count) %>% sum())
-  b0[j, cat] <- -log(prob / (1 - prob))
+  beta0[j, cat] <- -log(prob / (1 - prob))
 }
+b0 <- rowMeans(beta0)
+# b0 <- rep(0, J)
+k0 <- beta0 - matrix(b0, nrow = 7, ncol = max_cat_all)
+k0 %<>% scale()
 rm(prob)
 
 rl <- Xl %>% dplyr::arrange(group)
@@ -135,9 +139,7 @@ group_vec <- Xl_tbl %>% dplyr::arrange(group) %>% .$group
 
 # create ujk
 ujk <- mapply(create_ujk, Xl_long$response, n_cat_vec) %>% as.vector()
-ujk <- tibble(u = as.integer(ujk))
-
-
+ujk <- tibble::tibble(u = as.integer(ujk))
 # prior of theta
 M <- 31 # of node
 min_th <- -4
@@ -148,30 +150,35 @@ wm <- dnorm(xm)/sum(dnorm(xm)) %>% rep.int(times = ng) %>% matrix(nrow = M, ncol
 # EM algorithm starts
 
 # E step
+# X_long <- data_frame(group = )
 
 # logit and probability
-Pjk <- array(0, dim = c(ng, J, max_cat_all, M))
-Zjk <- array(0, dim = c(ng, J, max_cat_all, M))
-Zjk_cum <- array(0, dim = c(ng, J, max_cat_all, M))
-Zj_bar <- array(0, dim = c(ng, J, M))
-Tj <- array(0, dim = c(ng, J, M))
-Zj <- array(0, dim = c(ng, J, M))
+Pgjkm <- array(0, dim = c(ng, J, max_cat_all, M))
+Zgjkm <- array(0, dim = c(ng, J, max_cat_all, M))
+Zgjkm_cum <- array(0, dim = c(ng, J, max_cat_all, M))
+Zgjm_bar <- array(0, dim = c(ng, J, M))
+Tgjm <- array(0, dim = c(ng, J, M))
+Zgjm <- array(0, dim = c(ng, J, M))
 for(g in 1:ng){
   item_list <- which(design_each_g[g, ] == 1) # pattern location of group g in data.frame
   for(j in item_list){
     cat_list <- sort(cat_item[[j]])
     for(m in 1:M){
       for(k in cat_list){ # calculate Z_jk
-        Zjk[g, j, k, m] <- 1.702 * a0[j] * (xm[m] - b0[j, k])
+        Zgjkm[g, j, k, m] <- a0[j] * (xm[m] - b0[j] + k0[j, k])
       }
-      temp <- cumsum(Zjk[g, j, , m])
-      Zjk_cum[g, j, , m] <- temp
-      p_const <- 1 + sum(exp(temp))
+      temp <- cumsum(Zgjkm[g, j, , m])
+      Zgjkm_cum[g, j, , m] <- temp
+      # log_sum_exp
+      log_p_const <- (temp - max(temp)) %>% exp %>% sum() %>% log() %>% magrittr::add(max(temp)) %>% exp() %>% magrittr::add(1) %>% log()
+      # log_p_const <- log(1 + exp(log_p_const))
+      # p_const <- 1 + sum(exp(temp))
       for(k in cat_list){ # calculate Zjk
-        Pjk[g, j, k, m] <- (1 + exp(Zjk_cum[g, j, k, m])) / p_const
+        # Pgjkm[g, j, k, m] <- (1 + exp(Zgjkm_cum[g, j, k, m])) / p_const
+        Pgjkm[g, j, k, m] <- exp(log(1 + exp(Zgjkm_cum[g, j, k, m])) - log_p_const)
       }
-      Zj[g, j, m] <- Pjk[g, j, , m] %*% temp
-      Tj[g, j, m] <- Pjk[g, j, , m] %*% cat_list
+      Zgjm[g, j, m] <- Pgjkm[g, j, , m] %*% temp
+      Tgjm[g, j, m] <- Pgjkm[g, j, , m] %*% cat_list
     }
   }
 }
@@ -189,7 +196,7 @@ for(g in 1:ng){
     for(m in 1:M){
       p <- wm[m, g]
       for(j in item_list){
-        p <- p * Pjk[g,j,Xl[l,j],m]
+        p <- p * Pgjkm[g,j,Xl[l,j],m]
       }
       Lw[g, l, m] <- p
       rLw[g, l, m] <- p * rl[l]
@@ -198,49 +205,8 @@ for(g in 1:ng){
   }
 }
 
-# system.time(
-#   for(l in 1:L){
-#     for(g in 1:ng){
-#       if(group_id[l] != g) next
-#       # cat("pattern ", l, "\r")
-#       for(m in 1:M){
-#         p <- wm[m, g]
-#         for(j in 1:J){
-#           if(design_all[l, j] == 0) next
-#           # p <- p * gpcm(xm[m], a = a0[j], b = b0[j,], k = Xl[l, j], D = 1.702) # irp of category k
-#           p <- p * Pjk[g,j,Xl[l,j],m]
-#         }
-#         Lw[g, l, m] <- p
-#         rLw[g, l, m] <- p * rl[l]
-#         const[g, l,] <- const[g, l,] + p
-#       }
-#     }
-#   }
-# )
-
-
-# provisional sumple size
-Nf <- numeric(M)
-for(g in 1:ng){
-  Nf <- Nf + (colSums(rLw[g,group_id == g,]/const[g, group_id == g,]))
-}
-
 # expected frequency of subjects that responsed category k in item j
 rgjkm <- array(0, dim = c(ng, J, max_cat_all, M))
-
-# for(l in 1:L){
-#   for(g in 1:ng){
-#     if(group_id[l] != g) next
-#     cat("pattern ", l, "\r")
-#     for(m in 1:M){
-#       p <- wm[m, g]
-#       for(j in 1:J){
-#         if(design_all[l, j] == 0) next
-#         rgjkm[g, j, Xl[l, j], m] <- rgjkm[g, j, Xl[l, j], m] + rLw[g, l, m] / const[g, l, m]
-#       }
-#     }
-#   }
-# }
 for(g in 1:ng){
   pattern_location <- which(group_vec == g) # pattern location of group g in data.frame
   for(l in pattern_location){
@@ -253,13 +219,126 @@ for(g in 1:ng){
   }
 }
 
-rjkm <- array(0, dim = c(J, max_cat_all, M))
+# # provisional sumple size
+# Nf <- numeric(M)
+# # expected frequency of subjects that responsed category k in item j
+# rjkm <- array(0, dim = c(J, max_cat_all, M))
+# Pjkm <- array(0, dim = c(J, max_cat_all, M))
+# Zjkm_cum <- array(0, dim = c(J, max_cat_all, M))
+# Zjm <- matrix(0, nrow = J, ncol = M)
+# Tjm <- matrix(0, nrow = J, ncol = M)
+# for(g in 1:ng){
+#   Nf <- Nf + (colSums(rLw[g,group_id == g,]/const[g, group_id == g,]))
+#   rjkm <- rjkm + rgjkm[g,,,]
+#   Pjkm <- Pjkm + Pgjkm[g,,,]
+#   Zjkm_cum <- Zjkm_cum + Zgjkm_cum[g,,,]
+#   Zjm <- Zjm + Zgjm[g,,]
+#   Tjm <- Tjm + Tgjm[g,,]
+# }
+# Pjkm %<>% divide_by(ng)
+# Zjkm_cum %<>% divide_by(ng)
+# Zjm %<>% divide_by(ng)
+# Tjm %<>% divide_by(ng)
+Ngm <- matrix(0, ncol = M, nrow = ng)
 for(g in 1:ng){
-  rjkm <- rjkm + rgjkm[g,,,]
+  Ngm[g, ] <- (colSums(rLw[g,group_id == g,]/const[g, group_id == g,]))
 }
 
 
 # M step algorithm
 
-for(j in 1:J){
+# jごとにベクトル化して，そのベクトルを受け取った関数でgradientや情報行列を計算すればよい
+# group_N$group %>% rep.int(times = rep(sum(unlist(max_cat_item)) * M, ng)) # of group
+# c(1:J) %>% rep.int(times = unlist(max_cat_item, use.names = F) * M) # %>% rep.int(times = ng) # of item
+# cat_item %>% unlist(use.names = F) %>% rep.int(times = rep(M, length(.))) #%>% rep.int(ng) # of category
+
+# sort
+t <- 0
+rgjkm_vec <- numeric(length = length(as.vector(rgjkm)))
+Ngm_vec <- numeric(length = length(rjkm_vec))
+Pgjkm_vec <- numeric(length = length(rjkm_vec))
+Zgjkm_cum_vec <- numeric(length = length(rjkm_vec))
+Zgjm_vec <- numeric(length = length(rjkm_vec))
+Tgjm_vec <- numeric(length = length(rjkm_vec))
+for(g in 1:ng){
+  for(j in 1:J){
+    for(k in 1:max_cat_all){
+      for(m in 1:M){
+        # cat(t,"\r")
+        t <- t + 1
+        rgjkm_vec[t] <- rgjkm[g,j,k,m]
+        Ngm_vec[t] <- Ngm[g,m]
+        Pgjkm_vec[t] <- Pgjkm[g,j,k,m]
+        Zgjkm_cum_vec[t] <- Zgjkm_cum[g,j,k,m]
+        Zgjm_vec[t] <- Zgjm[g,j,m]
+        Tgjm_vec[t] <- Tgjm[g,j,m]
+      }
+    }
+  }
 }
+
+
+X_long <- dplyr::data_frame(group = c(1:ng) %>% rep.int(times = rep(sum(unlist(max_cat_item, use.names = F) * M), ng)),
+                            item = c(1:J) %>% rep.int(times = unlist(max_cat_item, use.names = F) * M) %>% rep.int(times = ng),
+                            category = cat_item %>% unlist(use.names = F) %>% rep.int(times = rep(M, length(.))) %>% rep.int(times = ng),
+                            node = c(1:M) %>% rep.int(times = length(unlist(cat_item))) %>% rep.int(times = ng),
+                            r = rgjkm_vec,
+                            N = Ngm_vec,
+                            P = Pgjkm_vec,
+                            Z_cum = Zgjkm_cum_vec,
+                            Z_bar = Zgjm_vec,
+                            T_bar = Tgjm_vec
+                            )
+
+
+
+a1 <- numeric(J)
+b1 <- numeric(J)
+k1 <- matrix(0, nrow = J, ncol = max_cat_all)
+for(j in 1:J){
+  # 1st Mstep
+  cat(j,"\n")
+  response_group <- which(design_each_g[,j] == 1)
+  X_temp <- numeric(0)
+  for(g in response_group){
+    X_temp <- X_temp %>% dplyr::bind_rows(X_long %>% dplyr::filter(item == j) %>% dplyr::filter(group == g))
+  }
+  X_temp %<>% dplyr::slice(-1)
+  convergence <- TRUE
+  t <- 0
+  while(convergence){
+    t <- t + 1
+    cat(t,"  ")
+    gr <- numeric(2)
+    gr[1] <- a0[j]^(-1) * sum(X_temp$r * (X_temp$Z_cum - X_temp$Z_bar))
+    gr[2] <- a0[j] * sum(X_temp$r * (-X_temp$category + X_temp$T_bar))
+    V <- matrix(0,2,2)
+    V[1,1] <- a0[j]^(-2) * sum(X_temp$N * X_temp$P * (X_temp$Z_cum - X_temp$Z_bar)^2)
+    V[2,2] <- a0[j]^2 * sum(X_temp$N * X_temp$P * (-X_temp$category + X_temp$T_bar)^2)
+    V[1,2] <- V[2,1] <- sum(X_temp$N * X_temp$P * (X_temp$Z_cum - X_temp$Z_bar) * (-X_temp$category + X_temp$T_bar))
+
+    t1 <- c(a0[j], b0[j]) + solve(V) %*% gr
+    a1[j] <- t1[1]
+    b1[j] <- t1[2]
+    if(abs(a0[j] - a1[j]) < 0.001 && abs(b0[j] - b1[j]) < 0.001){
+      convergence <- FALSE
+    } else {
+      cat("a ", abs(a0[j] - a1[j]), "b", abs(b0[j] - b1[j]), "\r")
+      a0[j] <- a1[j]
+      b0[j] <- b1[j]
+    }
+  }
+
+
+  # 2nd Mstep
+  temp_N <- Ngm[response_group,] %>% t() %>% as.vector()
+  for(k in cat_item[[j]]){
+    rjkm_sum <- X_temp %>% dplyr::select(group, node, r) %>% dplyr::group_by(group, node) %>% dplyr::summarise(r = sum(r)) %>% .[,3] %>% apply(1, rep.int, times = 4) %>% as.vector()
+    gr2 <- a0[j] * sum(X_temp$r - X_temp$P * rjkm_sum)
+    Pjkm_sum <- X_temp %>% dplyr::select(group, node, category, P) %>% dplyr::filter(category >= k) %>% dplyr::group_by(group, node) %>% dplyr::summarise(P = sum(P)) %>% .[,3]
+    Pjk1m_sum <- X_temp %>% dplyr::select(group, node, category, P) %>% dplyr::filter(category >= k-1) %>% dplyr::group_by(group, node) %>% dplyr::summarise(P = sum(P)) %>% .[,3]
+    V2 <- a0[j]^2 * sum(temp_N *Pjkm_sum * (1 - Pjk1m_sum))
+    k1[j, k] <- k0[j,k] + gr2/V2
+  }
+}
+
