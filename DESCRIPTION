@@ -9,25 +9,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
-Imports: 
-    magrittr,
-    stats,
-    utils,
-    pracma,
-    dplyr,
-    tidyr,
-    purrr,
-    stringr,
-    ggplot2,
-    latex2exp,
-    graphics,
-    grDevices,
-    Hmisc,
-    Rcpp,
-    BH,
-    rstudioapi
-LinkingTo: 
-    Rcpp,
-    BH
+Imports: magrittr, stats, utils, pracma, dplyr, tidyr, purrr, stringr, ggplot2, latex2exp, graphics, grDevices, Hmisc, Rcpp, BH, rstudioapi
+LinkingTo: Rcpp, BH
 Copyright: Takumi Shibuya
 Date: 2018-12-18
