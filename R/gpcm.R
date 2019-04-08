@@ -261,7 +261,7 @@ M1_gpcm <- function(a0, b0, k0, cate, xm, rr, NN){
     Tbar[t1:(t1 + K -1)] <- Prob[t1:(t1 + K -1)] %*% cate %>% rep.int(times = K) # cumsum
     t1 <- t1 + K
   }
-  a <- a0^(-1) * sum(rr*(Zcum - Zbar))
+  a <- -a0^(-1) * sum(rr*(Zcum - Zbar))
   b <- a0 * sum(rr*(-Tk + Tbar))
   aa <- a0^(-2) * sum(NN * Prob * (Zcum - Zbar)^2)
   bb <- a0^2 * sum(NN * Prob * (-Tk + Tbar)^2)
