@@ -102,6 +102,8 @@ cat_count <- X %>% purrr::map(table)
 for(j in 1:J){
   cat <- dimnames(cat_count[[j]])[[1]][-1] %>% as.integer()
   cat_j <- cat_count[[j]][-1] %>% as.integer()
+  total_x <- rowSums(X %>% dplyr::select(-count, -group))
+  a0[j] <- cor(X[,j], total_x)
   prob <- cat_j / (group_N[design_each_g[,j] == 1,] %>% dplyr::select(count) %>% sum())
   beta0[j, cat] <- -log(prob / (1 - prob))
   b0[j] <- mean(beta0[j, cat])
@@ -155,6 +157,7 @@ wm <- dnorm(xm)/sum(dnorm(xm)) %>% rep.int(times = ng) %>% matrix(nrow = M, ncol
 # EM algorithm starts
 
 # E step
+#----
 # X_long <- data_frame(group = )
 
 # logit and probability
@@ -234,8 +237,9 @@ for(g in 1:ng){
 Nm <- apply(Ngm, 2, sum)
 
 
-
+#----
 # M step algorithm
+#----
 M1_gpcm <- function(a0, b0, k0, cate, xm, rr, NN){
   # First M step
   K <- length(cate)
@@ -265,7 +269,7 @@ M1_gpcm <- function(a0, b0, k0, cate, xm, rr, NN){
   gr <- c(a, b)
   V <-  matrix(c(aa,ab,ab,bb), 2,2)
   # new parameter
-  par <- c(a0, b0) - solve(V) %*% gr
+  par <- c(a0, b0) + solve(V) %*% gr
   list(par = par, gr = gr, V = V,
        tab = tibble::tibble(k = Tk, P = Prob, r = rr, N = NN, Zcum = Zcum, Tbar = Tbar, Zbar = Zbar) %>% dplyr::arrange(k))
 }
@@ -296,7 +300,6 @@ M2_gpcm <- function(a0, b0, k0, cat_item, xm, rr, NN){
                       P = Prob)
 
   r_bar <- apply(rr, c(1,3), sum)
-  # k1 <- matrix(0, nrow = nrow(k0), ncol = ncol(k0))
   for(j in 1:J){
     gr_k <- numeric(max_cat_item[[j]])
     V_k <- matrix(0, nrow = max_cat_item[[j]], ncol = max_cat_item[[j]])
@@ -304,9 +307,12 @@ M2_gpcm <- function(a0, b0, k0, cat_item, xm, rr, NN){
     for(k in 1:max_cat_item[[j]]){
       rr_jk <- rr_j[k:max_cat_item[[j]],]
       X1 <- XX %>% dplyr::filter(item == j, category >= k) %>% dplyr::mutate(rr = rr_jk %>% as.vector)
+      # gr_k <- sum(a0[j] * (X1$rr - X1$P * r_bar[j, X1$node])) # equation 6.26
       gr_k[k] <- sum(a0[j] * (X1$rr - X1$P * r_bar[j, X1$node])) # equation 6.26
-
       X1 <- X1 %>% group_by(node) %>% dplyr::summarise(cumP = sum(P))
+      # X0 <- XX %>% dplyr::filter(item == j, category >= k) %>% group_by(node) %>% dplyr::summarise(cumP = sum(P))
+      # V_k <- sum(NN * a0[j]^2 * X1$cumP * (1 - X0$cumP)) # equation 6.27
+      # k1[j,k] <- k0[j,k] + V_k^(-1)*gr_k
       col_list <- 1:max_cat_item[[j]]
       col_list <- col_list[col_list <= k]
       for(l in col_list){
@@ -314,31 +320,32 @@ M2_gpcm <- function(a0, b0, k0, cat_item, xm, rr, NN){
         V_k[k,l] <- sum(NN * a0[j]^2 * X1$cumP * (1 - X0$cumP)) # equation 6.27
       }
     }
-    V_kt <- V_k %>% t()
-    V_k[upper.tri(V_k)] <- V_kt[upper.tri(V_kt)]
-    k1[j,] <- solve(V_k) %*% gr_k
+    k1[j,] <- k0[j,] + solve(V_k) %*% gr_k
   }
   k1
 }
 
 # intial value
-beta0 <- matrix(0, nrow = J, ncol = length(1:max_cat_all))
+{beta0 <- matrix(0, nrow = J, ncol = length(1:max_cat_all))
 k0 <- matrix(0, nrow = J, ncol = length(1:max_cat_all))
 b0 <- numeric(J)
-a0 <- rep(1, J)
+# a0 <- rep(1, J)
+a0 <- c(0.8, 0.8, 2.2, 0.7)
 cat_count <- X %>% purrr::map(~ as.vector(table(.)))
 cat_count <- X %>% purrr::map(table)
 
 for(j in 1:J){
   cat <- dimnames(cat_count[[j]])[[1]][-1] %>% as.integer()
   cat_j <- cat_count[[j]][-1] %>% as.integer()
+  total_x <- rowSums(X %>% dplyr::select(-count, -group))
+  a0[j] <- cor(X[,j], total_x)
   prob <- cat_j / (group_N[design_each_g[,j] == 1,] %>% dplyr::select(count) %>% sum())
   beta0[j, cat] <- -log(prob / (1 - prob))
   b0[j] <- mean(beta0[j, cat])
   k0[j, cat] <- beta0[j, cat] - b0[j]
 }
 
-rm(prob)
+rm(prob)}
 
 a1 <- numeric(J)
 b1 <- numeric(J)
@@ -350,8 +357,8 @@ while(mstep_iter){
     a1[j] <- t1$par[1]
     b1[j] <- t1$par[2]
   }
-  # second block M step
-  k1 <- k0 - M2_gpcm(a0, b0, k0, cat_item, xm, rjkm, Nm)
+# second block M step
+  k1 <- M2_gpcm(a1, b1, k0, cat_item, xm, rjkm, Nm)
 
   # convergence check
   if(all(abs(a0 - a1) < 0.001) && all(abs(b0 - b1) < 0.001) &&  all(abs(k0 - k1) < 0.001)){
@@ -362,4 +369,9 @@ while(mstep_iter){
     t0 <- t1
   }
 }
+
+
+# log likelihood function
+# N! = gamma(n + 1)
+
 
