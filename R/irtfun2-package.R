@@ -411,7 +411,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'A estimation theta function.
 #'
 #'@param xall a item response data
-#'@param param a item parameter file.If class is df, parameter column starts from second column and the order is a, b, c.
+#'@param param a item parameter file.If class is df, parameter column must be "a", "b" and "c". If class is matrix, you should set a parameter in first column, b parameter in second and c in third.
 #'@param est estimation method option. "EAP","MAP","MLE","PVs."
 #'@param nofrands the number of PVs.
 #'@param method iteration method option in MLE and MAP. "NR" is Newton Rapthon, "SANN" is Simulated Aannealing, "Brent" is optimization using optimise function
@@ -449,7 +449,7 @@ FthetaWLE <- function(xi,a,b,c,D,groupitem, maxtheta=6,mintheta=-6){
 #'@export
 
 estheta <- function(xall, param, est="EAP", nofrands = 10, method = "NR", file = "default", output = FALSE, IDc = 1, gc = 2, fc = 3,
-                    gh = TRUE, N = 31, D=1.702, maxtheta = 6, mintheta = -6, mu=0, sigma=1, sampling_engine="rejection_Cpp", warm_up = 100){
+                    gh = TRUE, N = 31, D=1.702, maxtheta = 4, mintheta = -4, mu=0, sigma=1, sampling_engine="rejection_Cpp", warm_up = 100){
 
   #chack the arguments
   arg_est <- c("EAP","MAP","MLE","WLE","PVs")
@@ -477,7 +477,7 @@ estheta <- function(xall, param, est="EAP", nofrands = 10, method = "NR", file =
   }
   #remove a=0 item parameter and response column
 
-  if(is.data.frame(param) && param %>% colnames() %>% stringr::str_count(pattern = c("a", "b", "c")) %>% sum() == 3 ){
+  if(is.data.frame(param) && param %>% colnames() %in% c("a", "b", "c") %>% sum() == 3){
     a <- param$a
     x.all <- x.all[, a != 0]
 
@@ -507,7 +507,7 @@ estheta <- function(xall, param, est="EAP", nofrands = 10, method = "NR", file =
   xscore <- rowSums(x.all,na.rm=T)
   cat("n of subject is ",n,".\n")
   cat("n of item is ",m,".\n")
-  cat(est,"is starting!\n")
+  cat(est," ESTIMATION is RUNNING NOW!\n")
 
   groupitem <- numeric(G)
   for(g in 1:G){
