@@ -62,14 +62,14 @@ LL <- function(u,theta,a,b,c,D){
 #' @param a the slope parameter
 #' @param b the location parameter
 #' @param c the guessing parameter
-#' @param mu a hyperparameter of prior distribution.
+#' @param mu a hyperparameter of prior distribution(Gauss).
 #' @param sigma same as above.
 #' @param D a scale constant
 #' @export
 #'
 LL_b <- function(u,theta,a,b,c,mu,sigma,D){
   p <- ptheta(theta,a,b,c,D)
-  sum(log(p)*u+log(1-p)*(1-u)+log(dnorm(theta,mu,sigma)),na.rm = T)
+  sum(log(p)*u+log(1-p)*(1-u),na.rm = T)+log(dnorm(theta,mu,sigma))
 }
 
 # 一階偏微分
