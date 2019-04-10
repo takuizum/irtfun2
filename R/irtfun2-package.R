@@ -69,7 +69,7 @@ LL <- function(u,theta,a,b,c,D){
 #'
 LL_b <- function(u,theta,a,b,c,mu,sigma,D){
   p <- ptheta(theta,a,b,c,D)
-  sum(log(p)*u+log(1-p)*(1-u)-0.5*((theta-mu)/sigma)^2,na.rm = T)
+  sum(log(p)*u+log(1-p)*(1-u)+log(dnorm(theta,mu,sigma),na.rm = T)
 }
 
 # 一階偏微分
@@ -453,7 +453,7 @@ estheta <- function(xall, param, est="EAP", nofrands = 10, method = "NR", file =
 
   #chack the arguments
   arg_est <- c("EAP","MAP","MLE","WLE","PVs")
-  arg_method <- c("NR","Brent","SANN")
+  arg_method <- c("NR","Brent","SANN", "BFGS", "L-BFGS-B","Nelder-Mead", "CG")
   arg_engine <- c("rejection_R","rejection_Cpp","slice_R")
 
   if(!(est %in% arg_est)) stop("'est' argument is incorrect!")
@@ -817,10 +817,10 @@ stat_pv <- function(PVs_only){
     # extract the PVs data frame for each group
     group_pv <- pvG[pvG$group==i,-1]#
     # the average of the mean
-    M <- apply(pvG,2,mean) %>% as.vector()#as.vector(apply(pvG,2,mean))
-    V_M <- apply(pvG,2,e_v_mean) %>% as.vector()
-    V <- apply(pvG,2,var) %>% as.vector()#as.vector(apply(pvG,2,var))
-    V_V <- apply(pvG,2,e_v_var) %>% as.vector()
+    M <- apply(group_pv,2,mean) %>% as.vector()#as.vector(apply(pvG,2,mean))
+    V_M <- apply(group_pv,2,e_v_mean) %>% as.vector()
+    V <- apply(group_pv,2,var) %>% as.vector()#as.vector(apply(pvG,2,var))
+    V_V <- apply(group_pv,2,e_v_var) %>% as.vector()
     # imputation variance of mean
     # variance of expectation(the first term of equation 2.2.2)
     K <- length(M)
