@@ -69,7 +69,7 @@ LL <- function(u,theta,a,b,c,D){
 #'
 LL_b <- function(u,theta,a,b,c,mu,sigma,D){
   p <- ptheta(theta,a,b,c,D)
-  sum(log(p)*u+log(1-p)*(1-u)+log(dnorm(theta,mu,sigma),na.rm = T)
+  sum(log(p)*u+log(1-p)*(1-u)+log(dnorm(theta,mu,sigma)),na.rm = T)
 }
 
 # 一階偏微分
