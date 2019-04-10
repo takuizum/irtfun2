@@ -11,14 +11,21 @@ This package contains some useful function for IRT analysis. It is necessary to 
 
 ### バージョン0.6.7.3での変更点。正則化周辺最尤推定法や複数の反復計算手法に対応した項目パラメタ推定関数estip2を実装しました。estGipを多母集団モデルに適応させました。その他，細かいバグを修正しました。
 
-### バージョン0.6.7.4での変更点。esthetaの項目パラメタファイル選択に関するバグを修正。
-
-### バージョン0.6.7.5での変更点。esthetaのMAP推定に関するバグを修正
+### バージョン0.6.7.5での変更点。esthetaのMAP推定に関するバグを修正。(2019/04/10)
 
 ### estip & estip2
 "estip" is a function for marginal maximum likelihood (MML) estimation of item parameter. For binary response data only. MML via EM is a standard estimation method in IRT item parameter estimaiton.
 
 この関数はEMアルゴリズムを用いた周辺最尤推定法により項目パラメタを推定するためのものです。
+```{r}
+devtools::install_github("takuizum/irtfun2", dependency = TRUE)
+library(irtfun2)
+# estimation item parameter using simulation data in irtfun2 package.
+# 2 parameter logistic model
+res <- estip2(sim_dat_2, model = "2PL", fc = 2)
+res$para # estimated item parametes(data.frame)
+res$se # standard error(data.frame)
+```
 
 ### estheta
 "estheta" is a function for estimating MLE, EAP, MAP and PVs.　Rejection sampling method is implemented for PVs sub routine.
