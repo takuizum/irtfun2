@@ -13,6 +13,8 @@ This package contains some useful function for IRT analysis. It is necessary to 
 
 ### バージョン0.6.7.4での変更点。esthetaの項目パラメタファイル選択に関するバグを修正。
 
+### バージョン0.6.7.5での変更点。esthetaのMAP推定に関するバグを修正
+
 ### estip & estip2
 "estip" is a function for marginal maximum likelihood (MML) estimation of item parameter. For binary response data only. MML via EM is a standard estimation method in IRT item parameter estimaiton.
 
