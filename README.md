@@ -18,7 +18,7 @@ This package contains some useful function for IRT analysis. It is necessary to 
 
 この関数はEMアルゴリズムを用いた周辺最尤推定法により項目パラメタを推定するためのものです。
 ```{r}
-devtools::install_github("takuizum/irtfun2", dependency = TRUE)
+devtools::install_github("takuizum/irtfun2", dependencies = TRUE)
 library(irtfun2)
 # estimation item parameter using simulation data in irtfun2 package.
 # 2 parameter logistic model
