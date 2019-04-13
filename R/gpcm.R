@@ -261,7 +261,7 @@ M1_gpcm <- function(a0, b0, k0, cate, xm, rr, NN){
     Tbar[t1:(t1 + K -1)] <- Prob[t1:(t1 + K -1)] %*% cate %>% rep.int(times = K) # cumsum
     t1 <- t1 + K
   }
-  a <- -a0^(-1) * sum(rr*(Zcum - Zbar))
+  a <- a0^(-1) * sum(rr*(Zcum - Zbar))
   b <- a0 * sum(rr*(-Tk + Tbar))
   aa <- a0^(-2) * sum(NN * Prob * (Zcum - Zbar)^2)
   bb <- a0^2 * sum(NN * Prob * (-Tk + Tbar)^2)
@@ -320,9 +320,10 @@ M2_gpcm <- function(a0, b0, k0, cat_item, xm, rr, NN){
         V_k[k,l] <- sum(NN * a0[j]^2 * X1$cumP * (1 - X0$cumP)) # equation 6.27
       }
     }
+    # V_k[upper.tri(V_k)] <- V_k[lower.tri(V_k)]
     k1[j,] <- k0[j,] + solve(V_k) %*% gr_k
   }
-  k1
+  list(res = k1, V = V_k, g = gr_k)
 }
 
 # intial value
@@ -330,7 +331,7 @@ M2_gpcm <- function(a0, b0, k0, cat_item, xm, rr, NN){
 k0 <- matrix(0, nrow = J, ncol = length(1:max_cat_all))
 b0 <- numeric(J)
 # a0 <- rep(1, J)
-a0 <- c(0.8, 0.8, 2.2, 0.7)
+# a0 <- c(0.8, 0.8, 2.2, 0.7)/1.702
 cat_count <- X %>% purrr::map(~ as.vector(table(.)))
 cat_count <- X %>% purrr::map(table)
 
@@ -338,7 +339,8 @@ for(j in 1:J){
   cat <- dimnames(cat_count[[j]])[[1]][-1] %>% as.integer()
   cat_j <- cat_count[[j]][-1] %>% as.integer()
   total_x <- rowSums(X %>% dplyr::select(-count, -group))
-  a0[j] <- cor(X[,j], total_x)
+  R <- cor(X[,j], total_x)
+  a0[j] <- R/(1-R^2)
   prob <- cat_j / (group_N[design_each_g[,j] == 1,] %>% dplyr::select(count) %>% sum())
   beta0[j, cat] <- -log(prob / (1 - prob))
   b0[j] <- mean(beta0[j, cat])
@@ -358,7 +360,7 @@ while(mstep_iter){
     b1[j] <- t1$par[2]
   }
 # second block M step
-  k1 <- M2_gpcm(a1, b1, k0, cat_item, xm, rjkm, Nm)
+  k1 <- M2_gpcm(a1, b1, k0, cat_item, xm, rjkm, Nm)$res
 
   # convergence check
   if(all(abs(a0 - a1) < 0.001) && all(abs(b0 - b1) < 0.001) &&  all(abs(k0 - k1) < 0.001)){
