@@ -6,14 +6,14 @@
 \usage{
 estheta(xall, param, est = "EAP", nofrands = 10, method = "NR",
   file = "default", output = FALSE, IDc = 1, gc = 2, fc = 3,
-  gh = TRUE, N = 31, D = 1.702, maxtheta = 6, mintheta = -6,
+  gh = TRUE, N = 31, D = 1.702, maxtheta = 4, mintheta = -4,
   mu = 0, sigma = 1, sampling_engine = "rejection_Cpp",
   warm_up = 100)
 }
 \arguments{
 \item{xall}{a item response data}
 
-\item{param}{a item parameter file.If class is df, parameter column starts from second column and the order is a, b, c.}
+\item{param}{a item parameter file.If class is df, parameter column must be "a", "b" and "c". If class is matrix, you should set a parameter in first column, b parameter in second and c in third.}
 
 \item{est}{estimation method option. "EAP","MAP","MLE","PVs."}
 

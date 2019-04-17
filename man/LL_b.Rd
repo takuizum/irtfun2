@@ -17,7 +17,7 @@ LL_b(u, theta, a, b, c, mu, sigma, D)
 
 \item{c}{the guessing parameter}
 
-\item{mu}{a hyperparameter of prior distribution.}
+\item{mu}{a hyperparameter of prior distribution(Gauss).}
 
 \item{sigma}{same as above.}
 
