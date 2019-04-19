@@ -123,7 +123,7 @@ iif <- function(theta,a,b,c,D){
 #' @export
 #'
 tif_auto <- function(para, min=-6, max=6, length.out=301, D=1.702, labs=F, simplify=T){
-  if(labs==simplify) stop("'stop' must not be same logical to 'simplify'.")
+  if(labs==simplify) stop("'labs' must not be same logical to 'simplify'.")
   a <- para$a
   b <- para$b
   c <- para$c

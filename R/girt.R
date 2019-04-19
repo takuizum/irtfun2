@@ -39,7 +39,7 @@ dinvchi <- function(phi, v=1, tau=1){
   pow <- v/2
   A <- tau^pow
   B <- 2^(pow-1)*gamma(pow)
-  C <- phi^-(v+1)
+  C <- phi^(1-v)
   D <- exp(-tau/(2*phi^2))
   A/B*C*D
 }
