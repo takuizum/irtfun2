@@ -105,13 +105,15 @@ cor(phi, phi_map)
 plot(phi, phi_map)
 
 # Newton-Raphton
-t0 <- 0.5
+t0 <- 1
 s <- 0 # counter
 while(TRUE){
   s <- s + 1
-  cat(s, "\r")
-  gr1 <- fpdG(dat[1, -1], fit$person$theta[1], t0, fit$item$a, fit$item$b, D = 1.702)
-  Fi1 <- spdG(dat[1, -1], fit$person$theta[1], t0, fit$item$a, fit$item$b, D = 1.702)
+  cat(s, "\n")
+  gr1 <- fpdG(dat[3, -1], fit$person$theta[3], t0, fit$item$a, fit$item$b, D = 1.702)
+  # Hi1 <- fiG(dat[3, -1], fit$person$theta[3], t0, fit$item$a, fit$item$b, D = 1.702)
+  Fi1 <- fiG(dat[3, -1], fit$person$theta[3], t0, fit$item$a, fit$item$b, D = 1.702)
+  # t1 <- t0 - gr1/Hi1
   t1 <- t0 + gr1/Fi1
   if(abs(t1-t0) < 0.0001) break
   t0 <- t1
@@ -120,21 +122,21 @@ while(TRUE){
 #----Vizualization a maximum point of objective function----
 phi_vec <- seq(0.001, 4, length.out = 101)
 # ML function
-plot(y = LLG(dat[1, -1], fit$person$theta[1], phi_vec[1], fit$item$a, fit$item$b, D = 1.702), x = phi_vec[1], xlim = c(0, 4), ylim = c(-20, 0), type = "o", ylab = "", xlab = "")
-for(j in 1:100){
-  par(new = T)
-  plot(y = LLG(dat[1, -1], fit$person$theta[1], phi_vec[j+1], fit$item$a, fit$item$b, D = 1.702), x = phi_vec[j+1], xlim = c(0, 4), ylim = c(-20, 0), type = "o", ylab = "", xlab = "")
-}
+# plot(y = LLG(dat[1, -1], fit$person$theta[1], phi_vec[1], fit$item$a, fit$item$b, D = 1.702), x = phi_vec[1], xlim = c(0, 4), ylim = c(-20, 0), type = "o", ylab = "", xlab = "")
+# for(j in 1:100){
+#   par(new = T)
+#   plot(y = LLG(dat[1, -1], fit$person$theta[1], phi_vec[j+1], fit$item$a, fit$item$b, D = 1.702), x = phi_vec[j+1], xlim = c(0, 4), ylim = c(-20, 0), type = "o", ylab = "", xlab = "")
+# }
 # ML
 tibble(phi = 0.001:4) %>% ggplot(aes(x = phi)) +
-  stat_function(fun = LLG_visual, args = list(u = dat[5, -1], a = fit$item$a, b = fit$item$b, theta = fit$person$theta[5], D = 1.702))
+  stat_function(fun = LLG_visual, args = list(u = dat[3, -1], a = fit$item$a, b = fit$item$b, theta = fit$person$theta[3], D = 1.702))
 
 # log posterior distribution function
-plot(y = BLLG(dat[1, -1], fit$person$theta[1], phi_vec[1], fit$item$a, fit$item$b, D = 1.702, mode = 1), x = phi_vec[1], xlim = c(0, 4), ylim = c(-20, -15), type = "o", ylab = "", xlab = "")
-for(j in 1:100){
-  par(new = T)
-  plot(y = BLLG(dat[1, -1], fit$person$theta[1], phi_vec[j+1], fit$item$a, fit$item$b, D = 1.702, mode = 1), x = phi_vec[j+1], xlim = c(0, 4), ylim = c(-20, -15), type = "o", ylab = "", xlab = "")
-}
+# plot(y = BLLG(dat[1, -1], fit$person$theta[1], phi_vec[1], fit$item$a, fit$item$b, D = 1.702, mode = 1), x = phi_vec[1], xlim = c(0, 4), ylim = c(-20, -15), type = "o", ylab = "", xlab = "")
+# for(j in 1:100){
+#   par(new = T)
+#   plot(y = BLLG(dat[1, -1], fit$person$theta[1], phi_vec[j+1], fit$item$a, fit$item$b, D = 1.702, mode = 1), x = phi_vec[j+1], xlim = c(0, 4), ylim = c(-20, -15), type = "o", ylab = "", xlab = "")
+# }
 # MAP
 tibble(phi = 0.001:4) %>% ggplot(aes(x = phi)) +
   stat_function(fun = BLLG_visual,
