@@ -184,3 +184,7 @@ phi[1]
 plot(phi_map, phi)
 cor(phi, phi_map)
 plot(phi_map, fitindex)
+plot(phi, fitindex)
+
+# ECI 関数
+
