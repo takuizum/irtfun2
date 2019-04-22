@@ -127,9 +127,11 @@ phi_vec <- seq(0.001, 4, length.out = 101)
 #   par(new = T)
 #   plot(y = LLG(dat[1, -1], fit$person$theta[1], phi_vec[j+1], fit$item$a, fit$item$b, D = 1.702), x = phi_vec[j+1], xlim = c(0, 4), ylim = c(-20, 0), type = "o", ylab = "", xlab = "")
 # }
+
+subject <- 10
 # ML
 tibble(phi = 0.001:4) %>% ggplot(aes(x = phi)) +
-  stat_function(fun = LLG_visual, args = list(u = dat[3, -1], a = fit$item$a, b = fit$item$b, theta = fit$person$theta[3], D = 1.702))
+  stat_function(fun = LLG_visual, args = list(u = dat[subject, -1], a = fit$item$a, b = fit$item$b, theta = fit$person$theta[subject], D = 1.702))
 
 # log posterior distribution function
 # plot(y = BLLG(dat[1, -1], fit$person$theta[1], phi_vec[1], fit$item$a, fit$item$b, D = 1.702, mode = 1), x = phi_vec[1], xlim = c(0, 4), ylim = c(-20, -15), type = "o", ylab = "", xlab = "")
@@ -140,7 +142,7 @@ tibble(phi = 0.001:4) %>% ggplot(aes(x = phi)) +
 # MAP
 tibble(phi = 0.001:4) %>% ggplot(aes(x = phi)) +
   stat_function(fun = BLLG_visual,
-                args = list(u = dat[1, -1], a = fit$item$a, b = fit$item$b, theta = fit$person$theta[1], D = 1.702, mode = 1))
+                args = list(u = dat[subject, -1], a = fit$item$a, b = fit$item$b, theta = fit$person$theta[subject], D = 1.702, mode = 1))
 
 
 #----person fit index----
