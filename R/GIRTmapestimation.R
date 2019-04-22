@@ -9,7 +9,7 @@ b <- rnorm(30)
 dat <- sim_gen(theta=theta, phi=phi, a=a, b=b)
 fit <- estGip(dat, fc = 2, esteap = T)
 # for apply
-dat2 <- bind_cols(theta = fit$person$theta, phi = fit$person$phi, dat[,-1])
+dat2 <- bind_cols(theta = theta, phi = phi, dat[,-1])
 #----prior setting----
 tibble(phi = 0.0001:4) %>% ggplot(aes(x = phi)) + stat_function(fun = dinvchi, args = list(v = 2, tau = 3))
 tibble(phi = 0.0001:4) %>% ggplot(aes(x = phi)) + stat_function(fun = dlnorm, args = list(meanlog = 0.5, sdlog = 1))
@@ -28,7 +28,7 @@ LLG <- function(u, theta, phi, a, b, D){
 BLLG <- function(u, theta, phi, a, b, D, mode){
   z <- D * a / (sqrt(1 + phi^2*a^2)) * (theta - b)
   p <- 1/(1 + exp(-z))
-  sum(u * log(p) + (1-u) * log(1-p), na.rm = T) + log(dnorm(phi, mean = mode))
+  sum(u * log(p) + (1-u) * log(1-p), na.rm = T) + log(dnorm(phi, mean = mode, sd = 0.5))
 }
 
 # for apply version
@@ -186,5 +186,61 @@ cor(phi, phi_map)
 plot(phi_map, fitindex)
 plot(phi, fitindex)
 
-# ECI 関数
+# ECI 関数----
+ECI <- function(dat, a, b, D = 1.702){
+  theta <- dat[1]
+  u <- dat[c(-1,-2)]
+  # T(¥theta)
+  z <- D*a*(theta - b)
+  t <- mean(1/(1+exp(-z)))
+  p <- 1/(1+exp(-z))
+  numerator <- sum((p-u)*(p-t))
+  denominator <- sqrt(sum(p*(1-p)*(p-t)^2))
+  # numerator/denominator
+  sum(abs((p-u)*(p-t)))
+}
+
+eci1 <- apply(dat2, 1, ECI, a = fit$item$a, b = fit$item$b)
+
+hist(fit$person$phi)
+hist(fitindex)
+hist(eci1)
+plot(phi, eci1)
+phi_map <- apply(cbind(dat2$theta, eci1, dat2[,c(-1,-2)]), 1, BLLG_apply2, a = fit$item$a, b = fit$item$b, D = 1.702)
+plot(phi, phi_map)
+cor(phi_map, phi)
+plot(fit$person$phi, phi_map)
+
+# true phiをサポートとして使ってみる
+phi_map <- apply(cbind(dat2$theta, phi, dat2[,c(-1,-2)]), 1, BLLG_apply2, a = fit$item$a, b = fit$item$b, D = 1.702)
+plot(phi, phi_map)
+cor(phi_map, phi)
+plot(fit$person$phi, phi_map)
+
+# 人工的に逸脱した反応と良く適合した反応パタンを生成し，phi,
+dat2
+# sort(order)
+fit$item$b[fit$item$b %>% order()]
+
+dat3 <- dat2[c(1,2,order(fit$item$b))]
+# dat3[order(dat3$phi, decreasing = T),]
+rm(theta, phi)
+dat3 %>% dplyr::arrange(1, 2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
