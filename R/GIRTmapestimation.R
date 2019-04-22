@@ -47,6 +47,14 @@ BLLG_apply <- function(dat, a, b, D, mode){
   opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, maximum = T)
   opt$maximum
 }
+# phi penalized
+BLLG_apply2 <- function(dat, a, b, D){
+  theta <- dat[1]
+  mode <- abs(dat[2])
+  u <- dat[c(-1,-2)]
+  opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, maximum = T)
+  opt$maximum
+}
 
 # first partial derivative
 fpdG <- function(u, theta, phi, a, b, D){
@@ -102,7 +110,10 @@ phi_map <- apply(dat2, 1, BLLG_apply, a = fit$item$a, b = fit$item$b, D = 1.702,
 
 cor(phi, phi_ml)
 cor(phi, phi_map)
+plot(phi_ml, phi_map)
 plot(phi, phi_map)
+plot(phi, phi_ml)
+
 
 # Newton-Raphton
 t0 <- 1
@@ -147,21 +158,35 @@ tibble(phi = 0.001:4) %>% ggplot(aes(x = phi)) +
 
 #----person fit index----
 # E_3(theta) : expectation
-E3 <- function(theta, a, b,c,D){
-  p <- ptheta(theta,a,b,c,D)
+E3 <- function(theta, a, b, D){
+  z <- D * a * (theta - b)
+  p <- 1/(1 + exp(-z))
   sum(p * log(p) + (1-p) * log(1-p),na.rm = T)
 }
 
 # sigma3
-S3 <- function(theta, a, b,c,D){
-  p <- ptheta(theta,a,b,c,D)
+S3 <- function(theta, a, b, D){
+  z <- D * a * (theta - b)
+  p <- 1/(1 + exp(-z))
   sqrt(sum(p * (1 - p) * (log(p/(1-p)))^2,na.rm = T))
 }
 
 # person fit index: z_3 statistics
-pfit <- function(dat,a,b,c,D){
+pfit <- function(dat,a,b,D){
   #decompose dat
   theta <- dat[1]
   xi <- dat[-1]
-  (LL(xi, theta, a, b,c,D) - E3(theta, a, b,c,D)) / S3(theta, a, b,c,D)
+  (LLG(xi, theta, phi = 0,  a, b, D) - E3(theta, a, b, D)) / S3(theta, a, b, D)
 }
+
+fitindex <- apply(dat2[,-2], 1, pfit, a = fit$item$a, b = fit$item$b, D = 1.702)
+# MAP
+phi_map <- apply(cbind(dat2$theta, fitindex, dat2[,c(-1,-2)]), 1, BLLG_apply2, a = fit$item$a, b = fit$item$b, D = 1.702)
+phi[1]
+plot(phi_map, phi)
+cor(phi, phi_map)
+plot(phi_map, fitindex)
+plot(phi, fitindex)
+
+# ECI 関数
+
