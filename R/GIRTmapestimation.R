@@ -5,7 +5,9 @@ set.seed(0204)
 theta <- rnorm(3000)
 phi <- rinvchi(3000, max = 2)
 a <- rlnorm(30, sdlog = 0.25)
-b <- rnorm(30)
+# b <- rnorm(30)
+b <- runif(30, min = -4, 4)
+# b <- c(runif(15, -4, -2), runif(15, 2, 4))
 dat <- sim_gen(theta=theta, phi=phi, a=a, b=b)
 fit <- estGip(dat, fc = 2, esteap = T)
 # for apply
@@ -25,10 +27,10 @@ LLG <- function(u, theta, phi, a, b, D){
   sum(u * log(p) + (1-u) * log(1-p), na.rm = T)
 }
 # Maximau a posteriori(prior is turncated normal distribution)
-BLLG <- function(u, theta, phi, a, b, D, mode){
+BLLG <- function(u, theta, phi, a, b, D, mode, sigma){
   z <- D * a / (sqrt(1 + phi^2*a^2)) * (theta - b)
   p <- 1/(1 + exp(-z))
-  sum(u * log(p) + (1-u) * log(1-p), na.rm = T) + log(dnorm(phi, mean = mode, sd = 0.5))
+  sum(u * log(p) + (1-u) * log(1-p), na.rm = T) + log(dnorm(phi, mean = mode, sd = sigma))
 }
 
 # for apply version
@@ -40,19 +42,19 @@ LLG_apply <- function(dat, a, b, D){
   opt$maximum
 }
 # for apply version
-BLLG_apply <- function(dat, a, b, D, mode){
+BLLG_apply <- function(dat, a, b, D, mode, sigma = 1){
   theta <- dat[1]
   # phi <- dat[2]
   u <- dat[c(-1,-2)]
-  opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, maximum = T)
+  opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, sigma = sigma, maximum = T)
   opt$maximum
 }
 # phi penalized
-BLLG_apply2 <- function(dat, a, b, D){
+BLLG_apply2 <- function(dat, a, b, D, mode, sigma){
   theta <- dat[1]
   mode <- abs(dat[2])
   u <- dat[c(-1,-2)]
-  opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, maximum = T)
+  opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, sigma = sigma, maximum = T)
   opt$maximum
 }
 
@@ -106,12 +108,16 @@ phi[1]
 
 # apply version
 phi_ml <- apply(dat2, 1, LLG_apply, a = fit$item$a, b = fit$item$b, D = 1.702)
-phi_map <- apply(dat2, 1, BLLG_apply, a = fit$item$a, b = fit$item$b, D = 1.702, mode = 1)
+phi_map <- apply(dat2, 1, BLLG_apply, a = fit$item$a, b = fit$item$b, D = 1.702, mode = 1, sigma = 1)
 
 cor(phi, phi_ml)
 cor(phi, phi_map)
 plot(phi_ml, phi_map)
-plot(phi, phi_map)
+plot(phi, phi_map, pch = 20, cex = 0.1, ylim = c(0,2), xlim = c(0,2))
+plot(phi, phi_ml, pch = 20, cex = 0.1, ylim = c(0,2), xlim = c(0,2))
+plot(phi, fit$person$phi, pch = 20, cex = 0.1, ylim = c(0,2), xlim = c(0,2))
+
+
 plot(phi, phi_ml)
 
 
@@ -229,13 +235,49 @@ dat3 %>% dplyr::arrange(1, 2)
 
 
 
+graph_list[[1]] <- plot(phi, phi_ml, pch = 20, cex = 0.1, ylim = c(0,2), xlim = c(0,2))
 
 
+# phi monte carlo----
+# b prior dist is Normal
+library(tidyverse)
+res <- tibble(R = numeric(100), RMSE = numeric(100))
+graph_list <- purrr::list_along(rep(1,100))
+for(t in 1:100){
+  cat(t, "time simulation NOW")
+  theta <- rnorm(3000)
+  phi <- rinvchi(3000, max = 2)
+  a <- rlnorm(30, sdlog = 0.25)
+  b <- rnorm(30)
+  dat <- sim_gen(theta=theta, phi=phi, a=a, b=b)
+  dat2 <- bind_cols(theta = theta, phi = phi, dat[,-1])
+  fit <- estGip(dat, fc = 2, esteap = T)
+  phi_map <- apply(dat2, 1, BLLG_apply, a = fit$item$a, b = fit$item$b, D = 1.702, mode = 1, sigma = 1)
+  res$R[t] <- cor(phi, phi_map)
+res$RMSE[t] <- mean(sqrt((phi - phi_map)^2))
+}
 
+res %>% ggplot(aes(x = R)) + geom_histogram()
+res %>% ggplot(aes(x = RMSE)) + geom_histogram()
 
+# b prior dist is Uniform
+res2 <- tibble(R = numeric(100), RMSE = numeric(100))
+for(t in 1:100){
+  cat(t, "time simulation NOW")
+  theta <- rnorm(3000)
+  phi <- rinvchi(3000, max = 2)
+  a <- rlnorm(30, sdlog = 0.25)
+  b <- runif(30, -5, 5)
+  dat <- sim_gen(theta=theta, phi=phi, a=a, b=b)
+  dat2 <- bind_cols(theta = theta, phi = phi, dat[,-1])
+  fit <- estGip(dat, fc = 2, esteap = T, method = "BFGS")
+  phi_map <- apply(dat2, 1, BLLG_apply, a = fit$item$a, b = fit$item$b, D = 1.702, mode = 1, sigma = 1)
+  res2$R[t] <- cor(phi, phi_map)
+  res2$RMSE[t] <- mean(sqrt((phi - phi_map)^2))
+}
 
-
-
+res2 %>% ggplot(aes(x = R)) + geom_histogram()
+res2 %>% ggplot(aes(x = RMSE)) + geom_histogram()
 
 
 
