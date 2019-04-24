@@ -47,7 +47,7 @@ obs_sub <- function(para, theta){
     f0 <- prb[(j-1):tmp]
     for(k in 1:K[j]){
       p <- pgrm(theta, para[[j]][1], para[[j]][-1], k)
-      cat((j+k-1):(j+k+tmp-1), "\n", f0, "\n", p, "\n")
+      # cat((j+k-1):(j+k+tmp-1), "\n", f0, "\n", p, "\n")
       prb[(j+k-1):(k+tmp)] <- prb[(j+k-1):(k+tmp)] + f0 * p
     }
   }
