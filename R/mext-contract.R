@@ -24,9 +24,9 @@ probability <- function(trait,a,b,c,D=1.702){
   prb[2] <- ptheta[1]
   # recursive formula
   for(j in 2:m){
-    l <- j -1
-    j1 <- j+1
-    l1 <- l+1
+    l <- j -1 # item index of previous one
+    j1 <- j+1 # maximum + 1 score can be scored until item j
+    l1 <- l+1 # item index (the location of probability vector) muximum score can be scored until item j
     prb[j1] <- prb[l1]*ptheta[j]
 
     for(i in l:1){
