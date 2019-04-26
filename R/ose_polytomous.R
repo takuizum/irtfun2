@@ -17,7 +17,7 @@ para <- list(j1 = c(1.197, -1.906),
 )
 
 # Define pgrm function
-pgrm <- function(theta, a, b, k){
+pgrm <- function(theta, a, b, k, D){
   K <- length(b) + 1
   if(k == K){
     p1 <- 0
@@ -38,11 +38,29 @@ pgrm <- function(theta, a, b, k){
   p0 - p1 # probability observed category k response
 }
 
+pgpcm <- function(theta, a, b, k, D){
+  K <- length(b)
+  G <- rep(1,K+1)
+  for(v in 1:K) G[v+1] <- exp(sum(D*a*(theta-b[1:v])))
+  p <- G[k+1]/sum(G)
+  p
+}
+
 # Obserbed score distribution function
-obs_sub <- function(para, theta, min_category){
+obs_sub <- function(para, theta, min_category, model){
   J <- length(para) # the number of items
   N <- length(unlist(para)) # maximum total score()
   K <- unlist(purrr::map(para, function(x){length(x)}))
+  # model selection
+  if(model == "GRM"){
+    pf <- pgrm
+  } else if(model == "GPCM"){
+    pf <- pgpcm
+  } else if(model == "NRM"){
+    pf <- NULL
+  } else {
+    stop("Error in model definition. 'GRM' is only available now.")
+  }
   # item 1, special routine.
   prb <- rep(0, K[1]) # too short vector still at tis point
   for(k in 1:K[1]) prb[k] <- pgrm(theta, para[[1]][1], para[[1]][-1], k)
@@ -62,7 +80,10 @@ obs_sub <- function(para, theta, min_category){
 }
 
 obs_equating <- function(para, theta, weight = NULL, min_category = 1){
+  # theta's weight check
   if(is.null(weight)) weight <- rep(1, length(theta)) # uniform dist
+  # parameterfile check
+  if(!is.list(para))
   prb_matrix <- apply(matrix(theta), 1, obs_sub, para = para, min_category = min_category)
   prb <- prb_matrix %*% weight
   J <- length(para) # the number of items
