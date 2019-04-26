@@ -192,12 +192,12 @@ cal_imp_n <- function(k0, k1){
   list(ind1 = imp_ind1, ind2 = imp_ind2 %>% as.logical())
 }
 
-# imp_ind <- cal_imp_n(6, 20)
+imp_ind <- cal_imp_n(3, 5)
 
-# calculate imputed category parameter
+# calculate imputed category parameter, based on uniform distribution
 imp_category_sub <- function(para, imp_ind){
   K <- length(imp_ind$ind2) # total length
-  res <- numeric(K+1)
+  res <- numeric(K+1) # to involve discrimination parameter
   res[1] <- para[1] # a para
   i <- 1
   for(k in 1:K){
@@ -214,6 +214,43 @@ imp_category_sub <- function(para, imp_ind){
   }
   res
 }
+
+# calculate imputed category parameter, based on empirical distribution
+imp_category_sub2 <- function(para, imp_ind, distribution){
+  K <- length(imp_ind$ind2) # total length
+  res <- numeric(K+1) # to involve discrimination parameter
+  res[1] <- para[1] # a para
+  # increasement of b parameter
+  i <- 1
+  increasement <- numeric(length(imp_ind$ind1))
+  for(j in 1:length(imp_ind$ind1)){
+    denominator <- sum(distribution[seq(i, length.out = imp_ind$ind1[j] + 1)])
+    numerator <- abs(para[j+1] - para[j+2])
+    increasement[j] <- numerator/denominator
+  }
+  # imputation
+  i <- 1
+  for(k in 1:K){
+    if(imp_ind$ind2[k]){
+      i <- i+1 # index for original b parameter
+      res[k+1] <- para[i] # insert original b parameter to 'res' vector(res[1] is a parameter)
+    } else if((i+1) <= length(para)) { # not to reach K + 1(not k + 1!) in original parameter vector
+      b1 <- para[i]
+      b2 <- para[i+1]
+      inc <- increasement[i-1]
+      # このあとは適切なヒストグラムの度数を求めて，それをincrasementに乗じて，b1に足せばOK
+      distance <- (b2-b1)/(imp_ind$ind1[i-1] + 1)
+      res[k+1] <- res[k+1] + b1
+      res[(k+1):(k+imp_ind$ind1[i-1])] <- res[(k+1):(k+imp_ind$ind1[i-1])] + distance
+    }
+  }
+  res
+}
+
+test_cate <- c(rep(1,100), rep(2,500), rep(3,1500), rep(4,500), rep(5,200), rep(6, 50), rep(7, 150))
+test_table <- table(test_cate)
+test_para <- c(1, -1, 0, 1)
+imp_ind <- cal_imp_n(3, 6)
 
 # test <- est_para_7[[1]][-6]
 # test <-  test$Item001[-2,]
