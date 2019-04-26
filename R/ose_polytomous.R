@@ -42,12 +42,12 @@ pgpcm <- function(theta, a, b, k, D){
   K <- length(b)
   G <- rep(1,K+1)
   for(v in 1:K) G[v+1] <- exp(sum(D*a*(theta-b[1:v])))
-  p <- G[k+1]/sum(G)
+  p <- G[k]/sum(G) # k is start from 1 not 0
   p
 }
 
 # Obserbed score distribution function
-obs_sub <- function(para, theta, min_category, model){
+obs_sub <- function(para, theta, min_category, model, D){
   J <- length(para) # the number of items
   N <- length(unlist(para)) # maximum total score()
   K <- unlist(purrr::map(para, function(x){length(x)}))
@@ -63,15 +63,15 @@ obs_sub <- function(para, theta, min_category, model){
   }
   # item 1, special routine.
   prb <- rep(0, K[1]) # too short vector still at tis point
-  for(k in 1:K[1]) prb[k] <- pgrm(theta, para[[1]][1], para[[1]][-1], k)
+  for(k in 1:K[1]) prb[k] <- pf(theta, para[[1]][1], para[[1]][-1], k, D)
   # after item 2
   for(j in 2:J){
     maxrr <- j:sum(K[1:j]) - j + 1
     f0 <- prb
     prb <- numeric(length(maxrr)) # refresh
     for(k in 1:K[j]){
-      p <- pgrm(theta, para[[j]][1], para[[j]][-1], k)
-      # cat(tmp+k, "\n", f0, "\n", p, "\n")
+      p <- pf(theta, para[[j]][1], para[[j]][-1], k, D)
+      # cat(f0, "\n", p, "\n")
       prb <- prb + c(rep(0,k-1), c(f0 * p), rep(0,K[j]-k))
       # cat(prb, "!!!\n", c(rep(0,k-1), c(f0 * p), rep(0,K[j]-k)), "|||\n")
     }
@@ -79,12 +79,12 @@ obs_sub <- function(para, theta, min_category, model){
   prb
 }
 
-obs_equating <- function(para, theta, weight = NULL, min_category = 1){
+obs_equating <- function(para, theta, weight = NULL, model = "GRM", min_category = 1, D = 1.0){
   # theta's weight check
   if(is.null(weight)) weight <- rep(1, length(theta)) # uniform dist
   # parameterfile check
-  if(!is.list(para))
-  prb_matrix <- apply(matrix(theta), 1, obs_sub, para = para, min_category = min_category)
+  if(!is.list(para)){}
+  prb_matrix <- apply(matrix(theta), 1, obs_sub, para = para, min_category = min_category, D = D, model = model)
   prb <- prb_matrix %*% weight
   J <- length(para) # the number of items
   K <- unlist(purrr::map(para, function(x){length(x)}))
@@ -96,5 +96,6 @@ obs_equating <- function(para, theta, weight = NULL, min_category = 1){
 # validation
 theta <- seq(-4, 4, length.out = 31)
 weight <- dnorm(theta)/sum(dnorm(theta))
-test <- obs_equating(para, theta = theta, weight = weight, min_category = 1)
+obs_equating(para, theta = theta, weight = weight, min_category = 0, model = "GRM")
 
+pgpcm(0, 1, c(-1,1,-0.5), 0, 1.0)
