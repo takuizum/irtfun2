@@ -497,8 +497,6 @@ estheta <- function(xall, param, est="EAP", nofrands = 10, method = "NR", file =
     c <- param[,3]
   }
 
-
-
   # Number of Subjects"
   n <- nrow(x.all)
   ng <- numeric(G)

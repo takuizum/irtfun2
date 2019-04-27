@@ -1,22 +1,10 @@
 # observed score equating
 
-para <- list(j1 = c(1.197, -1.906, 0.103, 1.713),
-              j2 = c(1.029, -2.094, -0.208, 2.020),
-              j3 = c(1.627, -2.335, -1.481, -0.803, -0.197, 0.551, 1.670)
-              )
-
-para <- list(j1 = c(1.197, -1.906, 0.103, 1.713),
-             j2 = c(1.029, -2.094, -0.208, 2.020),
-             j3 = c(1.627, -2.335, -1.481)
-)
-para <- list(j1 = c(1.197, -1.906),
-             j2 = c(1.029, -2.094),
-             j3 = c(1.627, -2.335),
-             j4 = c(1.223,  2.456),
-             j5 = c(1.223,  2.456)
-)
+# packages to need to install (without library)
+installed.packages(c("tibble", "purrr"))
 
 # Define pgrm function
+# graded response model
 pgrm <- function(theta, a, b, k, D){
   K <- length(b) + 1
   if(k == K){
@@ -38,6 +26,7 @@ pgrm <- function(theta, a, b, k, D){
   p0 - p1 # probability observed category k response
 }
 
+# generalized partial credit model
 pgpcm <- function(theta, a, b, k, D){
   K <- length(b)
   G <- rep(1,K+1)
@@ -46,10 +35,9 @@ pgpcm <- function(theta, a, b, k, D){
   p
 }
 
-# Obserbed score distribution function
+# Obserbed score distribution function (sub routine assigned for apply function)
 obs_sub <- function(para, theta, min_category, model, D){
   J <- length(para) # the number of items
-  N <- length(unlist(para)) # maximum total score()
   K <- unlist(purrr::map(para, function(x){length(x)}))
   # model selection
   if(model == "GRM"){
@@ -57,9 +45,10 @@ obs_sub <- function(para, theta, min_category, model, D){
   } else if(model == "GPCM"){
     pf <- pgpcm
   } else if(model == "NRM"){
-    pf <- NULL
+    stop("Error in model definition. 'GRM' or 'GPCM' is only available now.")
+    # pf <- NULL
   } else {
-    stop("Error in model definition. 'GRM' is only available now.")
+    stop("Error in model definition. 'GRM' or 'GPCM' is only available now.")
   }
   # item 1, special routine.
   prb <- rep(0, K[1]) # too short vector still at tis point
@@ -71,9 +60,9 @@ obs_sub <- function(para, theta, min_category, model, D){
     prb <- numeric(length(maxrr)) # refresh
     for(k in 1:K[j]){
       p <- pf(theta, para[[j]][1], para[[j]][-1], k, D)
-      # cat(f0, "\n", p, "\n")
+      # cat(f0, "\n", p, "\n") # for debugging
       prb <- prb + c(rep(0,k-1), c(f0 * p), rep(0,K[j]-k))
-      # cat(prb, "!!!\n", c(rep(0,k-1), c(f0 * p), rep(0,K[j]-k)), "|||\n")
+      # cat(prb, "!!!\n", c(rep(0,k-1), c(f0 * p), rep(0,K[j]-k)), "|||\n") # for debugging
     }
   }
   prb
@@ -81,9 +70,9 @@ obs_sub <- function(para, theta, min_category, model, D){
 
 obs_equating <- function(para, theta, weight = NULL, model = "GRM", min_category = 1, D = 1.0){
   # theta's weight check
-  if(is.null(weight)) weight <- rep(1, length(theta)) # uniform dist
+  if(is.null(weight)) weight <- rep(1, length(theta))/length(theta) # uniform dist
   # parameterfile check
-  if(!is.list(para)){}
+  # if(!is.list(para)){}
   prb_matrix <- apply(matrix(theta), 1, obs_sub, para = para, min_category = min_category, D = D, model = model)
   prb <- prb_matrix %*% weight
   J <- length(para) # the number of items
@@ -93,9 +82,33 @@ obs_equating <- function(para, theta, weight = NULL, model = "GRM", min_category
 }
 
 
-# validation
-theta <- seq(-4, 4, length.out = 31)
-weight <- dnorm(theta)/sum(dnorm(theta))
-obs_equating(para, theta = theta, weight = weight, min_category = 0, model = "GRM")
+# validation----
 
-pgpcm(0, 1, c(-1,1,-0.5), 0, 1.0)
+# # GRM parameters
+# para <- list(j1 = c(1.197, -1.906, 0.103, 1.713),
+#              j2 = c(1.029, -2.094, -0.208, 2.020),
+#              j3 = c(1.627, -2.335, -1.481, -0.803, -0.197, 0.551, 1.670)
+# )
+#
+# para <- list(j1 = c(1.197, -1.906, 0.103, 1.713),
+#              j2 = c(1.029, -2.094, -0.208, 2.020),
+#              j3 = c(1.627, -2.335, -1.481)
+# )
+# dichotomous parameter
+para <- list(j1 = c(1.197, -1.906),
+             j2 = c(1.029, -2.094),
+             j3 = c(1.627, -2.335),
+             j4 = c(1.223,  2.456),
+             j5 = c(1.223,  2.456)
+)
+
+# simulation data
+theta <- seq(-4, 4, length.out = 31)
+# weight <- dnorm(theta)/sum(dnorm(theta))
+
+# polytomous observed score distribution
+obs_equating(para, theta = theta, min_category = 0, model = "GRM")
+
+# dichotomous observed score distribution
+obs1 <- obscore_dist(theta, c(1.197, 1.029, 1.627, 1.223, 1.223), c(-1.906, -2.094, -2.335, 2.456, 2.456), c(0,0,0,0,0), 1.0)
+table(obs1)/length(obs1)
