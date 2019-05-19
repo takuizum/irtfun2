@@ -229,7 +229,7 @@ LLgirt_apply <- function(theta, phi, u, a, b, D){
   mapply(FUN = LLgirt2, theta, phi, MoreArgs = list(u = u, a = a, b = b, D = D), SIMPLIFY = T) %>% as.vector
 }
 tibble(theta = seq(-4, 4, length.out = 31) %>% rep(31), phi = apply(matrix(seq(0, 4, length.out = 31)), 1, rep, 31) %>% as.vector) %>%
-  mutate(LL = LLgirt_apply(theta = theta, phi = phi, u = dat[475,-1], a = fit$item$a, b = fit$item$b, D = 1.702)) %>%
+  mutate(LL = LLgirt_apply(theta = theta, phi = phi, u = dat[3,-1], a = fit$item$a, b = fit$item$b, D = 1.702)) %>%
   ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
 
 test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
