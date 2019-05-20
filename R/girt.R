@@ -170,10 +170,10 @@ dgbeta <- function (x, paramab, rangex){
 #'
 #' @export
 #'
-estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="Fisher_Scoring", th_dist="normal", rm_list=NULL,
+estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.0, Ntheta=31, Nphi=10,  method="Fisher_Scoring", th_dist="normal", rm_list=NULL,
                    phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0.01, max_ph=2, paramab=c(1,4),
                    mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=1e-6, eDIST=1e-4, maxiter_em=100,
-                   print=0, esteap=FALSE, estdist=FALSE){
+                   print=0, esteap=FALSE, estdist=FALSE, initial = NULL){
 
   if(!(method %in% c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN","Brent","Fisher_Scoring"))) stop("argument input of `method` is improper string!!")
 
@@ -225,13 +225,17 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
   BY <- BY %>% rep.int(times=ng) %>% matrix(ncol=ng)
   #
   # initial value
-  D <- 1.702
-  r <- cor(rowSums(X, na.rm = T),X, use = "pair") %>% as.numeric()
-  pass <- colMeans(X, na.rm = T)
-  a0 <- D*r/sqrt(1-r^2)
-  names(a0) <- Item
-  b0 <- -log(pass/(1-pass))
-  init <- t0 <- t1 <- data.frame(a=a0,b=b0)
+  if(is.null(initial)){
+    r <- cor(rowSums(X, na.rm = T),X, use = "pair") %>% as.numeric()
+    pass <- colMeans(X, na.rm = T)
+    a0 <- D*r/sqrt(1-r^2)
+    names(a0) <- Item
+    b0 <- -log(pass/(1-pass))
+    init <- t0 <- t1 <- data.frame(a=a0,b=b0)
+  } else {
+    init <- t0 <- t1 <- data.frame(a=initial$a,b=initial$b)
+  }
+
 
   # remove selected item
   if(!is.null(rm_list)){
@@ -300,7 +304,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
     #cat(t,"time EM cycle NOW\n")
 
     # E step
-    Estep <- Estep_girt_mg(X,a0,b0,Xq,AX,Yr,BY,D=1.702,
+    Estep <- Estep_girt_mg(X,a0,b0,Xq,AX,Yr,BY,D=D,
                            group=group, ind=ind, resp=resp, MLL=mll_history)
 
     mll <- Estep$MLL[t+1]
@@ -335,12 +339,12 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
       # gradient
       if(method != "Fisher_Scoring"){
         res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j_g, gr=gr_j_g, control = list(fnscale = -1),
-                     r=rqr, N=Nqr, X=X_long, Y=Y_long, D=1.702, method = method)
+                     r=rqr, N=Nqr, X=X_long, Y=Y_long, D=D, method = method)
         t1[j,] <- res$par
       }else{
         # Fisher scoring
-        gr <- grj_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
-        FI <- Ij_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=1.702)
+        gr <- grj_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
+        FI <- Ij_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
         # solve
         t1[j,] <- t0[j,] + solve(FI)%*%gr
       }
@@ -443,7 +447,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
   }
 
   # last E step
-  Estep <- Estep_girt_mg(X,a1,b1,Xq,AX,Yr,BY,D=1.702,
+  Estep <- Estep_girt_mg(X,a1,b1,Xq,AX,Yr,BY,D=D,
                          group=group, ind=ind, resp=resp, MLL=mll_history)
 
   mll <- Estep$MLL[t+1]
@@ -473,7 +477,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
     Nqr <- Njqr_long$prob[Njqr_long$j==j]
     rqr <- rjqr_long$prob[rjqr_long$j==j]
     # Fisher score matrix
-    FI <- Ij_g(rqr, Nqr, X_long, Y_long, t1[j,1], t1[j,2], D=1.702)
+    FI <- Ij_g(rqr, Nqr, X_long, Y_long, t1[j,1], t1[j,2], D=D)
     # solve
     SE[j,] <- sqrt(diag(solve(FI)))
   }
@@ -527,7 +531,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
       #cat(t,"time EM cycle NOW\n")
 
       # E step
-      Estep <- Estep_girt_mg(X,t1[,1],t1[,2],Xq,UX,Yr,BY,D=1.702,
+      Estep <- Estep_girt_mg(X,t1[,1],t1[,2],Xq,UX,Yr,BY,D=D,
                              group=group, ind=ind, resp=resp, MLL=mll_history2)
 
       mll <- Estep$MLL[t+1]
@@ -594,7 +598,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, Ntheta=31, Nphi=10,  method="F
       #cat(t,"time EM cycle NOW\n")
 
       # E step
-      Estep <- Estep_girt_mg(X,t1[,1],t1[,2],Xq,AX,Yr,UY,D=1.702,
+      Estep <- Estep_girt_mg(X,t1[,1],t1[,2],Xq,AX,Yr,UY,D=D,
                              group=group, ind=ind, resp=resp, MLL=mll_history3)
 
       mll <- Estep$MLL[t+1]
