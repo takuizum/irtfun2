@@ -337,12 +337,15 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.702, Ntheta=31, Nphi=10,
     a0 <- t1$a
     b0 <- t1$b
     eM <- 0.001
+    maxiter_M <- 10
+    z <- 0
     for(j in 1:nj){
       if(model[j]=="NONE") next
       convM <- TRUE
       Nqr <- Njqr_long$prob[Njqr_long$j==j]
       rqr <- rjqr_long$prob[rjqr_long$j==j]
       while(convM){
+        z <- z + 1
         # gradient
         if(method != "Fisher_Scoring"){
           res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j_g, gr=gr_j_g, control = list(fnscale = -1),
@@ -356,7 +359,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.702, Ntheta=31, Nphi=10,
           t1[j,] <- t0[j,] + solve(FI)%*%gr
         }
         # conv check
-        if(all(abs(t1[j,] - t0[j,]) < eM)) convM <- FALSE
+        if(all(abs(t1[j,] - t0[j,]) < eM) || z == maxiter_M) convM <- FALSE
         t0[j,] <- t1[j,]
       } # end of while
     } # end of j
