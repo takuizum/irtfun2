@@ -236,6 +236,8 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.702, Ntheta=31, Nphi=10,
     init <- t0 <- t1 <- data.frame(a=a0,b=b0)
   } else {
     init <- t0 <- t1 <- data.frame(a=initial$a,b=initial$b)
+    a0 <- init$a
+    b0 <- init$b
   }
 
 
