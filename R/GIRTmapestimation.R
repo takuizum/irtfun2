@@ -2,6 +2,44 @@
 
 
 #----functions----
+# thetaを固定した時のphiの尤度関数----
+# Maximum Likelihood
+LLG <- function(u, theta, phi, a, b, D){
+  z <- D * a / (sqrt(1 + phi^2*a^2)) * (theta - b)
+  p <- 1/(1 + exp(-z))
+  sum(u * log(p) + (1-u) * log(1-p), na.rm = T)
+}
+# Maximau a posteriori(prior is turncated normal distribution)
+BLLG <- function(u, theta, phi, a, b, D, mode, sigma){
+  z <- D * a / (sqrt(1 + phi^2*a^2)) * (theta - b)
+  p <- 1/(1 + exp(-z))
+  sum(u * log(p) + (1-u) * log(1-p), na.rm = T) + log(dnorm(phi, mean = mode, sd = sigma))
+}
+
+# for apply version
+LLG_apply <- function(dat, a, b, D){
+  theta <- dat[1]
+  # phi <- dat[2]
+  u <- dat[c(-1,-2)]
+  opt <- optimise(LLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, maximum = T)
+  opt$maximum
+}
+# for apply version
+BLLG_apply <- function(dat, a, b, D, mode, sigma = 1){
+  theta <- dat[1]
+  # phi <- dat[2]
+  u <- dat[c(-1,-2)]
+  opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, sigma = sigma, maximum = T)
+  opt$maximum
+}
+# phi penalized
+BLLG_apply2 <- function(dat, a, b, D, mode, sigma){
+  theta <- dat[1]
+  mode <- abs(dat[2])
+  u <- dat[c(-1,-2)]
+  opt <- optimise(BLLG, interval = c(0.001, 5), u = u, theta = theta, a = a, b = b, D = D, mode = mode, sigma = sigma, maximum = T)
+  opt$maximum
+}
 # theta and phi joint maximum likelihood (optimise) ----
 # optim関数を使って，二変数最適化をする。
 LLgirt <- function(para, u, a, b, D){
@@ -74,17 +112,17 @@ LLG_visual <- function(u, a, b, theta, phi, D){
 BLLG_visual <- function(u, a, b, theta, phi, D, mode){
   apply(matrix(phi), 1, BLLG, u = u, theta = theta, a = a, b = b, D = D, mode)
 }
-# test
-LLG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-gr1 <- fpdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-He1 <- spdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-Fi1 <- fiG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-
-1 - gr1/He1
-1 + gr1/Fi1
-
-LLG_visual(dat[1, -1], fit$item$a, fit$item$b, fit$person$theta[1], c(0.1, 1, 2, 3), D = 1.702)
-
+# # test
+# LLG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+# gr1 <- fpdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+# He1 <- spdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+# Fi1 <- fiG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+#
+# 1 - gr1/He1
+# 1 + gr1/Fi1
+#
+# LLG_visual(dat[1, -1], fit$item$a, fit$item$b, fit$person$theta[1], c(0.1, 1, 2, 3), D = 1.702)
+#
 
 # ECI 関数----
 ECI <- function(dat, a, b, D = 1.702){
@@ -218,7 +256,7 @@ estGtheta <- function(xall, param, IDc = 1, fc = 2, gc = 2, est = "MAP", method 
 }
 
 
-map2 <- estGtheta(dat, param = fit$item, fc = 2, gc = 0, est = "MAP", method = "BFGS")
+# map2 <- estGtheta(dat, param = fit$item, fc = 2, gc = 0, est = "MAP", method = "BFGS")
 
 # for graph
 LLgirt2 <- function(theta, phi, u, a, b, D){
@@ -228,9 +266,9 @@ LLgirt2 <- function(theta, phi, u, a, b, D){
 LLgirt_apply <- function(theta, phi, u, a, b, D){
   mapply(FUN = LLgirt2, theta, phi, MoreArgs = list(u = u, a = a, b = b, D = D), SIMPLIFY = T) %>% as.vector
 }
-tibble(theta = seq(-4, 4, length.out = 31) %>% rep(31), phi = apply(matrix(seq(0, 4, length.out = 31)), 1, rep, 31) %>% as.vector) %>%
-  mutate(LL = LLgirt_apply(theta = theta, phi = phi, u = dat[3,-1], a = fit$item$a, b = fit$item$b, D = 1.702)) %>%
-  ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
-
-test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
-test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_raster(aes(fill = LL), hjust = 0, vjust = 0, interpolate = F)
+# tibble(theta = seq(-4, 4, length.out = 31) %>% rep(31), phi = apply(matrix(seq(0, 4, length.out = 31)), 1, rep, 31) %>% as.vector) %>%
+#   mutate(LL = LLgirt_apply(theta = theta, phi = phi, u = dat[3,-1], a = fit$item$a, b = fit$item$b, D = 1.702)) %>%
+#   ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
+#
+# test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
+# test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_raster(aes(fill = LL), hjust = 0, vjust = 0, interpolate = F)
