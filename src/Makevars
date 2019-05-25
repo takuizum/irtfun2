@@ -2,4 +2,3 @@
 CXX_STD = CXX11
 #PKG_CPPFLAGS=-DSTRICT_R_HEADERS -I/usr/local/include
 #PKG_LIBS=-L/usr/local/lib -Wl,-rpath,/usr/local/lib -irtfun2
-
