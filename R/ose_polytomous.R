@@ -1,7 +1,6 @@
 # observed score equating
 
 # packages to need to install (without library)
-installed.packages(c("tibble", "purrr"))
 
 # Define pgrm function
 # graded response model
@@ -95,20 +94,20 @@ obs_equating <- function(para, theta, weight = NULL, model = "GRM", min_category
 #              j3 = c(1.627, -2.335, -1.481)
 # )
 # dichotomous parameter
-para <- list(j1 = c(1.197, -1.906),
-             j2 = c(1.029, -2.094),
-             j3 = c(1.627, -2.335),
-             j4 = c(1.223,  2.456),
-             j5 = c(1.223,  2.456)
-)
+# para <- list(j1 = c(1.197, -1.906),
+#              j2 = c(1.029, -2.094),
+#              j3 = c(1.627, -2.335),
+#              j4 = c(1.223,  2.456),
+#              j5 = c(1.223,  2.456)
+# )
 
 # simulation data
-theta <- seq(-4, 4, length.out = 31)
+# theta <- seq(-4, 4, length.out = 31)
 # weight <- dnorm(theta)/sum(dnorm(theta))
 
 # polytomous observed score distribution
-obs_equating(para, theta = theta, min_category = 0, model = "GRM")
+# obs_equating(para, theta = theta, min_category = 0, model = "GRM")
 
 # dichotomous observed score distribution
-obs1 <- obscore_dist(theta, c(1.197, 1.029, 1.627, 1.223, 1.223), c(-1.906, -2.094, -2.335, 2.456, 2.456), c(0,0,0,0,0), 1.0)
-table(obs1)/length(obs1)
+# obs1 <- obscore_dist(theta, c(1.197, 1.029, 1.627, 1.223, 1.223), c(-1.906, -2.094, -2.335, 2.456, 2.456), c(0,0,0,0,0), 1.0)
+# table(obs1)/length(obs1)
