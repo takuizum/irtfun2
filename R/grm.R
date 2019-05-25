@@ -297,7 +297,7 @@ ext_par <- function(x){x["par",]} # extract only item parameter
 # test <- est_para_17[[1]][-6] %>% map(pluck, ext_par) # map & pluck
 modif_mirt_para <- function(para, n_of_items){
   tmp <- para[-(1+n_of_items)]
-  tmp %>% map(pluck, ext_par)
+  tmp %>% purrr::map(purrr::pluck, ext_par)
 }
 
 # # optimize
