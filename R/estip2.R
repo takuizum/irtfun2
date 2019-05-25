@@ -378,98 +378,109 @@ estip2 <- function(x, fc=3, IDc=1, Gc=NULL, bg=1, Ntheta=31, D=1.702, method="Fi
     # penalty
     penalty <- en_penalty(a0, alpha = alpha, lambda = lambda)
     for(j in 1:nj){
-      if(model[j]=="NONE") next
-      #cat("Optimising item ",j,"\r")
-      # Let Nqr tidyr for FS
-      N <- Njm[j,]
-      rr <- rjm[j,]
-      # normal M step
-      if(max_func == "N"){
-        if(method != "Fisher_Scoring"){
-          #stop("This option dose not work now!!")
-          if(model[j]=="1PL"){
-            sol <- optimise(Elnk_jm_1pl, interval = c(min_th,max_th)+t0$b[j], maximum = T,
-                            r=rr, N=N, X=Xq, D=D, fix_a=fix_a)
-            t1[j,2] <- sol$maximum
+      convM <- TRUE
+      eM <- 0.001
+      while(convM){
+        if(model[j]=="NONE") next
+        #cat("Optimising item ",j,"\r")
+        # Let Nqr tidyr for FS
+        N <- Njm[j,]
+        rr <- rjm[j,]
+        # normal M step
+        if(max_func == "N"){
+          if(method != "Fisher_Scoring"){
+            #stop("This option dose not work now!!")
+            if(model[j]=="1PL"){
+              sol <- optimise(Elnk_jm_1pl, interval = c(min_th,max_th)+t0$b[j], maximum = T,
+                              r=rr, N=N, X=Xq, D=D, fix_a=fix_a)
+              t1[j,2] <- sol$maximum
+            }
+            if(model[j]=="2PL"){
+              sol <- optim(par=c(t0$a[j],t0$b[j]), fn=Elnk_jm, gr=gr_jm, control = list(fnscale = -1),
+                           r=rr, N=N, X=Xq, D=D, method = method)
+              t1[j,c(1,2)] <- sol$par
+            }
+            if(model[j]=="3PL"){
+              sol <- optim(par=c(t0$a[j],t0$b[j],t0$c[j]), fn=Elnk_jm, gr=gr_jm, control = list(fnscale = -1),
+                           r=rr, N=N, X=Xq, D=D, method = method)
+              t1[j,c(1,2,3)] <- sol$par
+            }
+          }else{
+            # Fisher scoring
+            gr <- grjm(rr, N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j])
+            FI <- Ijm(N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j])
+            # solve
+            sol <- solve(FI)%*%gr
+            if(model[j]=="1PL") t1$b[j] <- t0$b[j]+sol
+            if(model[j]=="2PL") t1[j,c(1,2)] <- t0[j,c(1,2)]+sol
+            if(model[j]=="3PL") t1[j,] <- t0[j,]+sol
           }
+        } else if (max_func=="B"){
+          if(method != "Fisher_Scoring"){
+            #stop("This option dose not work now!!")
+            if(model[j]=="1PL"){
+              sol <- optimise(Elnk_jm_1pl_b, interval = c(min_th,max_th)+t0$b[j], maximum = T,
+                              r=rr, N=N, X=Xq, D=D, fix_a=fix_a, mean=mu_b, sd=sigma_b)
+              t1[j,2] <- sol$maximum
+            }
+            if(model[j]=="2PL"){
+              sol <- optim(par=c(t0$a[j],t0$b[j]), fn=Elnk_jm_b, gr=gr_jm_b, control = list(fnscale = -1),
+                           r=rr, N=N, X=Xq, D=D, method = method,
+                           meanlog=mu_a, sdlog=sigma_a, mean=mu_b, sd=sigma_b, shape1=shape1, shape2=shape2)
+              t1[j,c(1,2)] <- sol$par
+            }
+            if(model[j]=="3PL"){
+              sol <- optim(par=c(t0$a[j],t0$b[j],t0$c[j]), fn=Elnk_jm_b, gr=gr_jm_b, control = list(fnscale = -1),
+                           r=rr, N=N, X=Xq, D=D, method = method,
+                           meanlog=mu_a, sdlog=sigma_a, mean=mu_b, sd=sigma_b, shape1=shape1, shape2=shape2)
+              t1[j,c(1,2,3)] <- sol$par
+            }
+          }else{
+            # Fisher scoring
+            gr <- grjm_b(rr, N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j],
+                         meanlog=mu_a, sdlog=sigma_a, mean=mu_b, sd=sigma_b, shape1=shape1, shape2=shape2)
+            FI <- Ijm(N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j])
+            # solve
+            sol <- solve(FI)%*%gr
+            if(model[j]=="1PL") t1$b[j] <- t0$b[j]+sol
+            if(model[j]=="2PL") t1[j,c(1,2)] <- t0[j,c(1,2)]+sol
+            if(model[j]=="3PL") t1[j,] <- t0[j,]+sol
+          }
+        }else if(max_func=="R"){
           if(model[j]=="2PL"){
-            sol <- optim(par=c(t0$a[j],t0$b[j]), fn=Elnk_jm, gr=gr_jm, control = list(fnscale = -1),
-                         r=rr, N=N, X=Xq, D=D, method = method)
+            sol <- optim(par=c(t0$a[j],t0$b[j]), fn=Elnk_jm_r, control = list(fnscale = -1),
+                         r=rr, N=N, X=Xq, D=D, method = method, penalty = penalty)
             t1[j,c(1,2)] <- sol$par
           }
           if(model[j]=="3PL"){
-            sol <- optim(par=c(t0$a[j],t0$b[j],t0$c[j]), fn=Elnk_jm, gr=gr_jm, control = list(fnscale = -1),
-                         r=rr, N=N, X=Xq, D=D, method = method)
+            sol <- optim(par=c(t0$a[j],t0$b[j],t0$c[j]), fn=Elnk_jm_r, control = list(fnscale = -1),
+                         r=rr, N=N, X=Xq, D=D, method = method, penalty = penalty)
             t1[j,c(1,2,3)] <- sol$par
           }
-        }else{
-          # Fisher scoring
-          gr <- grjm(rr, N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j])
-          FI <- Ijm(N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j])
-          # solve
-          sol <- solve(FI)%*%gr
-          if(model[j]=="1PL") t1$b[j] <- t0$b[j]+sol
-          if(model[j]=="2PL") t1[j,c(1,2)] <- t0[j,c(1,2)]+sol
-          if(model[j]=="3PL") t1[j,] <- t0[j,]+sol
         }
-      } else if (max_func=="B"){
-        if(method != "Fisher_Scoring"){
-          #stop("This option dose not work now!!")
-          if(model[j]=="1PL"){
-            sol <- optimise(Elnk_jm_1pl_b, interval = c(min_th,max_th)+t0$b[j], maximum = T,
-                            r=rr, N=N, X=Xq, D=D, fix_a=fix_a, mean=mu_b, sd=sigma_b)
-            t1[j,2] <- sol$maximum
-          }
-          if(model[j]=="2PL"){
-            sol <- optim(par=c(t0$a[j],t0$b[j]), fn=Elnk_jm_b, gr=gr_jm_b, control = list(fnscale = -1),
-                         r=rr, N=N, X=Xq, D=D, method = method,
-                         meanlog=mu_a, sdlog=sigma_a, mean=mu_b, sd=sigma_b, shape1=shape1, shape2=shape2)
-            t1[j,c(1,2)] <- sol$par
-          }
-          if(model[j]=="3PL"){
-            sol <- optim(par=c(t0$a[j],t0$b[j],t0$c[j]), fn=Elnk_jm_b, gr=gr_jm_b, control = list(fnscale = -1),
-                         r=rr, N=N, X=Xq, D=D, method = method,
-                         meanlog=mu_a, sdlog=sigma_a, mean=mu_b, sd=sigma_b, shape1=shape1, shape2=shape2)
-            t1[j,c(1,2,3)] <- sol$par
-          }
-        }else{
-          # Fisher scoring
-          gr <- grjm_b(rr, N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j],
-                       meanlog=mu_a, sdlog=sigma_a, mean=mu_b, sd=sigma_b, shape1=shape1, shape2=shape2)
-          FI <- Ijm(N, Xq, t0$a[j], t0$b[j], t0$c[j], D=D, model=model[j])
-          # solve
-          sol <- solve(FI)%*%gr
-          if(model[j]=="1PL") t1$b[j] <- t0$b[j]+sol
-          if(model[j]=="2PL") t1[j,c(1,2)] <- t0[j,c(1,2)]+sol
-          if(model[j]=="3PL") t1[j,] <- t0[j,]+sol
+
+        # exception handling
+        if(t1$c[j] < 0){
+          warning(paste0("The model of item ",j," was changed to 2PLM"))
+          model[j] <- "2PL"
+          t1[j,1] <- init$a[j]
+          t1[j,2] <- init$b[j]
+          t1[j,3] <- 0
         }
-      }else if(max_func=="R"){
-        if(model[j]=="2PL"){
-          sol <- optim(par=c(t0$a[j],t0$b[j]), fn=Elnk_jm_r, control = list(fnscale = -1),
-                       r=rr, N=N, X=Xq, D=D, method = method, penalty = penalty)
-          t1[j,c(1,2)] <- sol$par
+        if(t1$a[j] < 0){
+          warning(paste0("In ",t," times iteration, Item ",j," was eliminated. 'a' must be positive, but was negative."))
+          model[j] <- "NONE"
+          t1[j,] <- t0[j,]
         }
-        if(model[j]=="3PL"){
-          sol <- optim(par=c(t0$a[j],t0$b[j],t0$c[j]), fn=Elnk_jm_r, control = list(fnscale = -1),
-                       r=rr, N=N, X=Xq, D=D, method = method, penalty = penalty)
-          t1[j,c(1,2,3)] <- sol$par
-        }
+
+        # conv check
+        # cat(max(abs(t1[j,]- t0[j,])), "\r")
+        if(all(abs(t1[j,]- t0[j,]) < eM))
+          convM <- FALSE
+        t0[j,] <- t1[j,]
       }
 
-      # exception handling
-      if(t1$c[j] < 0){
-        warning(paste0("The model of item ",j," was changed to 2PLM"))
-        model[j] <- "2PL"
-        t1[j,1] <- init$a[j]
-        t1[j,2] <- init$b[j]
-        t1[j,3] <- 0
-      }
-      if(t1$a[j] < 0){
-        warning(paste0("In ",t," times iteration, Item ",j," was eliminated. 'a' must be positive, but was negative."))
-        model[j] <- "NONE"
-        t1[j,] <- t0[j,]
-      }
-    }
+    } # end j
 
     # calibration
     # calculate mean and sd

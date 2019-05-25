@@ -19,12 +19,12 @@ gptheta <- function(theta,phi,a,b,D){
 # likelihood
 gL <- function(u,theta,phi,a,b,D){
   p <- gptheta(theta,phi,a,b,D)
-  prod(p^u*(1-p)^(1-u))
+  prod(p^u*(1-p)^(1-u), na.rm = T)
 }
 
 gLL <- function(u,theta,phi,a,b,D){
   p <- gptheta(theta,phi,a,b,D)
-  sum(u*log(p)+(1-u)*log(1-p))
+  sum(u*log(p)+(1-u)*log(1-p), na.rm = T)
 }
 
 #' The density of chi inv dist
@@ -136,6 +136,7 @@ dgbeta <- function (x, paramab, rangex){
 #' @param Gc the grade column.
 #' @param bg a mumber of base grade.
 #' @param IDc the ID column.
+#' @param D scale constant
 #' @param Ntheta the number of the nodes of theta dist.
 #' @param Nphi the number of the nodes of phi dist.
 #' @param method the method of optimiser.  Default is "Fisher_Scoring", but \code{\link[stats]{optim}} function also be able to use.
@@ -157,6 +158,7 @@ dgbeta <- function (x, paramab, rangex){
 #' @param maxiter_em the number of iteration of EM cycle.
 #' @param rm_list a vector of item U want to remove for estimation. NOT list.
 #' @param th_dist a type of theta dist."normal" or "empirical"
+#' @param initial if use specify initial value, set here data.frame.
 #' @param print How much information you want to display? from 1 to 3. The larger, more information is displayed.
 #' @param esteap logical. If \code{TRUE}, estimate subject theta & phi EAP.
 #' @param estdist logical. If \code{TRUE}, estimate population distribution theta & phi.
@@ -170,7 +172,7 @@ dgbeta <- function (x, paramab, rangex){
 #'
 #' @export
 #'
-estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.0, Ntheta=31, Nphi=10,  method="Fisher_Scoring", th_dist="normal", rm_list=NULL,
+estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.702, Ntheta=31, Nphi=10,  method="Fisher_Scoring", th_dist="normal", rm_list=NULL,
                    phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0.01, max_ph=2, paramab=c(1,4),
                    mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=1e-6, eDIST=1e-4, maxiter_em=100,
                    print=0, esteap=FALSE, estdist=FALSE, initial = NULL){
@@ -332,23 +334,30 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.0, Ntheta=31, Nphi=10,  
     t1 <- t0
     a0 <- t1$a
     b0 <- t1$b
+    eM <- 0.001
     for(j in 1:nj){
       if(model[j]=="NONE") next
+      convM <- TRUE
       Nqr <- Njqr_long$prob[Njqr_long$j==j]
       rqr <- rjqr_long$prob[rjqr_long$j==j]
-      # gradient
-      if(method != "Fisher_Scoring"){
-        res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j_g, gr=gr_j_g, control = list(fnscale = -1),
-                     r=rqr, N=Nqr, X=X_long, Y=Y_long, D=D, method = method)
-        t1[j,] <- res$par
-      }else{
-        # Fisher scoring
-        gr <- grj_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
-        FI <- Ij_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
-        # solve
-        t1[j,] <- t0[j,] + solve(FI)%*%gr
-      }
-    }
+      while(convM){
+        # gradient
+        if(method != "Fisher_Scoring"){
+          res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j_g, gr=gr_j_g, control = list(fnscale = -1),
+                       r=rqr, N=Nqr, X=X_long, Y=Y_long, D=D, method = method)
+          t1[j,] <- res$par
+        }else{
+          # Fisher scoring
+          gr <- grj_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
+          FI <- Ij_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
+          # solve
+          t1[j,] <- t0[j,] + solve(FI)%*%gr
+        }
+        # conv check
+        if(all(abs(t1[j,] - t0[j,]) < eM)) convM <- FALSE
+        t0[j,] <- t1[j,]
+      } # end of while
+    } # end of j
 
     # calibration
     # calculate mean and sd
@@ -360,7 +369,7 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.0, Ntheta=31, Nphi=10,  
         dplyr::mutate(J=J, R=R, Q=Q) %>%
         dplyr::filter(J %in% gind)%>%
         dplyr::select(-g) %>%
-        tidyr::spread(key=J, value=prob)%>%
+        tidyr::spread(key=J, value=prob) %>%
         aggregate(by=list(c(1:nq) %>% rep(nr)), FUN=sum) %>%
         dplyr::select(-Group.1, -R, -Q) %>%
         t()
