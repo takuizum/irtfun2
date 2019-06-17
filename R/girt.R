@@ -172,8 +172,8 @@ dgbeta <- function (x, paramab, rangex){
 #'
 #' @export
 #'
-estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.702, Ntheta=31, Nphi=10,  method="Fisher_Scoring", th_dist="normal", rm_list=NULL,
-                   phi_dist = "invchi", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0.01, max_ph=2, paramab=c(1,4),
+estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.702, Ntheta=31, Nphi=10,  method="BFGS", th_dist="normal", rm_list=NULL,
+                   phi_dist = "uniform", v=3, tau=1, mu_ph=0, sigma_ph=0.25, min_ph=0.01, max_ph=2, paramab=c(1,4),
                    mu_th=0, sigma_th=1, min_th=-4, max_th=4, eEM=0.001, eMLL=1e-6, eDIST=1e-4, maxiter_em=100,
                    print=0, esteap=FALSE, estdist=FALSE, initial = NULL){
 
@@ -344,25 +344,25 @@ estGip <- function(x, fc=3, Gc=NULL, bg=1, IDc=1, D = 1.702, Ntheta=31, Nphi=10,
       convM <- TRUE
       Nqr <- Njqr_long$prob[Njqr_long$j==j]
       rqr <- rjqr_long$prob[rjqr_long$j==j]
-      while(convM){
-        z <- z + 1
-        # gradient
-        if(method != "Fisher_Scoring"){
-          res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j_g, gr=gr_j_g, control = list(fnscale = -1),
-                       r=rqr, N=Nqr, X=X_long, Y=Y_long, D=D, method = method)
-          t1[j,] <- res$par
-        }else{
-          # Fisher scoring
-          gr <- grj_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
-          FI <- Ij_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
-          # solve
-          t1[j,] <- t0[j,] + solve(FI)%*%gr
-        }
-        # conv check
-        if(all(abs(t1[j,] - t0[j,]) < eM) || z == maxiter_M) convM <- FALSE
-        t0[j,] <- t1[j,]
-      } # end of while
-    } # end of j
+      if(method != "Fisher_Scoring"){
+        res <- optim(par=c(t0[j,1],t0[j,2]), fn=Elnk_j_g, gr=gr_j_g, control = list(fnscale = -1),
+                     r=rqr, N=Nqr, X=X_long, Y=Y_long, D=D, method = method)
+        t1[j,] <- res$par
+      }else{
+        while(convM){
+          z <- z + 1
+            # gradient
+            # Fisher scoring
+            gr <- grj_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
+            FI <- Ij_g(rqr, Nqr, X_long, Y_long, t0[j,1], t0[j,2], D=D)
+            # solve
+            t1[j,] <- t0[j,] + solve(FI)%*%gr
+            # conv check
+            if(all(abs(t1[j,] - t0[j,]) < eM) || z == maxiter_M) convM <- FALSE
+            t0[j,] <- t1[j,]
+          }
+        } # end of while
+      } # end of j
 
     # calibration
     # calculate mean and sd
