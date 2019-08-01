@@ -26,7 +26,7 @@ pgrm <- function(theta, a, b, k, D){
 }
 
 # generalized partial credit model
-pgpcm <- function(theta, a, b, k, D){
+pgpcm2 <- function(theta, a, b, k, D){
   K <- length(b)
   G <- rep(1,K+1)
   for(v in 1:K) G[v+1] <- exp(sum(D*a*(theta-b[1:v])))
@@ -42,7 +42,7 @@ obs_sub <- function(para, theta, min_category, model, D){
   if(model == "GRM"){
     pf <- pgrm
   } else if(model == "GPCM"){
-    pf <- pgpcm
+    pf <- pgpcm2
   } else if(model == "NRM"){
     stop("Error in model definition. 'GRM' or 'GPCM' is only available now.")
     # pf <- NULL
