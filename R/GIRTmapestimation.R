@@ -248,7 +248,7 @@ estGtheta <- function(xall, param, IDc = 1, fc = 2, gc = 2, est = "MAP", method 
   }
 
   if(est == "MAP"){
-    cat("MAP estimation is buggynow. \n")
+    cat("MAP estimation is buggy now. \n")
     t(apply(x.all, 1, mapG_apply, a = a, b = b, method = method, mu_th = mu_th, sigma_th = sigma_th, mu_ph = mu_ph, sigma_ph = sigma_ph, Hessian = F, D = D))
   } else if(est == "MLE"){
     t(apply(x.all, 1, mlG_apply, a = a, b = b, method = method, Hessian = F, D = D))
