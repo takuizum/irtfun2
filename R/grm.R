@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # GRM analysis tools
 
 # response probability----
@@ -361,7 +360,7 @@ estgrmtheta <- function(dat, para, fc = 2, gc = 0, IDc = 1, D = 1.0, mu = 0, sig
   tibble::tibble(ID = id, GROUP = group, SCORE = rowSums(xall, na.rm = T), MAP = map1)
 }
 # estgrmtheta(resp[[1]][,-1], test, fc = 1, IDc = 0)
-=======
+
 # GRM analysis tools
 
 # response probability----
@@ -724,4 +723,3 @@ estgrmtheta <- function(dat, para, fc = 2, gc = 0, IDc = 1, D = 1.0, mu = 0, sig
   tibble::tibble(ID = id, GROUP = group, SCORE = rowSums(xall, na.rm = T), MAP = map1)
 }
 # estgrmtheta(resp[[1]][,-1], test, fc = 1, IDc = 0)
->>>>>>> 4773e0ca988efeec2a968f8ec7a37ee44cd846dc

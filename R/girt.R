@@ -129,7 +129,7 @@ dgbeta <- function (x, paramab, rangex){
 
 # functionalize
 
-#'Generalized Item Response Theory parameter estimation
+#' Generalized Item Response Theory parameter estimation
 #'
 #' @param x DataFrame.
 #' @param fc the first column.

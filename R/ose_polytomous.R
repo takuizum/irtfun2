@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # observed score equating
 
 # packages to need to install (without library)
@@ -113,7 +112,7 @@ obs_equating(para, theta = theta, min_category = 0, model = "GRM")
 # dichotomous observed score distribution
 obs1 <- obscore_dist(theta, c(1.197, 1.029, 1.627, 1.223, 1.223), c(-1.906, -2.094, -2.335, 2.456, 2.456), c(0,0,0,0,0), 1.0)
 table(obs1)/length(obs1)
-=======
+
 # observed score equating
 
 # packages to need to install (without library)
@@ -227,4 +226,3 @@ obs_equating <- function(para, theta, weight = NULL, model = "GRM", min_category
 # dichotomous observed score distribution
 # obs1 <- obscore_dist(theta, c(1.197, 1.029, 1.627, 1.223, 1.223), c(-1.906, -2.094, -2.335, 2.456, 2.456), c(0,0,0,0,0), 1.0)
 # table(obs1)/length(obs1)
->>>>>>> 4773e0ca988efeec2a968f8ec7a37ee44cd846dc

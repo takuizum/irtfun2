@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # ML and MAP estimate function using optim function
 
 
@@ -76,16 +75,16 @@ BLLG_visual <- function(u, a, b, theta, phi, D, mode){
   apply(matrix(phi), 1, BLLG, u = u, theta = theta, a = a, b = b, D = D, mode)
 }
 # test
-LLG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-gr1 <- fpdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-He1 <- spdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-Fi1 <- fiG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
-
-1 - gr1/He1
-1 + gr1/Fi1
-
-LLG_visual(dat[1, -1], fit$item$a, fit$item$b, fit$person$theta[1], c(0.1, 1, 2, 3), D = 1.702)
-
+# LLG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+# gr1 <- fpdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+# He1 <- spdG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+# Fi1 <- fiG(dat[1, -1], fit$person$theta[1], 1, fit$item$a, fit$item$b, D = 1.702)
+#
+# 1 - gr1/He1
+# 1 + gr1/Fi1
+#
+# LLG_visual(dat[1, -1], fit$item$a, fit$item$b, fit$person$theta[1], c(0.1, 1, 2, 3), D = 1.702)
+#
 
 # ECI 関数----
 ECI <- function(dat, a, b, D = 1.702){
@@ -219,7 +218,7 @@ estGtheta <- function(xall, param, IDc = 1, fc = 2, gc = 2, est = "MAP", method 
 }
 
 
-map2 <- estGtheta(dat, param = fit$item, fc = 2, gc = 0, est = "MAP", method = "BFGS")
+# map2 <- estGtheta(dat, param = fit$item, fc = 2, gc = 0, est = "MAP", method = "BFGS")
 
 # for graph
 LLgirt2 <- function(theta, phi, u, a, b, D){
@@ -229,13 +228,12 @@ LLgirt2 <- function(theta, phi, u, a, b, D){
 LLgirt_apply <- function(theta, phi, u, a, b, D){
   mapply(FUN = LLgirt2, theta, phi, MoreArgs = list(u = u, a = a, b = b, D = D), SIMPLIFY = T) %>% as.vector
 }
-tibble(theta = seq(-4, 4, length.out = 31) %>% rep(31), phi = apply(matrix(seq(0, 4, length.out = 31)), 1, rep, 31) %>% as.vector) %>%
-  mutate(LL = LLgirt_apply(theta = theta, phi = phi, u = dat[475,-1], a = fit$item$a, b = fit$item$b, D = 1.702)) %>%
-  ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
-
-test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
-test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_raster(aes(fill = LL), hjust = 0, vjust = 0, interpolate = F)
-=======
+# tibble(theta = seq(-4, 4, length.out = 31) %>% rep(31), phi = apply(matrix(seq(0, 4, length.out = 31)), 1, rep, 31) %>% as.vector) %>%
+#   mutate(LL = LLgirt_apply(theta = theta, phi = phi, u = dat[475,-1], a = fit$item$a, b = fit$item$b, D = 1.702)) %>%
+#   ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
+#
+# test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
+# test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_raster(aes(fill = LL), hjust = 0, vjust = 0, interpolate = F)
 # ML and MAP estimate function using optim function
 
 
@@ -510,4 +508,3 @@ LLgirt_apply <- function(theta, phi, u, a, b, D){
 #
 # test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_contour(bins = 200)
 # test %>% ggplot(aes(x = theta, y = phi, z = LL)) + geom_raster(aes(fill = LL), hjust = 0, vjust = 0, interpolate = F)
->>>>>>> 4773e0ca988efeec2a968f8ec7a37ee44cd846dc
