@@ -174,7 +174,17 @@ S3 <- function(theta, a, b,c,D){
   sqrt(sum(p * (1 - p) * (log(p/(1-p)))^2,na.rm = T))
 }
 
-# person fit index: z_3 statistics
+#' Person fit index: z_3 statistics
+#'
+#' This function is a provisional version so will be update soon.
+#' @param dat matrix which has theta estimates in the first column and the response data in the other.
+#' @param a a vector item discrimination parameter.
+#' @param b vector, item difficulty parameter.
+#' @param c a vector. lower asymptote parameter.
+#' @param D a scale constant.
+#' @return a matrix of z3 values
+#' @export
+#'
 pfit <- function(dat,a,b,c,D){
   #decompose dat
   theta <- dat[1]
