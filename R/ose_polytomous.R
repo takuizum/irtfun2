@@ -1,7 +1,7 @@
 # observed score equating
 
 # packages to need to install (without library)
-installed.packages(c("tibble", "purrr"))
+# installed.packages(c("tibble", "purrr"))
 
 # Define pgrm function
 # graded response model
