@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .Rproj.user
 .Rhistory
 .RData
@@ -5,3 +6,8 @@
 src/*.o
 src/*.so
 src/*.dll
+=======
+.Rproj.user
+.Rhistory
+.RData
+>>>>>>> 4773e0ca988efeec2a968f8ec7a37ee44cd846dc
