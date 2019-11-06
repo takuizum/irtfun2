@@ -189,6 +189,10 @@ pfit <- function(dat,a,b,c,D){
   #decompose dat
   theta <- dat[1]
   xi <- dat[-1]
+  a <- a[!is.na(xi)]
+  b <- b[!is.na(xi)]
+  c <- c[!is.na(xi)]
+  xi <- xi[!is.na(xi)]
   (LL(xi, theta, a, b,c,D) - E3(theta, a, b,c,D)) / S3(theta, a, b,c,D)
 }
 
