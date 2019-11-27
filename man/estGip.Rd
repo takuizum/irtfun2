@@ -4,14 +4,39 @@
 \alias{estGip}
 \title{Generalized Item Response Theory parameter estimation}
 \usage{
-estGip(x, fc = 3, Gc = NULL, bg = 1, IDc = 1, D = 1.702,
-  Ntheta = 31, Nphi = 10, method = "BFGS", th_dist = "normal",
-  rm_list = NULL, phi_dist = "uniform", v = 3, tau = 1,
-  mu_ph = 0, sigma_ph = 0.25, min_ph = 0.01, max_ph = 2,
-  paramab = c(1, 4), mu_th = 0, sigma_th = 1, min_th = -4,
-  max_th = 4, eEM = 0.001, eMLL = 1e-06, eDIST = 1e-04,
-  maxiter_em = 100, print = 0, esteap = FALSE, estdist = FALSE,
-  initial = NULL)
+estGip(
+  x,
+  fc = 3,
+  Gc = NULL,
+  bg = 1,
+  IDc = 1,
+  D = 1.702,
+  Ntheta = 31,
+  Nphi = 10,
+  method = "BFGS",
+  th_dist = "normal",
+  rm_list = NULL,
+  phi_dist = "uniform",
+  v = 3,
+  tau = 1,
+  mu_ph = 0,
+  sigma_ph = 0.25,
+  min_ph = 0.01,
+  max_ph = 2,
+  paramab = c(1, 4),
+  mu_th = 0,
+  sigma_th = 1,
+  min_th = -4,
+  max_th = 4,
+  eEM = 0.001,
+  eMLL = 1e-06,
+  eDIST = 1e-04,
+  maxiter_em = 100,
+  print = 0,
+  esteap = FALSE,
+  estdist = FALSE,
+  initial = NULL
+)
 }
 \arguments{
 \item{x}{DataFrame.}

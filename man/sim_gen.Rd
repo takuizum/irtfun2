@@ -4,8 +4,17 @@
 \alias{sim_gen}
 \title{Generate simulation binary data in IRT.}
 \usage{
-sim_gen(theta, a = NULL, b = NULL, c = NULL, phi = NULL,
-  para = NULL, item = "A", power = 0, D = 1.702)
+sim_gen(
+  theta,
+  a = NULL,
+  b = NULL,
+  c = NULL,
+  phi = NULL,
+  para = NULL,
+  item = "A",
+  power = 0,
+  D = 1.702
+)
 }
 \arguments{
 \item{theta}{theta vector}

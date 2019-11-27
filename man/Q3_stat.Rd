@@ -4,8 +4,15 @@
 \alias{Q3_stat}
 \title{Item Fit indexes 'Q3'statistics. Diagnosis Local Item Independence(LID)}
 \usage{
-Q3_stat(x, para, theta, fc = 3, D = 1.702,
-  use = "pairwise.complete.obs", abs_value = 0.2)
+Q3_stat(
+  x,
+  para,
+  theta,
+  fc = 3,
+  D = 1.702,
+  use = "pairwise.complete.obs",
+  abs_value = 0.2
+)
 }
 \arguments{
 \item{x}{data.frame of item response data.}

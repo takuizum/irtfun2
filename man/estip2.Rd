@@ -4,13 +4,38 @@
 \alias{estip2}
 \title{Unidimensional Item Response Theory parameter estimation}
 \usage{
-estip2(x, fc = 3, IDc = 1, Gc = NULL, bg = 1, Ntheta = 31,
-  D = 1.702, method = "Fisher_Scoring", model = "2PL",
-  max_func = "N", rm_list = NULL, mu_th = 0, sigma_th = 1,
-  min_th = -4, max_th = 4, eEM = 0.001, eMLL = 0.001,
-  maxiter_em = 100, th_dist = "normal", fix_a = 1, mu_a = 0,
-  sigma_a = 1, mu_b = 0, sigma_b = 1, mu_c = 0, sigma_c = 1,
-  w_c = 1, alpha = 0.5, lambda = 1, print = 0)
+estip2(
+  x,
+  fc = 3,
+  IDc = 1,
+  Gc = NULL,
+  bg = 1,
+  Ntheta = 31,
+  D = 1.702,
+  method = "Fisher_Scoring",
+  model = "2PL",
+  max_func = "N",
+  rm_list = NULL,
+  mu_th = 0,
+  sigma_th = 1,
+  min_th = -4,
+  max_th = 4,
+  eEM = 0.001,
+  eMLL = 0.001,
+  maxiter_em = 100,
+  th_dist = "normal",
+  fix_a = 1,
+  mu_a = 0,
+  sigma_a = 1,
+  mu_b = 0,
+  sigma_b = 1,
+  mu_c = 0,
+  sigma_c = 1,
+  w_c = 1,
+  alpha = 0.5,
+  lambda = 1,
+  print = 0
+)
 }
 \arguments{
 \item{x}{DataFrame.}

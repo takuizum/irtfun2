@@ -4,8 +4,22 @@
 \alias{theta_pv}
 \title{Sampling plausible values(PVs) based on rejection sampling.}
 \usage{
-theta_pv(x, nofrands, eap_apply, const_apply, map_apply, n, maxtheta,
-  mintheta, a, b, c, D, mu, sigma)
+theta_pv(
+  x,
+  nofrands,
+  eap_apply,
+  const_apply,
+  map_apply,
+  n,
+  maxtheta,
+  mintheta,
+  a,
+  b,
+  c,
+  D,
+  mu,
+  sigma
+)
 }
 \arguments{
 \item{x}{response data}

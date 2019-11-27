@@ -4,8 +4,17 @@
 \alias{CEquating}
 \title{Equating item parameter only sampled by common item design. FOR ONLY 2PLM}
 \usage{
-CEquating(T_para, F_para, method = "SL", D = 1.702, N = 31,
-  mintheta = -6, maxtheta = 6, Change = "to", Easy = F)
+CEquating(
+  T_para,
+  F_para,
+  method = "SL",
+  D = 1.702,
+  N = 31,
+  mintheta = -6,
+  maxtheta = 6,
+  Change = "to",
+  Easy = F
+)
 }
 \arguments{
 \item{T_para}{a parameter data.frame equating TO, base item scale.}

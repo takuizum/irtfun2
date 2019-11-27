@@ -4,15 +4,44 @@
 \alias{estip}
 \title{Estimate item parameter for binary{0,1} response data.}
 \usage{
-estip(x, model0 = as.character(c("2PL")), N = 31L, bg0 = 1L,
-  fc0 = 2L, ng = 1L, gc0 = 2L, eMLL = 1e-06, eEM = 1e-04,
-  eM = 0.001, emu = 0.001, esd = 0.001, D = 1.702, ic = 1/5,
-  max = 6, min = -6, mu = 0, sigma = 1, Bayes = 0L,
-  method = "Fisher_Scoring", mu_a = 0, sigma_a = 1, mu_b = 0,
-  sigma_b = 2, mu_c = 1/5, w_c = 5, fix = 1L, print = 0L,
-  min_a = 0.1, maxabs_b = 20, maxiter_em = 200L, maxiter_j = 20L,
-  maxskip_j = 0L, rm_list = as.character(c("NONE")),
-  thdist = "normal", estdist = 1L)
+estip(
+  x,
+  model0 = as.character(c("2PL")),
+  N = 31L,
+  bg0 = 1L,
+  fc0 = 2L,
+  ng = 1L,
+  gc0 = 2L,
+  eMLL = 1e-06,
+  eEM = 1e-04,
+  eM = 0.001,
+  emu = 0.001,
+  esd = 0.001,
+  D = 1.702,
+  ic = 1/5,
+  max = 6,
+  min = -6,
+  mu = 0,
+  sigma = 1,
+  Bayes = 0L,
+  method = "Fisher_Scoring",
+  mu_a = 0,
+  sigma_a = 1,
+  mu_b = 0,
+  sigma_b = 2,
+  mu_c = 1/5,
+  w_c = 5,
+  fix = 1L,
+  print = 0L,
+  min_a = 0.1,
+  maxabs_b = 20,
+  maxiter_em = 200L,
+  maxiter_j = 20L,
+  maxskip_j = 0L,
+  rm_list = as.character(c("NONE")),
+  thdist = "normal",
+  estdist = 1L
+)
 }
 \arguments{
 \item{x}{an item response data which class is data.frame object.}

@@ -4,9 +4,23 @@
 \alias{estdist}
 \title{Estimation of population distribution via EM algorithm.}
 \usage{
-estdist(x, para, N = 31L, eMLL = 1e-06, eDIST = 1e-04, fc0 = 2L,
-  ng = 1L, gc0 = 2L, D = 1.702, fix = 1L, print = 0L, max = 4,
-  min = -4, maxiter_em = 200L, rm_list = as.character(c("NONE")))
+estdist(
+  x,
+  para,
+  N = 31L,
+  eMLL = 1e-06,
+  eDIST = 1e-04,
+  fc0 = 2L,
+  ng = 1L,
+  gc0 = 2L,
+  D = 1.702,
+  fix = 1L,
+  print = 0L,
+  max = 4,
+  min = -4,
+  maxiter_em = 200L,
+  rm_list = as.character(c("NONE"))
+)
 }
 \arguments{
 \item{x}{Item response matrix.}

@@ -4,8 +4,15 @@
 \alias{tif_auto}
 \title{Item Information Function for IRT 1~3PLM}
 \usage{
-tif_auto(para, min = -6, max = 6, length.out = 301, D = 1.702,
-  labs = F, simplify = T)
+tif_auto(
+  para,
+  min = -6,
+  max = 6,
+  length.out = 301,
+  D = 1.702,
+  labs = F,
+  simplify = T
+)
 }
 \arguments{
 \item{para}{the item parameter data.frame estimated by \code{\link{estip}}}

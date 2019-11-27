@@ -4,8 +4,16 @@
 \alias{timer}
 \title{Measure the time and display original message.}
 \usage{
-timer(StopTime, MESSAGE = "STOP!!", disp = T, units = "secs",
-  cex = 5, font = 1, col = 1, family = "")
+timer(
+  StopTime,
+  MESSAGE = "STOP!!",
+  disp = T,
+  units = "secs",
+  cex = 5,
+  font = 1,
+  col = 1,
+  family = ""
+)
 }
 \arguments{
 \item{StopTime}{How long time you want to measure?}

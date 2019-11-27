@@ -4,8 +4,17 @@
 \alias{ifind}
 \title{Item Fit indexes 'chi^2' and 'g^2' statistics}
 \usage{
-ifind(x, para, theta, fc = 3, H = 10, p = 0.05, D = 1.702,
-  dot_size = 1, line_size = 1)
+ifind(
+  x,
+  para,
+  theta,
+  fc = 3,
+  H = 10,
+  p = 0.05,
+  D = 1.702,
+  dot_size = 1,
+  line_size = 1
+)
 }
 \arguments{
 \item{x}{data.frame of item response data.}
