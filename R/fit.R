@@ -55,6 +55,7 @@ ifind <- function(x, para, theta, fc=3, H = 10 , p = 0.05, D = 1.702, dot_size=1
   G2 <- data.frame(G2=rep(NA,m), p_value=rep(NA,m), result=rep(NA,m))
   rownames(G2) <- Item
   thetam <- matrix(nrow=m, ncol=H)
+  x.all <- as.data.frame(x.all)
 
   # predict correct probability
   for(j in 1:m){
