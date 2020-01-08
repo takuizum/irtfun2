@@ -99,7 +99,7 @@ ifind <- function(x, para, theta, fc=3, H = 10 , p = 0.05, D = 1.702, dot_size=1
     ggplot2::geom_line(aes(y=observed), size=line_size)+
     # ggplot2::geom_smooth(aes(y=predict, colour=Item), size=line_size,
     #                      method = "glm", method.arg=list(family="binomial"), se=FALSE)+
-    ggplot2::geom_line(aes(y=predict, colour=Item), size=line_size)+
+    ggplot2::geom_line(aes(y=predict), size=line_size)+
     ggplot2::labs(x=TeX("$\\theta$"), y=TeX("$P(\\theta)$"))+
     ggplot2::theme(legend.position = 'none')+
     ggplot2::facet_wrap(~Item, ncol=floor(sqrt(m)))
