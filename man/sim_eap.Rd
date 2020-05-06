@@ -4,7 +4,9 @@
 \name{sim_eap}
 \alias{sim_eap}
 \title{Estimated theta parameter under 2PLM.}
-\format{See \code{\link{estheta}}.}
+\format{
+See \code{\link{estheta}}.
+}
 \usage{
 sim_eap
 }

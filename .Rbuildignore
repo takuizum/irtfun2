@@ -1,8 +1,6 @@
-<<<<<<< HEAD
-^.*\.Rproj$
-^\.Rproj\.user$
-=======
 ^LICENSE\.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
->>>>>>> 4773e0ca988efeec2a968f8ec7a37ee44cd846dc
+run.R
+.vscode/
+src/*.tar.gz

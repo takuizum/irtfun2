@@ -4,7 +4,9 @@
 \name{sim_param}
 \alias{sim_param}
 \title{Estimated 2PLM item parameter.}
-\format{See \code{\link{estip}}.}
+\format{
+See \code{\link{estip}}.
+}
 \usage{
 sim_param
 }

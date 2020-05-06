@@ -4,7 +4,9 @@
 \name{sim_dat_st}
 \alias{sim_dat_st}
 \title{Simulated multi group item response data for scaling test design.}
-\format{a dataset with 72 cols, first col is ID line and second col is group ID line.}
+\format{
+a dataset with 72 cols, first col is ID line and second col is group ID line.
+}
 \usage{
 sim_dat_st
 }

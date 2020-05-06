@@ -4,7 +4,9 @@
 \name{sim_data_4}
 \alias{sim_data_4}
 \title{Simulated multi group item response data for 2PLM}
-\format{a dataset with 32 cols, first col is ID line and second col is group ID line.}
+\format{
+a dataset with 32 cols, first col is ID line and second col is group ID line.
+}
 \usage{
 sim_data_4
 }

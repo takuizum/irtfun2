@@ -4,7 +4,9 @@
 \name{sim_data_3}
 \alias{sim_data_3}
 \title{Simulated item response data for 3PLM}
-\format{a dataset with 31 cols, first col is ID line.}
+\format{
+a dataset with 31 cols, first col is ID line.
+}
 \usage{
 sim_data_3
 }

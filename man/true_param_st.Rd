@@ -4,7 +4,9 @@
 \name{true_param_st}
 \alias{true_param_st}
 \title{true 2PLM item parameter of 'sim_dat_st'.}
-\format{See \code{\link{sim_dat_st}}.}
+\format{
+See \code{\link{sim_dat_st}}.
+}
 \usage{
 true_param_st
 }

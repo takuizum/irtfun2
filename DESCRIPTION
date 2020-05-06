@@ -8,7 +8,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Imports: magrittr, stats, utils, pracma, dplyr, tidyr, purrr, stringr, ggplot2, latex2exp, graphics, grDevices, Hmisc, Rcpp, BH, rstudioapi, tibble, extraDistr
 LinkingTo: Rcpp, BH
 Copyright: Takumi Shibuya

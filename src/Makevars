@@ -1,12 +1,5 @@
-<<<<<<< HEAD
 #PKG_CPPFLAGS = -I../inst/include
 CXX_STD = CXX11
 #PKG_CPPFLAGS=-DSTRICT_R_HEADERS -I/usr/local/include
 #PKG_LIBS=-L/usr/local/lib -Wl,-rpath,/usr/local/lib -irtfun2
 
-=======
-#PKG_CPPFLAGS = -I../inst/include
-CXX_STD = CXX11
-#PKG_CPPFLAGS=-DSTRICT_R_HEADERS -I/usr/local/include
-#PKG_LIBS=-L/usr/local/lib -Wl,-rpath,/usr/local/lib -irtfun2
->>>>>>> 4773e0ca988efeec2a968f8ec7a37ee44cd846dc

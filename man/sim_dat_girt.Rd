@@ -4,7 +4,9 @@
 \name{sim_dat_girt}
 \alias{sim_dat_girt}
 \title{Simulated item response data for GIRT model}
-\format{a dataset with 31 cols, first col is ID line.See \code{\link{estGip}}.}
+\format{
+a dataset with 31 cols, first col is ID line.See \code{\link{estGip}}.
+}
 \usage{
 sim_dat_girt
 }
